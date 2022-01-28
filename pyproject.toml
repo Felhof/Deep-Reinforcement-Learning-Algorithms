@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "deep-reinforcement-learning-algorithms"
+version = "0.1.0"
+authors = ["felix <felhof1@hotmail.com>"]
+description = "various Deep Reinforcement Learning algorithms"
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/Felhof/Deep-Reinforcement-Learning-Algorithms"
+repository = "https://github.com/Felhof/Deep-Reinforcement-Learning-Algorithms"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+[tool.poetry.dev-dependencies]
+black = "^21.12b0"
+flake8 = "^4.0.1"
+flake8-black = "^0.2.3"
+flake8-bugbear = "^22.1.11"
+flake8-import-order = "^0.18.1"
+mypy = "^0.931"
+flake8-annotations = "^2.7.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

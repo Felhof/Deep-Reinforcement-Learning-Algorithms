@@ -5,10 +5,10 @@ import nox
 from nox.sessions import Session
 
 nox.options.sessions = "lint", "mypy"
-locations = "agents", "noxfile.py"
+locations = "agents", "noxfile.py", "utilities", "train_VPN_for_cartpole.py"
 
 
-@nox.session(python=["3.10"])
+@nox.session(python=["3.10", "3.9.10"])
 def black(session: Session) -> None:
     args = session.posargs or locations
     install_with_constraints(session, "black")
@@ -29,7 +29,7 @@ def install_with_constraints(session: Session, *args: str, **kwargs: Any) -> Non
         session.install(f"--constraint={requirements.name}", *args, **kwargs)
 
 
-@nox.session(python=["3.10"])
+@nox.session(python=["3.10", "3.9.10"])
 def lint(session: Session) -> None:
     args = session.posargs or locations
     install_with_constraints(
@@ -43,7 +43,7 @@ def lint(session: Session) -> None:
     session.run("flake8", *args)
 
 
-@nox.session(python=["3.10"])
+@nox.session(python=["3.10", "3.9.10"])
 def mypy(session: Session) -> None:
     args = session.posargs or locations
     install_with_constraints(session, "mypy")

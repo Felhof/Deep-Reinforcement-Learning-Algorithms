@@ -73,102 +73,118 @@ class VPN:
 
     def train(self: "VPN") -> np.ndarray:
         avg_reward_per_step = np.empty(self.config.training_steps_per_epoch)
-        for step in range(self.config.training_steps_per_epoch):
-            self.policy_optimizer.zero_grad()
-            (
-                obs_histories,
-                action_histories,
-                reward_histories,
-                done_histories,
-            ) = self._run_episodes()
 
-            obs_tensor = torch.tensor(obs_histories, dtype=torch.float32)
-            action_tensor = torch.tensor(action_histories, dtype=torch.int64)
-            state_action_values = self._get_state_action_values(obs_tensor, action_tensor)
-            (
-                advantage_histories,
-                value_target_histories,
-            ) = self._get_generalized_advantage_estimates(
-                state_action_values.squeeze().detach().numpy(),
-                reward_histories,
-                done_histories,
-            )
-            advantage_tensor = torch.tensor(advantage_histories, dtype=torch.float32)
-            reward_tensor = torch.tensor(reward_histories, dtype=torch.float32)
-
-            avg_reward_per_step[step] = reward_tensor.sum(dim=1).mean()
-            rewards_to_go = torch.cumsum(reward_tensor.flip(1), 1).flip(1)
-
-            policy_loss = self._compute_policy_loss(
-                obs_tensor, action_tensor, advantage_tensor
-            )
+        def update_policy(
+            obs: torch.Tensor, actions: torch.Tensor, advantages: torch.Tensor
+        ) -> None:
+            policy_loss = self._compute_policy_loss(obs, actions, advantages)
             policy_loss.backward()
             self.policy_optimizer.step()
+
+        def update_q_net(
+            obs: torch.Tensor, actions: torch.Tensor, rewards: torch.Tensor
+        ) -> None:
+            rewards_to_go = torch.cumsum(rewards.flip(1), 1).flip(1)
 
             for _ in range(
                 self.config.hyperparameters["VPN"].get(
                     "value_updates_per_training_step"
                 )
             ):
+                state_action_values = self._get_state_action_values(obs, actions)
                 self.q_net_optimizer.zero_grad()
                 q_loss = nn.MSELoss()(state_action_values, rewards_to_go)
                 q_loss.backward()
                 self.q_net_optimizer.step()
-                state_action_values = self._get_state_action_values(obs_tensor, action_tensor)
+
+        for step in range(self.config.training_steps_per_epoch):
+            self.policy_optimizer.zero_grad()
+            (
+                obs,
+                actions,
+                rewards,
+                advantages,
+                value_targets,
+            ) = self._run_episodes_and_estimate_advantage()
+
+            update_policy(obs, actions, advantages)
+
+            update_q_net(obs, actions, rewards)
+
+            avg_reward_per_step[step] = rewards.sum(dim=1).mean()
 
         return avg_reward_per_step
 
-    def _run_episodes(
+    def _run_episodes_and_estimate_advantage(
         self: "VPN",
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        obs_histories = np.empty(
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor,]:
+        obs_step = np.empty(
             self.episodes_per_training_step,
             dtype=get_dimension_format_string(
                 self.episode_length, self.config.observation_dim
             ),
         )
-        action_histories = np.empty(
+        actions_step = np.empty(
             self.episodes_per_training_step,
             dtype=get_dimension_format_string(
                 self.episode_length, self.config.action_dim
             ),
         )
-        reward_histories = np.empty(
+        rewards_step = np.empty(
             self.episodes_per_training_step,
             dtype=get_dimension_format_string(self.episode_length),
         )
-        done_histories = np.empty(
+        done_step = np.empty(
             self.episodes_per_training_step,
             dtype=get_dimension_format_string(self.episode_length, dtype="bool"),
         )
         for episode in range(self.episodes_per_training_step):
-            obs_history = np.zeros(
+            obs_episode = np.zeros(
                 self.episode_length,
                 dtype=get_dimension_format_string(self.config.observation_dim),
             )
-            action_history = np.zeros(
+            actions_episode = np.zeros(
                 self.episode_length,
                 dtype=get_dimension_format_string(self.config.action_dim),
             )
-            reward_history = np.zeros(self.episode_length, dtype=np.float32)
-            done_history = np.ones(self.episode_length, dtype=bool)
+            rewards_episode = np.zeros(self.episode_length, dtype=np.float32)
+            done_episode = np.ones(self.episode_length, dtype=bool)
             obs = self.environment.reset()
             for step in range(self.episode_length):
-                obs_history[step] = obs
+                obs_episode[step] = obs
                 action = self._get_action(obs)
                 next_obs, reward, done, info = self.environment.step(action)
-                action_history[step] = action
-                reward_history[step] = reward
-                done_history[step] = done
+                actions_episode[step] = action
+                rewards_episode[step] = reward
+                done_episode[step] = done
                 obs = next_obs
                 if done:
                     break
-            obs_histories[episode] = obs_history
-            action_histories[episode] = action_history
-            reward_histories[episode] = reward_history
-        return obs_histories, action_histories, reward_histories, done_histories
+            obs_step[episode] = obs_episode
+            actions_step[episode] = actions_episode
+            rewards_step[episode] = rewards_episode
 
-    def _get_state_action_values(self: "VPN", obs: torch.Tensor, actions: torch.Tensor) -> torch.Tensor:
+        state_action_values = self._get_state_action_values(
+            torch.tensor(obs_step, dtype=torch.float32),
+            torch.tensor(actions_step, dtype=torch.float32),
+        )
+        (advantages, value_targets,) = self._get_generalized_advantage_estimates(
+            state_action_values.squeeze().detach().numpy(),
+            rewards_step,
+            done_step,
+        )
+
+        return (
+            torch.tensor(obs_step, dtype=torch.float32),
+            torch.tensor(actions_step, dtype=torch.float32),
+            torch.tensor(rewards_step, dtype=torch.float32),
+            torch.tensor(advantages, dtype=torch.float32),
+            torch.tensor(value_targets, dtype=torch.float32),
+        )
+
+    def _get_state_action_values(
+        self: "VPN", obs: torch.Tensor, actions: torch.Tensor
+    ) -> torch.Tensor:
         q_value_tensor = self.q_net.forward(obs)
         return q_value_tensor.gather(
             2, actions.unsqueeze(-1).type(torch.int64)
@@ -203,7 +219,7 @@ class VPN:
             dtype=get_dimension_format_string(self.episode_length),
         )
 
-        def _get_episode_generalized_advantage_estimate(
+        def get_episode_generalized_advantage_estimate(
             values: np.ndarray, rewards: np.ndarray, done: np.ndarray
         ) -> Tuple[np.ndarray, np.ndarray]:
             advantage = np.zeros(self.episode_length)
@@ -226,7 +242,7 @@ class VPN:
             (
                 advantage_ep,
                 value_targets_ep,
-            ) = _get_episode_generalized_advantage_estimate(
+            ) = get_episode_generalized_advantage_estimate(
                 values_ep, rewards_ep, done_ep
             )
             advantage_histories[idx] = advantage_ep

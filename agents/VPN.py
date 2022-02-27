@@ -83,11 +83,8 @@ class VPN:
             ) = self._run_episodes()
 
             obs_tensor = torch.tensor(obs_histories, dtype=torch.float32)
-            q_value_tensor = self.q_net.forward(obs_tensor)
             action_tensor = torch.tensor(action_histories, dtype=torch.int64)
-            state_action_values = q_value_tensor.gather(
-                2, action_tensor.unsqueeze(-1).type(torch.int64)
-            ).squeeze(-1)
+            state_action_values = self._get_state_action_values(obs_tensor, action_tensor)
             (
                 advantage_histories,
                 value_target_histories,
@@ -117,6 +114,7 @@ class VPN:
                 q_loss = nn.MSELoss()(state_action_values, rewards_to_go)
                 q_loss.backward()
                 self.q_net_optimizer.step()
+                state_action_values = self._get_state_action_values(obs_tensor, action_tensor)
 
         return avg_reward_per_step
 
@@ -169,6 +167,12 @@ class VPN:
             action_histories[episode] = action_history
             reward_histories[episode] = reward_history
         return obs_histories, action_histories, reward_histories, done_histories
+
+    def _get_state_action_values(self: "VPN", obs: torch.Tensor, actions: torch.Tensor) -> torch.Tensor:
+        q_value_tensor = self.q_net.forward(obs)
+        return q_value_tensor.gather(
+            2, actions.unsqueeze(-1).type(torch.int64)
+        ).squeeze(-1)
 
     def _get_policy(self: "VPN", obs: torch.Tensor) -> Categorical:
         logits: torch.Tensor = self.policy(obs)

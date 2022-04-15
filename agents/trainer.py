@@ -1,7 +1,7 @@
 from typing import List
 
 import numpy as np
-from utilities.config import Config  # type: ignore
+from utilities.config import Config
 
 
 class Trainer:

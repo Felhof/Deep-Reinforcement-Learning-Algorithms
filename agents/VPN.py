@@ -5,8 +5,8 @@ import numpy as np
 import torch
 from torch.distributions.categorical import Categorical
 import torch.nn as nn
-from utilities.config import Config  # type: ignore
-from utilities.types import (  # type: ignore
+from utilities.config import Config
+from utilities.types import (
     ActivationFunction,
     AdamOptimizer,
     LinearLayer,
@@ -41,19 +41,20 @@ class VPN:
             self.config.environment_name
         )
         self.episode_length: int = self.config.hyperparameters["VPN"]["episode_length"]
-        self.episodes_per_training_step: int = self.config.hyperparameters["VPN"].get(
+
+        self.episodes_per_training_step: int = self.config.hyperparameters["VPN"][
             "episodes_per_training_step"
-        )
-        self.gamma: float = self.config.hyperparameters["VPN"].get("discount_rate")
-        self.lamda: float = self.config.hyperparameters["VPN"].get(
+        ]
+        self.gamma: float = self.config.hyperparameters["VPN"]["discount_rate"]
+        self.lamda: float = self.config.hyperparameters["VPN"][
             "generalized_advantage_estimate_exponential_mean_discount_rate"
-        )
-        policy_parameters: NNParameters = self.config.hyperparameters["VPN"].get(
+        ]
+        policy_parameters: NNParameters = self.config.hyperparameters["VPN"][
             "policy_parameters"
-        )
-        q_net_parameters: NNParameters = self.config.hyperparameters["VPN"].get(
+        ]
+        q_net_parameters: NNParameters = self.config.hyperparameters["VPN"][
             "q_net_parameters"
-        )
+        ]
         self.policy: nn.Sequential = create_nn(
             policy_parameters["sizes"],
             policy_parameters["activations"],
@@ -87,9 +88,7 @@ class VPN:
             rewards_to_go = torch.cumsum(rewards.flip(1), 1).flip(1)
 
             for _ in range(
-                self.config.hyperparameters["VPN"].get(
-                    "value_updates_per_training_step"
-                )
+                self.config.hyperparameters["VPN"]["value_updates_per_training_step"]
             ):
                 state_action_values = self._get_state_action_values(obs, actions)
                 self.q_net_optimizer.zero_grad()

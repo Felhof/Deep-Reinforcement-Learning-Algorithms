@@ -1,6 +1,6 @@
-from agents import trainer, VPN  # type: ignore
+from agents import trainer, VPN
 import torch.nn
-from utilities.config import Config  # type: ignore
+from utilities.config import Config
 
 NUMBER_OF_ACTIONS: int = 2
 ACTION_DIM: int = 1
@@ -41,5 +41,5 @@ config = Config(
 )
 
 if __name__ == "__main__":
-    trainer = trainer.Trainer(config)
-    trainer.train_agents([VPN.VPN])
+    vpn_trainer = trainer.Trainer(config)
+    vpn_trainer.train_agents([VPN.VPN])

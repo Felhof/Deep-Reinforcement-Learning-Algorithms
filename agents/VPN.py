@@ -72,8 +72,8 @@ class VPN:
             lr=self.config.hyperparameters["VPN"].get("q_net_learning_rate"),
         )
 
-    def train(self: "VPN") -> np.ndarray:
-        avg_reward_per_step = np.empty(self.config.training_steps_per_epoch)
+    def train(self: "VPN") -> List[float]:
+        avg_reward_per_step: List[float] = []
 
         def update_policy(
             obs: torch.Tensor, actions: torch.Tensor, advantages: torch.Tensor
@@ -110,7 +110,7 @@ class VPN:
 
             update_q_net(obs, actions, rewards)
 
-            avg_reward_per_step[step] = rewards.sum(dim=1).mean()
+            avg_reward_per_step.append(rewards.sum(dim=1).mean().item())
 
         return avg_reward_per_step
 

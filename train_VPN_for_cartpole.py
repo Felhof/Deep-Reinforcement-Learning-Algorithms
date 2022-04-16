@@ -36,8 +36,8 @@ config = Config(
             "q_net_learning_rate": 0.001,
         }
     },
-    training_steps_per_epoch=1000,
-    epochs=5,
+    training_steps_per_epoch=50,
+    epochs=6,
 )
 
 if __name__ == "__main__":

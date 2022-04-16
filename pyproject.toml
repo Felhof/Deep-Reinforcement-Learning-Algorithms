@@ -17,6 +17,7 @@ torch = [
 ]
 numpy = "^1.22.2"
 pygame = "^2.1.2"
+matplotlib = "^3.5.1"
 
 [tool.poetry.dev-dependencies]
 black = "^22.3.0"

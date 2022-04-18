@@ -5,7 +5,9 @@ import numpy as np
 import torch
 from torch.distributions.categorical import Categorical
 import torch.nn as nn
+
 from utilities.config import Config
+from utilities.utils import get_dimension_format_string
 from utilities.types import (
     ActivationFunction,
     AdamOptimizer,
@@ -24,14 +26,6 @@ def create_nn(
         layers.append(activation)
 
     return nn.Sequential(*layers)
-
-
-def get_dimension_format_string(
-    x_dim: int, y_dim: int = 1, dtype: str = "float32"
-) -> str:
-    if y_dim == 1:
-        return f"{x_dim}{dtype}"
-    return f"({x_dim},{y_dim}){dtype}"
 
 
 class VPG:

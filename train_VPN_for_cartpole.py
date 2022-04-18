@@ -1,4 +1,4 @@
-from agents import trainer, VPN
+from agents import trainer, VPG
 import torch.nn
 from utilities.config import Config
 
@@ -12,7 +12,7 @@ config = Config(
     observation_dim=OBSERVATION_DIM,
     number_of_actions=NUMBER_OF_ACTIONS,
     hyperparameters={
-        "VPN": {
+        "VPG": {
             "episode_length": 250,
             "episodes_per_training_step": 30,
             "value_updates_per_training_step": 20,
@@ -42,4 +42,4 @@ config = Config(
 
 if __name__ == "__main__":
     vpn_trainer = trainer.Trainer(config)
-    vpn_trainer.train_agents([VPN.VPN])
+    vpn_trainer.train_agents([VPG.VPG])

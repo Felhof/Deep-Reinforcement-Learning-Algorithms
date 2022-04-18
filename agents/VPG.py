@@ -34,25 +34,25 @@ def get_dimension_format_string(
     return f"({x_dim},{y_dim}){dtype}"
 
 
-class VPN:
-    def __init__(self: "VPN", config: Config) -> None:
+class VPG:
+    def __init__(self: "VPG", config: Config) -> None:
         self.config = config
         self.environment: gym.Env[np.ndarray, Union[int, np.ndarray]] = gym.make(
             self.config.environment_name
         )
-        self.episode_length: int = self.config.hyperparameters["VPN"]["episode_length"]
+        self.episode_length: int = self.config.hyperparameters["VPG"]["episode_length"]
 
-        self.episodes_per_training_step: int = self.config.hyperparameters["VPN"][
+        self.episodes_per_training_step: int = self.config.hyperparameters["VPG"][
             "episodes_per_training_step"
         ]
-        self.gamma: float = self.config.hyperparameters["VPN"]["discount_rate"]
-        self.lamda: float = self.config.hyperparameters["VPN"][
+        self.gamma: float = self.config.hyperparameters["VPG"]["discount_rate"]
+        self.lamda: float = self.config.hyperparameters["VPG"][
             "generalized_advantage_estimate_exponential_mean_discount_rate"
         ]
-        policy_parameters: NNParameters = self.config.hyperparameters["VPN"][
+        policy_parameters: NNParameters = self.config.hyperparameters["VPG"][
             "policy_parameters"
         ]
-        q_net_parameters: NNParameters = self.config.hyperparameters["VPN"][
+        q_net_parameters: NNParameters = self.config.hyperparameters["VPG"][
             "q_net_parameters"
         ]
         self.policy: nn.Sequential = create_nn(
@@ -65,14 +65,14 @@ class VPN:
         )
         self.policy_optimizer: AdamOptimizer = torch.optim.Adam(
             self.policy.parameters(),
-            lr=self.config.hyperparameters["VPN"]["policy_learning_rate"],
+            lr=self.config.hyperparameters["VPG"]["policy_learning_rate"],
         )
         self.q_net_optimizer: AdamOptimizer = torch.optim.Adam(
             self.q_net.parameters(),
-            lr=self.config.hyperparameters["VPN"]["q_net_learning_rate"],
+            lr=self.config.hyperparameters["VPG"]["q_net_learning_rate"],
         )
 
-    def train(self: "VPN") -> List[float]:
+    def train(self: "VPG") -> List[float]:
         avg_reward_per_step: List[float] = []
 
         def update_policy(
@@ -88,7 +88,7 @@ class VPN:
             rewards_to_go = torch.cumsum(rewards.flip(1), 1).flip(1)
 
             for _ in range(
-                self.config.hyperparameters["VPN"]["value_updates_per_training_step"]
+                self.config.hyperparameters["VPG"]["value_updates_per_training_step"]
             ):
                 state_action_values = self._get_state_action_values(obs, actions)
                 self.q_net_optimizer.zero_grad()
@@ -115,7 +115,7 @@ class VPN:
         return avg_reward_per_step
 
     def _run_episodes_and_estimate_advantage(
-        self: "VPN",
+        self: "VPG",
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor,]:
         obs_step = np.empty(
             self.episodes_per_training_step,
@@ -182,29 +182,29 @@ class VPN:
         )
 
     def _get_state_action_values(
-        self: "VPN", obs: torch.Tensor, actions: torch.Tensor
+        self: "VPG", obs: torch.Tensor, actions: torch.Tensor
     ) -> torch.Tensor:
         q_value_tensor = self.q_net.forward(obs)
         return q_value_tensor.gather(
             2, actions.unsqueeze(-1).type(torch.int64)
         ).squeeze(-1)
 
-    def _get_policy(self: "VPN", obs: torch.Tensor) -> Categorical:
+    def _get_policy(self: "VPG", obs: torch.Tensor) -> Categorical:
         logits: torch.Tensor = self.policy(obs)
         return Categorical(logits=logits)
 
-    def _get_action(self: "VPN", obs: np.ndarray) -> np.ndarray:
+    def _get_action(self: "VPG", obs: np.ndarray) -> np.ndarray:
         obs_tensor = torch.tensor(obs, dtype=torch.float32)
         return self._get_policy(obs_tensor).sample().numpy()
 
     def _compute_policy_loss(
-        self: "VPN", obs: torch.Tensor, actions: torch.Tensor, weights: torch.Tensor
+        self: "VPG", obs: torch.Tensor, actions: torch.Tensor, weights: torch.Tensor
     ) -> torch.Tensor:
         log_probs = self._get_policy(obs).log_prob(actions)
         return -(log_probs * weights).mean()
 
     def _get_generalized_advantage_estimates(
-        self: "VPN",
+        self: "VPG",
         value_histories: np.ndarray,
         reward_histories: np.ndarray,
         done_histories: np.ndarray,

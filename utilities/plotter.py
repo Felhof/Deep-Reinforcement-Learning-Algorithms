@@ -1,11 +1,11 @@
 from typing import List
-import matplotlib.pyplot as plt
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 
 class Plotter:
-    def __init__(self):
+    def __init__(self: "Plotter") -> None:
         self.ax = plt.gca()
         self.current_y_max = float("-inf")
         self.current_y_min = float("inf")
@@ -42,7 +42,7 @@ class Plotter:
         show_std: bool = False,
         color: str = "#0000FF",
         show_solution_score: bool = True,
-    ):
+    ) -> None:
         def get_mean_result_at_timestep(
             results: List[List[float]], timestep: int
         ) -> float:

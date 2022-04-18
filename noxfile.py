@@ -46,5 +46,5 @@ def lint(session: Session) -> None:
 @nox.session(python=["3.10", "3.9.10"])
 def mypy(session: Session) -> None:
     args = session.posargs or locations
-    install_with_constraints(session, "mypy", "numpy")
+    install_with_constraints(session, "mypy", "numpy", "torch")
     session.run("mypy", *args)

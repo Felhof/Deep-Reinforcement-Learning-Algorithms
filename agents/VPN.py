@@ -1,6 +1,6 @@
 from typing import List, Tuple, Union
 
-import gym  # type: ignore
+import gym
 import numpy as np
 import torch
 from torch.distributions.categorical import Categorical
@@ -65,11 +65,11 @@ class VPN:
         )
         self.policy_optimizer: AdamOptimizer = torch.optim.Adam(
             self.policy.parameters(),
-            lr=self.config.hyperparameters["VPN"].get("policy_learning_rate"),
+            lr=self.config.hyperparameters["VPN"]["policy_learning_rate"],
         )
         self.q_net_optimizer: AdamOptimizer = torch.optim.Adam(
             self.q_net.parameters(),
-            lr=self.config.hyperparameters["VPN"].get("q_net_learning_rate"),
+            lr=self.config.hyperparameters["VPN"]["q_net_learning_rate"],
         )
 
     def train(self: "VPN") -> List[float]:
@@ -96,7 +96,7 @@ class VPN:
                 q_loss.backward()
                 self.q_net_optimizer.step()
 
-        for step in range(self.config.training_steps_per_epoch):
+        for _step in range(self.config.training_steps_per_epoch):
             self.policy_optimizer.zero_grad()
             (
                 obs,

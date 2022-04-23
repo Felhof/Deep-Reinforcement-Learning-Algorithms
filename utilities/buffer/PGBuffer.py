@@ -22,7 +22,7 @@ class PGBuffer:
         ) = self._create_empty_buffers()
 
     def _get_episode_generalized_advantage_estimates(
-            self: "PGBuffer", rewards: np.ndarray, values: np.ndarray
+        self: "PGBuffer", rewards: np.ndarray, values: np.ndarray
     ) -> np.ndarray:
         episode_duration = self.top_index - self.current_episode_start_index
         gamma: float = self.config.hyperparameters["VPG"]["discount_rate"]
@@ -41,14 +41,7 @@ class PGBuffer:
 
     def _create_empty_buffers(
         self: "PGBuffer",
-    ) -> Tuple[
-        np.ndarray,
-        np.ndarray,
-        np.ndarray,
-        np.ndarray,
-        np.ndarray,
-        np.ndarray,
-    ]:
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray,]:
         states = np.zeros(
             self.buffer_size,
             dtype=get_dimension_format_string(self.config.observation_dim),
@@ -92,14 +85,7 @@ class PGBuffer:
 
     def get_data(
         self: "PGBuffer",
-    ) -> Tuple[
-        np.ndarray,
-        np.ndarray,
-        np.ndarray,
-        np.ndarray,
-        np.ndarray,
-        np.ndarray,
-    ]:
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray,]:
         return (
             self.states,
             self.actions,

@@ -6,6 +6,7 @@ import torch
 from torch.distributions.categorical import Categorical
 import torch.nn as nn
 
+from utilities.buffer.PGBuffer import PGBuffer
 from utilities.config import Config
 from utilities.utils import get_dimension_format_string
 from utilities.types import (
@@ -65,6 +66,8 @@ class VPG:
             self.q_net.parameters(),
             lr=self.config.hyperparameters["VPG"]["q_net_learning_rate"],
         )
+        buffer_size = self.episode_length * self.episodes_per_training_step
+        self.buffer = PGBuffer(config, buffer_size)
 
     def train(self: "VPG") -> List[float]:
         avg_reward_per_step: List[float] = []
@@ -77,9 +80,8 @@ class VPG:
             self.policy_optimizer.step()
 
         def update_q_net(
-            obs: torch.Tensor, actions: torch.Tensor, rewards: torch.Tensor
+            obs: torch.Tensor, actions: torch.Tensor, rewards_to_go: torch.Tensor
         ) -> None:
-            rewards_to_go = torch.cumsum(rewards.flip(1), 1).flip(1)
 
             for _ in range(
                 self.config.hyperparameters["VPG"]["value_updates_per_training_step"]
@@ -92,21 +94,72 @@ class VPG:
 
         for _step in range(self.config.training_steps_per_epoch):
             self.policy_optimizer.zero_grad()
+            # (
+            #     obs,
+            #     actions,
+            #     rewards,
+            #     advantages,
+            #     value_targets,
+            # ) = self._run_episodes_and_estimate_advantage()
+            #
+            # update_policy(obs, actions, advantages)
+            #
+            # update_q_net(obs, actions, rewards)
+
+            avg_step_reward = self._run_episodes()
+
             (
                 obs,
                 actions,
+                values,
                 rewards,
                 advantages,
-                value_targets,
-            ) = self._run_episodes_and_estimate_advantage()
+                rewards_to_go,
+            ) = self.buffer.get_data()
 
-            update_policy(obs, actions, advantages)
+            update_policy(
+                torch.tensor(obs, dtype=torch.float32),
+                torch.tensor(actions, dtype=torch.float32),
+                torch.tensor(advantages, dtype=torch.float32),
+            )
 
-            update_q_net(obs, actions, rewards)
+            update_q_net(
+                torch.tensor(obs, dtype=torch.float32),
+                torch.tensor(actions, dtype=torch.float32),
+                torch.tensor(rewards_to_go, dtype=torch.float32),
+            )
 
-            avg_reward_per_step.append(rewards.sum(dim=1).mean().item())
+            avg_reward_per_step.append(avg_step_reward)
+            self.buffer.reset()
 
         return avg_reward_per_step
+
+    def _run_episodes(self: "VPG") -> float:
+        step_rewards: List[float] = []
+        for episode in range(self.episodes_per_training_step):
+            episode_reward = 0
+            obs = self.environment.reset()
+            for step in range(self.episode_length):
+                action, value = self._get_action_and_value(
+                    torch.tensor(obs, dtype=torch.float32)
+                )
+                next_obs, reward, done, info = self.environment.step(action)
+                episode_reward += reward
+                self.buffer.add_transition_data(obs, action, value, reward)
+                obs = next_obs
+
+                if done:
+                    self.buffer.end_episode()
+                    step_rewards.append(episode_reward)
+                    break
+                elif step == self.episode_length - 1:
+                    _, last_value = self._get_action_and_value(
+                        torch.tensor(obs, dtype=torch.float32)
+                    )
+                    self.buffer.end_episode(last_value=last_value)
+                    step_rewards.append(episode_reward)
+
+        return np.mean(step_rewards)
 
     def _run_episodes_and_estimate_advantage(
         self: "VPG",
@@ -145,7 +198,7 @@ class VPG:
             obs = self.environment.reset()
             for step in range(self.episode_length):
                 obs_episode[step] = obs
-                action = self._get_action(obs)
+                action = self._get_action(torch.tensor(obs, dtype=torch.float32))
                 next_obs, reward, done, info = self.environment.step(action)
                 actions_episode[step] = action
                 rewards_episode[step] = reward
@@ -175,21 +228,33 @@ class VPG:
             torch.tensor(value_targets, dtype=torch.float32),
         )
 
+    def _get_state_action_value(
+        self: "VPG", obs: torch.Tensor, action: torch.Tensor
+    ) -> float:
+        q_value_tensor = self.q_net.forward(obs)
+        return q_value_tensor[action].item()
+
     def _get_state_action_values(
         self: "VPG", obs: torch.Tensor, actions: torch.Tensor
     ) -> torch.Tensor:
         q_value_tensor = self.q_net.forward(obs)
         return q_value_tensor.gather(
-            2, actions.unsqueeze(-1).type(torch.int64)
+            1, actions.unsqueeze(-1).type(torch.int64)
         ).squeeze(-1)
 
     def _get_policy(self: "VPG", obs: torch.Tensor) -> Categorical:
         logits: torch.Tensor = self.policy(obs)
         return Categorical(logits=logits)
 
-    def _get_action(self: "VPG", obs: np.ndarray) -> np.ndarray:
-        obs_tensor = torch.tensor(obs, dtype=torch.float32)
-        return self._get_policy(obs_tensor).sample().numpy()
+    def _get_action(self: "VPG", obs: torch.Tensor) -> torch.Tensor:
+        return self._get_policy(obs).sample()
+
+    def _get_action_and_value(
+        self: "VPG", obs: torch.Tensor
+    ) -> Tuple[np.ndarray, float]:
+        action = self._get_action(obs)
+        value = self._get_state_action_value(obs, action)
+        return action.numpy(), value
 
     def _compute_policy_loss(
         self: "VPG", obs: torch.Tensor, actions: torch.Tensor, weights: torch.Tensor

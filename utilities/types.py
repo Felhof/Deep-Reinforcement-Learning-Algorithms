@@ -30,6 +30,8 @@ AgentHyperParameters = TypedDict(
         "policy_learning_rate": float,
         "q_net_learning_rate": float,
         "minibatch_size": int,
+        "buffer_size": int,
+        "exploration_rate": float,
     },
     total=False,
 )

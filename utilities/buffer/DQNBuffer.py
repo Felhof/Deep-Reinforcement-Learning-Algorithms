@@ -7,9 +7,9 @@ from utilities.utils import get_dimension_format_string
 
 
 class DQNBuffer:
-    def __init__(self: "DQNBuffer", config: Config, buffer_size: int) -> None:
+    def __init__(self: "DQNBuffer", config: Config) -> None:
         self.minibatch_size = config.hyperparameters["DQN"]["minibatch_size"]
-        self.buffer_size = buffer_size
+        self.buffer_size = config.hyperparameters["DQN"]["buffer_size"]
         self.states = np.zeros(
             self.buffer_size,
             dtype=get_dimension_format_string(config.observation_dim),
@@ -23,7 +23,9 @@ class DQNBuffer:
             self.buffer_size,
             dtype=get_dimension_format_string(config.observation_dim),
         )
+        self.done = np.zeros(self.buffer_size, dtype=bool)
         self.index = 0
+        self.number_of_stored_transitions = 0
 
     def add_transition(
         self,
@@ -31,22 +33,31 @@ class DQNBuffer:
         action: np.ndarray,
         reward: float,
         next_state: np.ndarray,
+        done: bool,
     ) -> None:
         self.states[self.index] = state
         self.actions[self.index] = action
         self.rewards[self.index] = reward
         self.next_states[self.index] = next_state
+        self.done[self.index] = done
         self.index = (self.index + 1) % self.buffer_size
+        self.number_of_stored_transitions = min(
+            self.number_of_stored_transitions + 1, self.buffer_size
+        )
+
+    def get_number_of_stored_transitions(self) -> int:
+        return self.number_of_stored_transitions
 
     def get_transition_data(
         self: "DQNBuffer",
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray,]:
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         transition_indices = np.random.choice(
             np.arange(len(self.states)), size=self.minibatch_size
         )
         return (
-            np.array(self.states[transition_indices]),
-            np.array(self.actions[transition_indices]),
-            np.array(self.rewards[transition_indices]),
-            np.array(self.next_states[transition_indices]),
+            self.states[transition_indices],
+            self.actions[transition_indices],
+            self.rewards[transition_indices],
+            self.next_states[transition_indices],
+            self.done[transition_indices],
         )

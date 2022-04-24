@@ -85,11 +85,10 @@ class PGBuffer:
 
     def get_data(
         self: "PGBuffer",
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray,]:
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray,]:
         return (
             self.states,
             self.actions,
-            self.values,
             self.rewards,
             self.advantages,
             self.rewards_to_go,

@@ -94,24 +94,11 @@ class VPG:
 
         for _step in range(self.config.training_steps_per_epoch):
             self.policy_optimizer.zero_grad()
-            # (
-            #     obs,
-            #     actions,
-            #     rewards,
-            #     advantages,
-            #     value_targets,
-            # ) = self._run_episodes_and_estimate_advantage()
-            #
-            # update_policy(obs, actions, advantages)
-            #
-            # update_q_net(obs, actions, rewards)
-
             avg_step_reward = self._run_episodes()
 
             (
                 obs,
                 actions,
-                values,
                 rewards,
                 advantages,
                 rewards_to_go,
@@ -161,73 +148,6 @@ class VPG:
 
         return np.mean(step_rewards)
 
-    def _run_episodes_and_estimate_advantage(
-        self: "VPG",
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor,]:
-        obs_step = np.empty(
-            self.episodes_per_training_step,
-            dtype=get_dimension_format_string(
-                self.episode_length, self.config.observation_dim
-            ),
-        )
-        actions_step = np.empty(
-            self.episodes_per_training_step,
-            dtype=get_dimension_format_string(
-                self.episode_length, self.config.action_dim
-            ),
-        )
-        rewards_step = np.empty(
-            self.episodes_per_training_step,
-            dtype=get_dimension_format_string(self.episode_length),
-        )
-        done_step = np.empty(
-            self.episodes_per_training_step,
-            dtype=get_dimension_format_string(self.episode_length, dtype="bool"),
-        )
-        for episode in range(self.episodes_per_training_step):
-            obs_episode = np.zeros(
-                self.episode_length,
-                dtype=get_dimension_format_string(self.config.observation_dim),
-            )
-            actions_episode = np.zeros(
-                self.episode_length,
-                dtype=get_dimension_format_string(self.config.action_dim),
-            )
-            rewards_episode = np.zeros(self.episode_length, dtype=np.float32)
-            done_episode = np.ones(self.episode_length, dtype=bool)
-            obs = self.environment.reset()
-            for step in range(self.episode_length):
-                obs_episode[step] = obs
-                action = self._get_action(torch.tensor(obs, dtype=torch.float32))
-                next_obs, reward, done, info = self.environment.step(action)
-                actions_episode[step] = action
-                rewards_episode[step] = reward
-                done_episode[step] = done
-                obs = next_obs
-                if done:
-                    break
-            obs_step[episode] = obs_episode
-            actions_step[episode] = actions_episode
-            rewards_step[episode] = rewards_episode
-
-        state_action_values = self._get_state_action_values(
-            torch.tensor(obs_step, dtype=torch.float32),
-            torch.tensor(actions_step, dtype=torch.float32),
-        )
-        (advantages, value_targets,) = self._get_generalized_advantage_estimates(
-            state_action_values.squeeze().detach().numpy(),
-            rewards_step,
-            done_step,
-        )
-
-        return (
-            torch.tensor(obs_step, dtype=torch.float32),
-            torch.tensor(actions_step, dtype=torch.float32),
-            torch.tensor(rewards_step, dtype=torch.float32),
-            torch.tensor(advantages, dtype=torch.float32),
-            torch.tensor(value_targets, dtype=torch.float32),
-        )
-
     def _get_state_action_value(
         self: "VPG", obs: torch.Tensor, action: torch.Tensor
     ) -> float:
@@ -261,49 +181,3 @@ class VPG:
     ) -> torch.Tensor:
         log_probs = self._get_policy(obs).log_prob(actions)
         return -(log_probs * weights).mean()
-
-    def _get_generalized_advantage_estimates(
-        self: "VPG",
-        value_histories: np.ndarray,
-        reward_histories: np.ndarray,
-        done_histories: np.ndarray,
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        advantage_histories = np.empty(
-            self.episodes_per_training_step,
-            dtype=get_dimension_format_string(self.episode_length),
-        )
-        value_target_histories = np.empty(
-            self.episodes_per_training_step,
-            dtype=get_dimension_format_string(self.episode_length),
-        )
-
-        def get_episode_generalized_advantage_estimate(
-            values: np.ndarray, rewards: np.ndarray, done: np.ndarray
-        ) -> Tuple[np.ndarray, np.ndarray]:
-            advantage = np.zeros(self.episode_length)
-            for t in reversed(range(self.episode_length)):
-                next_value = values[t + 1] if t < self.episode_length - 1 else 0
-                delta = rewards[t] + self.gamma * next_value * done[t] - values[t]
-                next_advantage = advantage[t + 1] if t < self.episode_length - 1 else 0
-                advantage[t] = (
-                    delta + self.lamda * self.gamma * next_advantage * done[t]
-                )
-            value_targets = np.add(
-                advantage,
-                values,
-            )
-            return advantage, value_targets
-
-        for idx, (values_ep, rewards_ep, done_ep) in enumerate(
-            zip(value_histories, reward_histories, done_histories)
-        ):
-            (
-                advantage_ep,
-                value_targets_ep,
-            ) = get_episode_generalized_advantage_estimate(
-                values_ep, rewards_ep, done_ep
-            )
-            advantage_histories[idx] = advantage_ep
-            value_target_histories[idx] = value_targets_ep
-
-        return advantage_histories, value_target_histories

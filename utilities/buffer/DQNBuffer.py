@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Dict
 
 import numpy as np
 
@@ -50,14 +50,14 @@ class DQNBuffer:
 
     def get_transition_data(
         self: "DQNBuffer",
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    ) -> Dict[str, np.ndarray]:
         transition_indices = np.random.choice(
             np.arange(len(self.states)), size=self.minibatch_size
         )
-        return (
-            self.states[transition_indices],
-            self.actions[transition_indices],
-            self.rewards[transition_indices],
-            self.next_states[transition_indices],
-            self.done[transition_indices],
+        return dict(
+            states=self.states[transition_indices],
+            actions=self.actions[transition_indices],
+            rewards=self.rewards[transition_indices],
+            next_states=self.next_states[transition_indices],
+            done=self.done[transition_indices],
         )

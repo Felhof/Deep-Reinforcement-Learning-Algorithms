@@ -13,7 +13,6 @@ config = Config(
     number_of_actions=NUMBER_OF_ACTIONS,
     hyperparameters={
         "VPG": {
-            "episode_length": 250,
             "episodes_per_training_step": 30,
             "value_updates_per_training_step": 20,
             "discount_rate": 0.99,
@@ -36,6 +35,7 @@ config = Config(
             "q_net_learning_rate": 0.001,
         }
     },
+    episode_length=250,
     training_steps_per_epoch=1000,
     epochs=6,
 )

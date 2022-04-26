@@ -11,4 +11,5 @@ class Config:
     number_of_actions: int = 1
     hyperparameters: HyperParameters = field(default_factory=HyperParameters)
     training_steps_per_epoch: int = 0
+    episode_length: int = 0
     epochs: int = 0

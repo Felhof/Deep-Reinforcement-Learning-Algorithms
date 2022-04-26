@@ -18,7 +18,7 @@ class VPG:
         self.environment: gym.Env[np.ndarray, Union[int, np.ndarray]] = gym.make(
             self.config.environment_name
         )
-        self.episode_length: int = self.config.hyperparameters["VPG"]["episode_length"]
+        self.episode_length: int = self.config.episode_length
 
         self.episodes_per_training_step: int = self.config.hyperparameters["VPG"][
             "episodes_per_training_step"
@@ -53,7 +53,7 @@ class VPG:
         self.buffer = PGBuffer(config, buffer_size)
 
     def train(self: "VPG") -> List[float]:
-        avg_reward_per_step: List[float] = []
+        avg_reward_per_training_step: List[float] = []
 
         def update_policy(
             obs: torch.Tensor, actions: torch.Tensor, advantages: torch.Tensor
@@ -75,9 +75,9 @@ class VPG:
                 q_loss.backward()
                 self.q_net_optimizer.step()
 
-        for _step in range(self.config.training_steps_per_epoch):
+        for _training_step in range(self.config.training_steps_per_epoch):
             self.policy_optimizer.zero_grad()
-            avg_step_reward = self._run_episodes()
+            avg_training_step_reward = self._run_episodes()
 
             (
                 obs,
@@ -99,13 +99,13 @@ class VPG:
                 torch.tensor(rewards_to_go, dtype=torch.float32),
             )
 
-            avg_reward_per_step.append(avg_step_reward)
+            avg_reward_per_training_step.append(avg_training_step_reward)
             self.buffer.reset()
 
-        return avg_reward_per_step
+        return avg_reward_per_training_step
 
     def _run_episodes(self: "VPG") -> float:
-        step_rewards: List[float] = []
+        episode_rewards: List[float] = []
         for episode in range(self.episodes_per_training_step):
             episode_reward = 0
             obs = self.environment.reset()
@@ -120,16 +120,16 @@ class VPG:
 
                 if done:
                     self.buffer.end_episode()
-                    step_rewards.append(episode_reward)
+                    episode_rewards.append(episode_reward)
                     break
                 elif step == self.episode_length - 1:
                     _, last_value = self._get_action_and_value(
                         torch.tensor(obs, dtype=torch.float32)
                     )
                     self.buffer.end_episode(last_value=last_value)
-                    step_rewards.append(episode_reward)
+                    episode_rewards.append(episode_reward)
 
-        return np.mean(step_rewards)
+        return np.mean(episode_rewards)
 
     def _get_state_action_value(
         self: "VPG", obs: torch.Tensor, action: torch.Tensor

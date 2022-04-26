@@ -34,28 +34,44 @@ class DQN:
         self.exploration_rate = self.config.hyperparameters["DQN"]["exploration_rate"]
 
     def train(self: "DQN") -> List[float]:
+        episode_rewards: List[float] = []
+
         def update_q_network() -> None:
-            states, actions, rewards, next_states, done = self.replayBuffer.get_transition_data()
-            states = torch.tensor(states, dtype=torch.float32)
-            actions = torch.tensor(actions, dtype=torch.float32)
-            rewards = torch.tensor(rewards, dtype=torch.float32)
-            done = torch.tensor(done, dtype=torch.float32)
+            data = self.replayBuffer.get_transition_data()
+            states = torch.tensor(data["states"], dtype=torch.float32)
+            actions = torch.tensor(data["actions"], dtype=torch.float32)
+            rewards = torch.tensor(data["rewards"], dtype=torch.float32)
+            next_states = torch.tensor(data["next_states"], dtype=torch.float32)
+            done = torch.tensor(data["done"], dtype=torch.float32)
+
             next_state_q_values = self.q_net(next_states)
             best_next_state_q_values = torch.max(next_state_q_values, dim=1)
             q_value_targets = rewards + done * self.gamma * best_next_state_q_values
             actual_q_values = self.q_net(states).gather(1, actions.unsqueeze(-1).type(torch.int64)).squeeze(-1)
 
-        obs = self.environment.reset()
-        for _step in range(self.config.training_steps_per_epoch):
-            action = self._get_action(torch.tensor(obs, dtype=torch.float32))
-            next_obs, reward, done, info = self.environment.step(action)
-            self.replayBuffer.add_transition(obs, action, reward, next_obs, done)
+            self.q_net_optimizer.zero_grad()
+            q_loss = nn.MSELoss()(q_value_targets, actual_q_values)
+            q_loss.backward()
+            self.q_net_optimizer.step()
 
-            if (
-                self.replayBuffer.get_number_of_stored_transitions()
-                >= self.config.hyperparameters["DQN"]["minibatch_size"]
-            ):
-
+        for episode in range(self.config.training_steps_per_epoch):
+            episode_reward = 0
+            obs = self.environment.reset()
+            for _step in range(self.config.episode_length):
+                action = self._get_action(torch.tensor(obs, dtype=torch.float32))
+                next_obs, reward, done, info = self.environment.step(action)
+                self.replayBuffer.add_transition(obs, action, reward, next_obs, done)
+                episode_reward += reward
+                if (
+                    self.replayBuffer.get_number_of_stored_transitions()
+                    >= self.config.hyperparameters["DQN"]["minibatch_size"]
+                ):
+                    update_q_network()
+                    self.exploration_rate = self.exploration_rate / (episode + 1)
+                if done:
+                    break
+            episode_rewards.append(episode_reward)
+        return episode_rewards
 
     def _get_action(self: "DQN", obs: torch.Tensor) -> np.ndarray:
         explore = np.random.binomial(1, p=self.exploration_rate)
@@ -66,6 +82,9 @@ class DQN:
         return action
 
     def _get_best_action(self: "DQN", obs: torch.Tensor) -> np.ndarray:
-        q_value_tensor = self.q_net.forward(obs)
+        self.q_net.eval()
+        with torch.no_grad():
+            q_value_tensor = self.q_net.forward(obs)
         action = torch.argmax(q_value_tensor)
+        self.q_net.train()
         return np.array([action])

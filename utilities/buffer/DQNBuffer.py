@@ -52,7 +52,7 @@ class DQNBuffer:
         self: "DQNBuffer",
     ) -> Dict[str, np.ndarray]:
         transition_indices = np.random.choice(
-            np.arange(len(self.states)), size=self.minibatch_size
+            np.arange(self.number_of_stored_transitions), size=self.minibatch_size
         )
         return dict(
             states=self.states[transition_indices],

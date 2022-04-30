@@ -10,16 +10,15 @@ from utilities.config import Config
 from utilities.nn import create_nn
 from utilities.types import AdamOptimizer, NNParameters
 
-
 class DQN:
     def __init__(self: "DQN", config: Config) -> None:
         self.config = config
         self.environment: gym.Env[np.ndarray, Union[int, np.ndarray]] = gym.make(
             self.config.environment_name
         )
-        self.episode_length: int = self.config.hyperparameters["DQN"]["episode_length"]
+        self.episode_length: int = self.config.episode_length
         self.gamma: float = self.config.hyperparameters["DQN"]["discount_rate"]
-        q_net_parameters: NNParameters = self.config.hyperparameters["VPG"][
+        q_net_parameters: NNParameters = self.config.hyperparameters["DQN"][
             "q_net_parameters"
         ]
         self.q_net: nn.Sequential = create_nn(
@@ -31,7 +30,11 @@ class DQN:
             lr=self.config.hyperparameters["DQN"]["q_net_learning_rate"],
         )
         self.replayBuffer = DQNBuffer(config)
-        self.exploration_rate = self.config.hyperparameters["DQN"]["exploration_rate"]
+        self.exploration_rate = self.config.hyperparameters["DQN"][
+            "initial_exploration_rate"
+        ]
+        self.random_episodes = self.config.hyperparameters["DQN"]["random_episodes"]
+        self.exploration_rate_divisor = 2
 
     def train(self: "DQN") -> List[float]:
         episode_rewards: List[float] = []
@@ -44,10 +47,17 @@ class DQN:
             next_states = torch.tensor(data["next_states"], dtype=torch.float32)
             done = torch.tensor(data["done"], dtype=torch.float32)
 
-            next_state_q_values = self.q_net(next_states)
-            best_next_state_q_values = torch.max(next_state_q_values, dim=1)
-            q_value_targets = rewards + done * self.gamma * best_next_state_q_values
-            actual_q_values = self.q_net(states).gather(1, actions.unsqueeze(-1).type(torch.int64)).squeeze(-1)
+            with torch.no_grad():
+                next_state_q_values = self.q_net(next_states)
+                best_next_state_q_values = torch.max(next_state_q_values, dim=1).values
+                q_value_targets = (
+                    rewards + (1 - done) * self.gamma * best_next_state_q_values
+                )
+            actual_q_values = (
+                self.q_net(states)
+                .gather(1, actions.unsqueeze(-1).type(torch.int64))
+                .squeeze(-1)
+            )
 
             self.q_net_optimizer.zero_grad()
             q_loss = nn.MSELoss()(q_value_targets, actual_q_values)
@@ -60,15 +70,17 @@ class DQN:
             for _step in range(self.config.episode_length):
                 action = self._get_action(torch.tensor(obs, dtype=torch.float32))
                 next_obs, reward, done, info = self.environment.step(action)
+                reward /= self.config.episode_length
                 self.replayBuffer.add_transition(obs, action, reward, next_obs, done)
                 episode_reward += reward
-                if (
-                    self.replayBuffer.get_number_of_stored_transitions()
-                    >= self.config.hyperparameters["DQN"]["minibatch_size"]
-                ):
+                obs = next_obs
+                learning = self.replayBuffer.get_number_of_stored_transitions() >= self.config.hyperparameters["DQN"]["minibatch_size"]
+                if learning:
                     update_q_network()
-                    self.exploration_rate = self.exploration_rate / (episode + 1)
-                if done:
+                if done or _step == self.config.episode_length - 1:
+                    if episode > self.random_episodes and learning:
+                        self.exploration_rate = 1 / self.exploration_rate_divisor
+                        self.exploration_rate_divisor += 1
                     break
             episode_rewards.append(episode_reward)
         return episode_rewards
@@ -87,4 +99,4 @@ class DQN:
             q_value_tensor = self.q_net.forward(obs)
         action = torch.argmax(q_value_tensor)
         self.q_net.train()
-        return np.array([action])
+        return np.array(action)

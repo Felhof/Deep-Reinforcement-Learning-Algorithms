@@ -1,7 +1,6 @@
 from typing import Tuple
 
 import numpy as np
-
 from utilities.config import Config
 from utilities.utils import get_dimension_format_string
 
@@ -73,7 +72,7 @@ class PGBuffer:
         self.rewards[self.top_index] = reward
         self.top_index += 1
 
-    def end_episode(self, last_value: float = 0):
+    def end_episode(self: "PGBuffer", last_value: float = 0) -> None:
         episode_slice = slice(self.current_episode_start_index, self.top_index)
         rewards = np.append(self.rewards[episode_slice], last_value)
         values = np.append(self.values[episode_slice], last_value)

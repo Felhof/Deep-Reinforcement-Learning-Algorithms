@@ -32,7 +32,7 @@ AgentHyperParameters = TypedDict(
         "minibatch_size": int,
         "buffer_size": int,
         "initial_exploration_rate": float,
-        "random_episodes": int
+        "random_episodes": int,
     },
     total=False,
 )

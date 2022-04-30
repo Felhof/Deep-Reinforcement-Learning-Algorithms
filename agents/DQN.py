@@ -4,11 +4,11 @@ import gym
 import numpy as np
 import torch
 import torch.nn as nn
-
 from utilities.buffer.DQNBuffer import DQNBuffer
 from utilities.config import Config
 from utilities.nn import create_nn
 from utilities.types import AdamOptimizer, NNParameters
+
 
 class DQN:
     def __init__(self: "DQN", config: Config) -> None:
@@ -74,7 +74,10 @@ class DQN:
                 self.replayBuffer.add_transition(obs, action, reward, next_obs, done)
                 episode_reward += reward
                 obs = next_obs
-                learning = self.replayBuffer.get_number_of_stored_transitions() >= self.config.hyperparameters["DQN"]["minibatch_size"]
+                learning = (
+                    self.replayBuffer.get_number_of_stored_transitions()
+                    >= self.config.hyperparameters["DQN"]["minibatch_size"]
+                )
                 if learning:
                     update_q_network()
                 if done or _step == self.config.episode_length - 1:

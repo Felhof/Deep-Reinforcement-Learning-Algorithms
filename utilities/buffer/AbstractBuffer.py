@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from typing import Tuple
 
 import numpy as np
-
 from utilities.config import Config
 from utilities.utils import get_dimension_format_string
 
@@ -13,6 +12,7 @@ class AbstractBuffer(ABC):
         self.config = config
         self.top_index = 0
         (
+            self.states,
             self.actions,
             self.values,
             self.rewards,

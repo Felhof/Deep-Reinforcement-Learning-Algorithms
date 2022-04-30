@@ -5,7 +5,6 @@ import numpy as np
 import torch
 from torch.distributions.categorical import Categorical
 import torch.nn as nn
-
 from utilities.buffer.PGBuffer import PGBuffer
 from utilities.config import Config
 from utilities.nn import create_nn
@@ -106,7 +105,7 @@ class VPG:
 
     def _run_episodes(self: "VPG") -> float:
         episode_rewards: List[float] = []
-        for episode in range(self.episodes_per_training_step):
+        for _episode in range(self.episodes_per_training_step):
             episode_reward = 0
             obs = self.environment.reset()
             for step in range(self.episode_length):

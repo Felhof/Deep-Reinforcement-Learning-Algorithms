@@ -1,7 +1,7 @@
 from typing import List, Union
-from utilities.types import ActivationFunction, LinearLayer
 
 import torch.nn as nn
+from utilities.types import ActivationFunction, LinearLayer
 
 
 def create_nn(

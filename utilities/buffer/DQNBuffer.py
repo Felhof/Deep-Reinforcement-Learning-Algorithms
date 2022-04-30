@@ -1,7 +1,6 @@
 from typing import Dict
 
 import numpy as np
-
 from utilities.config import Config
 from utilities.utils import get_dimension_format_string
 
@@ -28,7 +27,7 @@ class DQNBuffer:
         self.number_of_stored_transitions = 0
 
     def add_transition(
-        self,
+        self: "DQNBuffer",
         state: np.ndarray,
         action: np.ndarray,
         reward: float,
@@ -45,7 +44,7 @@ class DQNBuffer:
             self.number_of_stored_transitions + 1, self.buffer_size
         )
 
-    def get_number_of_stored_transitions(self) -> int:
+    def get_number_of_stored_transitions(self: "DQNBuffer") -> int:
         return self.number_of_stored_transitions
 
     def get_transition_data(

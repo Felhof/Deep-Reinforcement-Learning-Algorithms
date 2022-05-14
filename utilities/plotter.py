@@ -105,7 +105,7 @@ class Plotter:
                 label="Target \n score",
             )
 
-    def show_plot(self: "Plotter", title: str) -> None:
+    def create_plot(self: "Plotter", title: str = "learning curve", filename: str = "results.png", show: bool = True) -> None:
         # Shrink current axis's height by 10% on the bottom
         box = self.ax.get_position()
         self.ax.set_position(
@@ -127,4 +127,8 @@ class Plotter:
         for spine in ["right", "top"]:
             self.ax.spines[spine].set_visible(False)
 
-        plt.show()
+        plt.savefig(f"{filename}")
+
+        if show:
+            plt.show()
+

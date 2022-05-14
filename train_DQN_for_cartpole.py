@@ -32,9 +32,10 @@ config = Config(
     },
     episode_length=250,
     training_steps_per_epoch=300,
-    epochs=5,
+    epochs=1,
 )
 
 if __name__ == "__main__":
     vpn_trainer = trainer.Trainer(config)
     vpn_trainer.train_agents([DQN])
+    vpn_trainer.save_results()

@@ -28,4 +28,6 @@ class Trainer:
     def train_agents(self: "Trainer", agent_types: List[type]) -> None:
         for agent_type in agent_types:
             self._train_agent(agent_type)
-        self.plotter.show_plot(self.config.environment_name)
+
+    def save_results(self: "Trainer", filename: str = "results.png") -> None:
+        self.plotter.create_plot(title=self.config.environment_name, filename=filename)

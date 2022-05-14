@@ -31,7 +31,7 @@ config = Config(
         }
     },
     episode_length=250,
-    training_steps_per_epoch=300,
+    training_steps_per_epoch=200,
     epochs=1,
 )
 

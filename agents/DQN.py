@@ -85,7 +85,7 @@ class DQN:
                         self.exploration_rate = 1 / self.exploration_rate_divisor
                         self.exploration_rate_divisor += 1
                     break
-            episode_rewards.append(episode_reward)
+            episode_rewards.append(episode_reward * self.config.episode_length)
         return episode_rewards
 
     def _get_action(self: "DQN", obs: torch.Tensor) -> np.ndarray:

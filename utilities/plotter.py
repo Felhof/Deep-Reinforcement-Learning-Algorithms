@@ -19,7 +19,7 @@ class Plotter:
                     self.current_y_max = timestep_result
                 elif timestep_result < self.current_y_min:
                     self.current_y_min = timestep_result
-        self.ax.set_ylim([self.current_y_min, self.current_y_max])
+        self.ax.set_ylim([self.current_y_min, self.current_y_max + 20])
 
     def _draw_horizontal_line_with_label(
         self: "Plotter", y_value: float, x_min: float, x_max: float, label: str
@@ -29,7 +29,7 @@ class Plotter:
             xmin=x_min,
             xmax=x_max,
             linewidth=2,
-            color="k",
+            color="r",
             linestyles="dotted",
             alpha=0.5,
         )

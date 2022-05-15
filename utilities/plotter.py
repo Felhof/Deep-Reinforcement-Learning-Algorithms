@@ -143,7 +143,7 @@ class Plotter:
         )
 
         self.ax.set_title(title, fontsize=15, fontweight="bold")
-        self.ax.set_ylabel("Rolling Episode Scores")
+        self.ax.set_ylabel("Episode Scores")
         self.ax.set_xlabel("Episode Number")
         for spine in ["right", "top"]:
             self.ax.spines[spine].set_visible(False)

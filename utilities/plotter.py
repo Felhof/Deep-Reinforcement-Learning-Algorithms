@@ -148,7 +148,7 @@ class Plotter:
         for spine in ["right", "top"]:
             self.ax.spines[spine].set_visible(False)
 
-        plt.savefig(f"{filename}", bbox_inches='tight')
+        plt.savefig(f"results/{filename}", bbox_inches='tight')
 
         if show:
             plt.show()

@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 from typing_extensions import TypeAlias
 
+
 ActivationFunction = Union[
     torch.nn.Identity, torch.nn.ReLU, torch.nn.Sigmoid, torch.nn.Tanh
 ]
@@ -36,6 +37,5 @@ AgentHyperParameters = TypedDict(
     },
     total=False,
 )
-
 
 HyperParameters = Dict[str, AgentHyperParameters]

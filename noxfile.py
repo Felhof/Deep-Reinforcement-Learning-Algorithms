@@ -5,7 +5,7 @@ import nox
 from nox.sessions import Session
 
 nox.options.sessions = "lint", "mypy"
-locations = "agents", "noxfile.py", "utilities", "train_VPN_for_cartpole.py"
+locations = "agents", "noxfile.py", "utilities", "train_VPG_for_cartpole.py"
 
 
 @nox.session(python=["3.10", "3.9.10"])

@@ -1,7 +1,16 @@
-from typing import List
+from typing import Dict, List, Type, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
+
+from agents.DQN import DQN
+from agents.VPG import VPG
+
+
+AgentType = Union[Type[DQN], Type[VPG]]
+
+agent_type_to_label: Dict[AgentType, str] = {DQN: "DQN", VPG: "VPG"}
+agent_type_to_color: Dict[AgentType, str] = {DQN: "#0000FF", VPG: "#00FF00"}
 
 
 class Plotter:
@@ -38,9 +47,8 @@ class Plotter:
     def plot_average_agent_overall_results(
         self: "Plotter",
         agent_overall_results: List[List[float]],
-        agent_name: str,
+        agent_type: AgentType,
         show_std: bool = False,
-        color: str = "#0000FF",
         show_solution_score: bool = True,
     ) -> None:
         def get_mean_result_at_timestep(
@@ -59,8 +67,13 @@ class Plotter:
             for t in range(timesteps)
         ]
 
+        color = agent_type_to_color[agent_type]
+
         self.ax.plot(
-            list(range(timesteps)), mean_results, label=agent_name, color=color
+            list(range(timesteps)),
+            mean_results,
+            label=agent_type_to_label[agent_type],
+            color=color,
         )
 
         if show_std:
@@ -105,7 +118,12 @@ class Plotter:
                 label="Target \n score",
             )
 
-    def create_plot(self: "Plotter", title: str = "learning curve", filename: str = "results.png", show: bool = True) -> None:
+    def create_plot(
+        self: "Plotter",
+        title: str = "learning curve",
+        filename: str = "results.png",
+        show: bool = True,
+    ) -> None:
         # Shrink current axis's height by 10% on the bottom
         box = self.ax.get_position()
         self.ax.set_position(
@@ -131,4 +149,3 @@ class Plotter:
 
         if show:
             plt.show()
-

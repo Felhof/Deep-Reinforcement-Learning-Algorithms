@@ -22,7 +22,7 @@ class Trainer:
             print(avg_epoch_rewards)
             avg_overall_rewards.append(avg_epoch_rewards)
         self.plotter.plot_average_agent_overall_results(
-            avg_overall_rewards, "VPN", show_std=True
+            avg_overall_rewards, agent_type, show_std=True
         )
 
     def train_agents(self: "Trainer", agent_types: List[type]) -> None:

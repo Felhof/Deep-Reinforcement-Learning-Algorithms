@@ -13,3 +13,4 @@ class Config:
     training_steps_per_epoch: int = 0
     episode_length: int = 0
     epochs: int = 0
+    target_score: int = 200

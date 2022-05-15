@@ -7,7 +7,7 @@ from utilities.plotter import Plotter
 class Trainer:
     def __init__(self: "Trainer", config: Config) -> None:
         self.config = config
-        self.plotter = Plotter()
+        self.plotter = Plotter(target_score=config.target_score)
 
     def _train_agent(self: "Trainer", agent_type: type) -> None:
         assert self.config is not None

@@ -56,6 +56,7 @@ config = Config(
     episode_length=30,
     training_steps_per_epoch=30,
     epochs=3,
+    target_score=200,
 )
 
 if __name__ == "__main__":

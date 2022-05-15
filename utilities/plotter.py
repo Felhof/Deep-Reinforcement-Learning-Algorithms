@@ -14,8 +14,9 @@ agent_type_to_color: Dict[AgentType, str] = {DQN: "#0000FF", VPG: "#00FF00"}
 
 
 class Plotter:
-    def __init__(self: "Plotter") -> None:
+    def __init__(self: "Plotter", target_score: int = 200) -> None:
         self.ax = plt.gca()
+        self.target_score = target_score
         self.current_y_max = float("-inf")
         self.current_y_min = float("inf")
 
@@ -28,7 +29,9 @@ class Plotter:
                     self.current_y_max = timestep_result
                 elif timestep_result < self.current_y_min:
                     self.current_y_min = timestep_result
-        self.ax.set_ylim([self.current_y_min, self.current_y_max + 20])
+
+        y_max = max(float(self.target_score), self.current_y_max)
+        self.ax.set_ylim([self.current_y_min, y_max * 1.1])
 
     def _draw_horizontal_line_with_label(
         self: "Plotter", y_value: float, x_min: float, x_max: float, label: str
@@ -145,7 +148,7 @@ class Plotter:
         for spine in ["right", "top"]:
             self.ax.spines[spine].set_visible(False)
 
-        plt.savefig(f"{filename}")
+        plt.savefig(f"{filename}", bbox_inches='tight')
 
         if show:
             plt.show()

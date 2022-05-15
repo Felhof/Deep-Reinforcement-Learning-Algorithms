@@ -53,10 +53,12 @@ config = Config(
             "q_net_learning_rate": 0.001,
         }
     },
-    episode_length=30,
-    training_steps_per_epoch=30,
-    epochs=3,
+    episode_length=230,
+    training_steps_per_epoch=400
+    ,
+    epochs=5,
     target_score=200,
+    plot_name="Cart Pole"
 )
 
 if __name__ == "__main__":

@@ -14,3 +14,4 @@ class Config:
     episode_length: int = 0
     epochs: int = 0
     target_score: int = 200
+    plot_name: str = ""

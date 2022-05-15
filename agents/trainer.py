@@ -30,4 +30,4 @@ class Trainer:
             self._train_agent(agent_type)
 
     def save_results(self: "Trainer", filename: str = "results.png") -> None:
-        self.plotter.create_plot(title=self.config.environment_name, filename=filename)
+        self.plotter.create_plot(title=self.config.plot_name, filename=filename)

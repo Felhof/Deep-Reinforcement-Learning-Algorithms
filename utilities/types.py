@@ -1,4 +1,4 @@
-from typing import Dict, List, TypedDict, Union
+from typing import Dict, List, Optional, TypedDict, Union
 
 import torch
 import torch.nn as nn
@@ -34,6 +34,7 @@ AgentHyperParameters = TypedDict(
         "buffer_size": int,
         "initial_exploration_rate": float,
         "random_episodes": int,
+        "gradient_clipping_norm": Optional[float]
     },
     total=False,
 )

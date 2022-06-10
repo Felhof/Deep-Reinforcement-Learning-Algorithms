@@ -16,9 +16,8 @@ config = Config(
         "DQN": {
             "discount_rate": 0.99,
             "q_net_parameters": {
-                "sizes": [OBSERVATION_DIM, 64, 32, NUMBER_OF_ACTIONS],
+                "sizes": [OBSERVATION_DIM, 64, NUMBER_OF_ACTIONS],
                 "activations": [
-                    torch.nn.ReLU(),
                     torch.nn.ReLU(),
                     torch.nn.Tanh(),
                 ],
@@ -28,11 +27,13 @@ config = Config(
             "buffer_size": 40000,
             "initial_exploration_rate": 1,
             "random_episodes": 3,
+            "gradient_clipping_norm": 0.7
         }
     },
     episode_length=250,
     training_steps_per_epoch=200,
-    epochs=1,
+    epochs=5,
+    target_score=200,
 )
 
 if __name__ == "__main__":

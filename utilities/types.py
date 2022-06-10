@@ -34,7 +34,7 @@ AgentHyperParameters = TypedDict(
         "buffer_size": int,
         "initial_exploration_rate": float,
         "random_episodes": int,
-        "gradient_clipping_norm": Optional[float]
+        "gradient_clipping_norm": Optional[float],
     },
     total=False,
 )

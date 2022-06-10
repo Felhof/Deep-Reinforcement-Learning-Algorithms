@@ -12,7 +12,7 @@ config = Config(
     observation_dim=OBSERVATION_DIM,
     number_of_actions=NUMBER_OF_ACTIONS,
     hyperparameters={
-        "VPG": {
+        "policy_gradient": {
             "episodes_per_training_step": 30,
             "value_updates_per_training_step": 20,
             "discount_rate": 0.99,

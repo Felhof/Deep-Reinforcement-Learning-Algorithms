@@ -34,7 +34,9 @@ class DQN:
             "initial_exploration_rate"
         ]
         self.random_episodes = self.config.hyperparameters["DQN"]["random_episodes"]
-        self.gradient_clipping_norm = self.config.hyperparameters["DQN"]["gradient_clipping_norm"]
+        self.gradient_clipping_norm = self.config.hyperparameters["DQN"][
+            "gradient_clipping_norm"
+        ]
         self.exploration_rate_divisor = 2
 
     def train(self: "DQN") -> List[float]:
@@ -64,7 +66,9 @@ class DQN:
             q_loss = nn.MSELoss()(q_value_targets, actual_q_values)
             q_loss.backward()
             if self.gradient_clipping_norm is not None:
-                torch.nn.utils.clip_grad_norm(self.q_net.parameters(), self.gradient_clipping_norm)
+                torch.nn.utils.clip_grad_norm(
+                    self.q_net.parameters(), self.gradient_clipping_norm
+                )
             self.q_net_optimizer.step()
 
         for episode in range(self.config.training_steps_per_epoch):

@@ -30,7 +30,7 @@ config = Config(
             "random_episodes": 3,
             "gradient_clipping_norm": 0.7
         },
-        "VPG": {
+        "policy_gradient": {
             "episodes_per_training_step": 30,
             "value_updates_per_training_step": 20,
             "discount_rate": 0.99,

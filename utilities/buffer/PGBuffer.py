@@ -24,8 +24,8 @@ class PGBuffer:
         self: "PGBuffer", rewards: np.ndarray, values: np.ndarray
     ) -> np.ndarray:
         episode_duration = self.top_index - self.current_episode_start_index
-        gamma: float = self.config.hyperparameters["VPG"]["discount_rate"]
-        lamda: float = self.config.hyperparameters["VPG"][
+        gamma: float = self.config.hyperparameters["policy_gradient"]["discount_rate"]
+        lamda: float = self.config.hyperparameters["policy_gradient"][
             "generalized_advantage_estimate_exponential_mean_discount_rate"
         ]
         delta: np.ndarray = rewards[:-1] + gamma * values[1:] - values[:-1]

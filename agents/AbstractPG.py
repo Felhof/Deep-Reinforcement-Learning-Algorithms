@@ -55,23 +55,13 @@ class AbstractPG(ABC):
         self.buffer = PGBuffer(config, buffer_size)
 
     @abstractmethod
-    def _update_q_net(
-        self: "AbstractPG",
-        obs: torch.Tensor,
-        actions: torch.Tensor,
-        rewards_to_go: torch.Tensor,
+    def _update_policy(
+            self: "AbstractPG", obs: torch.Tensor, actions: torch.Tensor, advantages: torch.Tensor
     ) -> None:
         pass
 
     def train(self: "AbstractPG") -> List[float]:
         avg_reward_per_training_step: List[float] = []
-
-        def update_policy(
-            obs: torch.Tensor, actions: torch.Tensor, advantages: torch.Tensor
-        ) -> None:
-            policy_loss = self._compute_policy_loss(obs, actions, advantages)
-            policy_loss.backward()
-            self.policy_optimizer.step()
 
         for _training_step in range(self.config.training_steps_per_epoch):
             self.policy_optimizer.zero_grad()
@@ -85,7 +75,7 @@ class AbstractPG(ABC):
                 rewards_to_go,
             ) = self.buffer.get_data()
 
-            update_policy(
+            self._update_policy(
                 torch.tensor(obs, dtype=torch.float32),
                 torch.tensor(actions, dtype=torch.float32),
                 torch.tensor(advantages, dtype=torch.float32),
@@ -163,5 +153,26 @@ class AbstractPG(ABC):
         actions: torch.Tensor,
         weights: torch.Tensor,
     ) -> torch.Tensor:
-        log_probs = self._get_policy(obs).log_prob(actions)
+        log_probs = self._log_probs_from_actions(obs, actions)
         return -(log_probs * weights).mean()
+
+    def _update_q_net(
+            self: "AbstractPG",
+            obs: torch.Tensor,
+            actions: torch.Tensor,
+            rewards_to_go: torch.Tensor,
+    ) -> None:
+        for _ in range(
+                self.config.hyperparameters["policy_gradient"]["value_updates_per_training_step"]
+        ):
+            state_action_values = self._get_state_action_values(obs, actions)
+            self.q_net_optimizer.zero_grad()
+            q_loss = nn.MSELoss()(state_action_values, rewards_to_go)
+            q_loss.backward()
+            self.q_net_optimizer.step()
+
+    def _log_probs_from_actions(self: "AbstractPG", obs: torch.Tensor, actions: torch.Tensor) -> torch.Tensor:
+        return self._get_policy(obs).log_prob(actions)
+
+    def _log_probs(self: "AbstractPG", obs: torch.Tensor) -> torch.Tensor:
+        return torch.log(self._get_policy(obs).probs)

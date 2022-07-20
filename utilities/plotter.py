@@ -5,12 +5,13 @@ import numpy as np
 
 from agents.DQN import DQN
 from agents.VPG import VPG
+from agents.TRPG import TRPG
 
 
-AgentType = Union[Type[DQN], Type[VPG]]
+AgentType = Union[Type[DQN], Type[VPG], Type[TRPG]]
 
-agent_type_to_label: Dict[AgentType, str] = {DQN: "DQN", VPG: "VPG"}
-agent_type_to_color: Dict[AgentType, str] = {DQN: "#0000FF", VPG: "#00FF00"}
+agent_type_to_label: Dict[AgentType, str] = {DQN: "DQN", VPG: "VPG", TRPG: "TRPG"}
+agent_type_to_color: Dict[AgentType, str] = {DQN: "#0000FF", VPG: "#00FF00", TRPG: "#FF0000"}
 
 
 class Plotter:

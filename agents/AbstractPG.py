@@ -34,24 +34,24 @@ class AbstractPG(ABC):
         policy_parameters: NNParameters = self.config.hyperparameters[
             "policy_gradient"
         ]["policy_parameters"]
-        q_net_parameters: NNParameters = self.config.hyperparameters["policy_gradient"][
-            "q_net_parameters"
+        value_net_parameters: NNParameters = self.config.hyperparameters["policy_gradient"][
+            "value_net_parameters"
         ]
         self.policy: nn.Sequential = create_nn(
             policy_parameters["sizes"],
             policy_parameters["activations"],
         )
-        self.q_net: nn.Sequential = create_nn(
-            q_net_parameters["sizes"],
-            q_net_parameters["activations"],
+        self.value_net: nn.Sequential = create_nn(
+            value_net_parameters["sizes"],
+            value_net_parameters["activations"],
         )
         self.policy_optimizer: AdamOptimizer = torch.optim.Adam(
             self.policy.parameters(),
             lr=self.config.hyperparameters["policy_gradient"]["policy_learning_rate"],
         )
-        self.q_net_optimizer: AdamOptimizer = torch.optim.Adam(
-            self.q_net.parameters(),
-            lr=self.config.hyperparameters["policy_gradient"]["q_net_learning_rate"],
+        self.value_net_optimizer: AdamOptimizer = torch.optim.Adam(
+            self.value_net.parameters(),
+            lr=self.config.hyperparameters["policy_gradient"]["value_net_learning_rate"],
         )
         buffer_size = self.episode_length * self.episodes_per_training_step
         self.buffer = PGBuffer(config, buffer_size)
@@ -89,7 +89,7 @@ class AbstractPG(ABC):
             )
 
             print("Updating Value Net")
-            self._update_q_net(
+            self._update_value_net(
                 torch.tensor(obs, dtype=self.tensor_type),
                 torch.tensor(actions, dtype=self.tensor_type),
                 torch.tensor(rewards_to_go, dtype=self.tensor_type),
@@ -136,13 +136,13 @@ class AbstractPG(ABC):
     def _get_state_action_value(
         self: "AbstractPG", obs: torch.Tensor, action: torch.Tensor
     ) -> float:
-        q_value_tensor = self.q_net.forward(obs)
+        q_value_tensor = self.value_net.forward(obs)
         return q_value_tensor[action].item()
 
     def _get_state_action_values(
         self: "AbstractPG", obs: torch.Tensor, actions: torch.Tensor
     ) -> torch.Tensor:
-        q_value_tensor = self.q_net.forward(obs)
+        q_value_tensor = self.value_net.forward(obs)
         return q_value_tensor.gather(
             1, actions.unsqueeze(-1).type(torch.int64)
         ).squeeze(-1)
@@ -170,7 +170,7 @@ class AbstractPG(ABC):
         log_probs = self._log_probs_from_actions(obs, actions)
         return -(log_probs * weights).mean()
 
-    def _update_q_net(
+    def _update_value_net(
         self: "AbstractPG",
         obs: torch.Tensor,
         actions: torch.Tensor,
@@ -182,10 +182,10 @@ class AbstractPG(ABC):
             ]
         ):
             state_action_values = self._get_state_action_values(obs, actions)
-            self.q_net_optimizer.zero_grad()
+            self.value_net_optimizer.zero_grad()
             q_loss = nn.MSELoss()(state_action_values, rewards_to_go)
             q_loss.backward()
-            self.q_net_optimizer.step()
+            self.value_net_optimizer.step()
 
     def _log_probs_from_actions(
         self: "AbstractPG", obs: torch.Tensor, actions: torch.Tensor

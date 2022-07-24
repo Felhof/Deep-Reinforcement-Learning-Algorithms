@@ -42,7 +42,7 @@ config = Config(
                     torch.nn.Tanh(),
                 ],
             },
-            "q_net_parameters": {
+            "value_net_parameters": {
                 "sizes": [OBSERVATION_DIM, 128, NUMBER_OF_ACTIONS],
                 "activations": [
                     torch.nn.ReLU(),
@@ -50,7 +50,7 @@ config = Config(
                 ],
             },
             "policy_learning_rate": 0.001,
-            "q_net_learning_rate": 0.001,
+            "value_net_learning_rate": 0.001,
         }
     },
     episode_length=230,

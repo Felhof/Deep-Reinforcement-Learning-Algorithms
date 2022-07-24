@@ -11,6 +11,11 @@ class PGBuffer:
         self.config = config
         self.current_episode_start_index = 0
         self.top_index = 0
+        use_double_precision = config.hyperparameters["policy_gradient"].get(
+            "use_double_precision", False
+        )
+        self.dtype = np.float64 if use_double_precision else np.float32
+        self.dtype_str = "float64" if use_double_precision else "float32"
         (
             self.states,
             self.actions,
@@ -43,19 +48,20 @@ class PGBuffer:
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray,]:
         states = np.zeros(
             self.buffer_size,
-            dtype=get_dimension_format_string(self.config.observation_dim),
+            dtype=get_dimension_format_string(
+                self.config.observation_dim, dtype=self.dtype_str
+            ),
         )
         actions = np.zeros(
             self.buffer_size,
-            dtype=get_dimension_format_string(self.config.action_dim),
+            dtype=get_dimension_format_string(
+                self.config.action_dim, dtype=self.dtype_str
+            ),
         )
-        values = np.zeros(
-            self.buffer_size,
-            dtype=np.float32,
-        )
-        rewards = np.zeros(self.buffer_size, dtype=np.float32)
-        advantages = np.zeros(self.buffer_size, dtype=np.float32)
-        rewards_to_go = np.zeros(self.buffer_size, dtype=np.float32)
+        values = np.zeros(self.buffer_size, dtype=self.dtype)
+        rewards = np.zeros(self.buffer_size, dtype=self.dtype)
+        advantages = np.zeros(self.buffer_size, dtype=self.dtype)
+        rewards_to_go = np.zeros(self.buffer_size, dtype=self.dtype)
 
         return states, actions, values, rewards, advantages, rewards_to_go
 

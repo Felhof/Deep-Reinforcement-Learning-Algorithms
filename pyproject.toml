@@ -12,8 +12,8 @@ repository = "https://github.com/Felhof/Deep-Reinforcement-Learning-Algorithms"
 python = "^3.9"
 gym = "^0.22.0"
 torch = [
-  {url = "https://download.pytorch.org/whl/cpu/torch-1.10.0%2Bcpu-cp39-cp39-linux_x86_64.whl", markers = "sys_platform == 'linux'"},
-  {url = "https://download.pytorch.org/whl/cpu/torch-1.10.0%2Bcpu-cp39-cp39-win_amd64.whl", markers = "sys_platform == 'win32'"},
+  {url = "https://download.pytorch.org/whl/cpu/torch-1.11.0%2Bcpu-cp39-cp39-linux_x86_64.whl", markers = "sys_platform == 'linux'"},
+  {url = "https://download.pytorch.org/whl/cpu/torch-1.11.0%2Bcpu-cp39-cp39-win_amd64.whl", markers = "sys_platform == 'win32'"},
 ]
 numpy = "^1.22.2"
 pygame = "^2.1.2"

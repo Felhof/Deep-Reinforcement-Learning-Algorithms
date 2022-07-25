@@ -6,9 +6,10 @@ their results.
 ## Algorithms
 The following algorithms have been implemented so far:
 
-1. Vanilla Policy Gradient (VPG) based on [OpenAI's Spinning Up](https://spinningup.openai.com/en/latest/algorithms/vpg.html)
-   1. using Generalized Advantage Estimation [(Schulman et al 2015)](https://arxiv.org/abs/1506.02438)
-2. Deep Q Learning (DQN) based on [Mnih et al. 2013](https://arxiv.org/pdf/1312.5602.pdf)  
+1. Vanilla Policy Gradient (VPG): [OpenAI's Spinning Up](https://spinningup.openai.com/en/latest/algorithms/vpg.html)
+   1. using Generalized Advantage Estimation [(Schulman et al 2015a)](https://arxiv.org/abs/1506.02438)
+2. Deep Q Learning (DQN): [Mnih et al. 2013](https://arxiv.org/pdf/1312.5602.pdf)  
+3. Trust Region Policy Gradient: [(Schulman et al 2015b)](https://arxiv.org/abs/1502.05477) *
 
 ## Results
 The algorithms were trained on OpenAI Gym's [implementation](https://www.gymlibrary.ml/environments/classic_control/cart_pole/) 
@@ -17,7 +18,11 @@ of the Cart Pole Environment. Each agent was trained for 400 training steps with
 represents the mean score of running the algorithm 5 times and the shaded area around the learning curve corresponds to 
 the standard deviation. 
 
+\* the implementation of TRPG occasionally fails during learning due to numerical issues. Results are from successful runs only
+
+
 ![CartPole Results](results/results.png)
+![TRPG Results](results/TRPG_results.png)
 
 Note that just looking at the learning curves is not sufficient to compare two algorithms. Firstly, the same amount of 
 training steps does not necessarily require the same amount of computing power and training time. For example, DQN can do

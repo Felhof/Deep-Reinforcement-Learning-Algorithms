@@ -34,9 +34,9 @@ class AbstractPG(ABC):
         policy_parameters: NNParameters = self.config.hyperparameters[
             "policy_gradient"
         ]["policy_parameters"]
-        value_net_parameters: NNParameters = self.config.hyperparameters["policy_gradient"][
-            "value_net_parameters"
-        ]
+        value_net_parameters: NNParameters = self.config.hyperparameters[
+            "policy_gradient"
+        ]["value_net_parameters"]
         self.policy: nn.Sequential = create_nn(
             policy_parameters["sizes"],
             policy_parameters["activations"],
@@ -51,7 +51,9 @@ class AbstractPG(ABC):
         )
         self.value_net_optimizer: AdamOptimizer = torch.optim.Adam(
             self.value_net.parameters(),
-            lr=self.config.hyperparameters["policy_gradient"]["value_net_learning_rate"],
+            lr=self.config.hyperparameters["policy_gradient"][
+                "value_net_learning_rate"
+            ],
         )
         buffer_size = self.episode_length * self.episodes_per_training_step
         self.buffer = PGBuffer(config, buffer_size)

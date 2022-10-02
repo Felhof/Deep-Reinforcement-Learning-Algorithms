@@ -16,7 +16,11 @@ class AbstractPG(ABC):
     def __init__(self: "AbstractPG", config: Config) -> None:
         self.config = config
         if config.hyperparameters["policy_gradient"].get("use_double_precision", False):
+            self.tensor_type = torch.float64
             torch.set_default_tensor_type("torch.DoubleTensor")
+        else:
+            self.tensor_type = torch.float32
+            torch.set_default_tensor_type(torch.FloatTensor)
         self.environment: gym.Env[np.ndarray, Union[int, np.ndarray]] = gym.make(
             self.config.environment_name
         )
@@ -57,7 +61,6 @@ class AbstractPG(ABC):
         )
         buffer_size = self.episode_length * self.episodes_per_training_step
         self.buffer = PGBuffer(config, buffer_size)
-        self.tensor_type = torch.float32
 
     @abstractmethod
     def _update_policy(

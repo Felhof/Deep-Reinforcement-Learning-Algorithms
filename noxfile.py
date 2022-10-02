@@ -4,7 +4,7 @@ from typing import Any
 import nox
 from nox.sessions import Session
 
-nox.options.sessions = "lint", "mypy"
+nox.options.sessions = "lint", "mypy", "tests"
 locations = "agents", "noxfile.py", "utilities", "train_VPG_for_cartpole.py"
 
 
@@ -13,6 +13,13 @@ def black(session: Session) -> None:
     args = session.posargs or locations
     install_with_constraints(session, "black")
     session.run("black", *args)
+
+
+@nox.session(python=["3.10", "3.9.10"])
+def tests(session: Session) -> None:
+    args = session.posargs
+    session.run("poetry", "install", external=True)
+    session.run("pytest", *args)
 
 
 def install_with_constraints(session: Session, *args: str, **kwargs: Any) -> None:

@@ -104,10 +104,8 @@ class AbstractPG(ABC):
         return avg_reward_per_training_step
 
     def _run_episodes(self: "AbstractPG") -> float:
-        # print("Running Episodes")
         episode_rewards: List[float] = []
         for _episode in range(self.episodes_per_training_step):
-            # print(f'Episode {_episode}')
             episode_reward = 0
             obs = self.environment.reset()
             for step in range(self.episode_length):
@@ -120,20 +118,17 @@ class AbstractPG(ABC):
                 obs = next_obs
 
                 if done:
-                    # print(f'Episode {_episode} ended due to loss')
                     self.buffer.end_episode()
                     episode_rewards.append(episode_reward)
                     break
                 elif step == self.episode_length - 1:
-                    # print(f'Episode {_episode} ended due to reaching time limit')
                     _, last_value = self._get_action_and_value(
                         torch.tensor(obs, dtype=self.tensor_type)
                     )
                     self.buffer.end_episode(last_value=last_value)
                     episode_rewards.append(episode_reward)
 
-        # print("Finished Running Episodes")
-        return np.mean(episode_rewards)
+        return float(np.mean(episode_rewards))
 
     def _get_state_action_value(
         self: "AbstractPG", obs: torch.Tensor, action: torch.Tensor

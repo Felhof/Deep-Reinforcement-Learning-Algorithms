@@ -1,8 +1,8 @@
 from typing import Callable
 
+from agents.AbstractPG import AbstractPG
 import numpy as np
 import torch
-from agents.AbstractPG import AbstractPG
 from utilities.config import Config
 
 
@@ -22,11 +22,13 @@ class TRPG(AbstractPG):
         self: "TRPG", obs: torch.Tensor, actions: torch.Tensor, advantages: torch.Tensor
     ) -> None:
         loss = self._compute_policy_loss(obs, actions, advantages)
-        loss_grad = torch.autograd.grad(loss, self.policy.parameters())
+        loss_grad = torch.autograd.grad(
+            loss, [param for param in self.policy.parameters()]
+        )
         flat_loss_grad = torch.cat([grad.view(-1) for grad in loss_grad]).data
         flat_loss_grad *= -1
 
-        def kl_hessian_vector_product(v):
+        def kl_hessian_vector_product(v: torch.Tensor) -> torch.Tensor:
             log_probs = self._log_probs(obs)
 
             kl_loss = torch.nn.functional.kl_div(
@@ -36,12 +38,16 @@ class TRPG(AbstractPG):
                 reduction="batchmean",
             )
             kl_loss_grad = torch.autograd.grad(
-                kl_loss, self.policy.parameters(), create_graph=True
+                kl_loss,
+                [param for param in self.policy.parameters()],
+                create_graph=True,
             )
             flat_kl_loss_grad = torch.cat([grad.view(-1) for grad in kl_loss_grad])
 
             kl_v = torch.dot(flat_kl_loss_grad, v.detach())
-            kl_v_grad = torch.autograd.grad(kl_v, self.policy.parameters())
+            kl_v_grad = torch.autograd.grad(
+                kl_v, [param for param in self.policy.parameters()]
+            )
             hvp = torch.cat([grad.contiguous().view(-1) for grad in kl_v_grad]).data
 
             return hvp
@@ -58,7 +64,7 @@ class TRPG(AbstractPG):
 
         def backtracking_line_search(original_params: torch.Tensor) -> None:
             log_probs = self._log_probs(obs)
-            for i, step_fraction in enumerate(
+            for _, step_fraction in enumerate(
                 self.alpha ** np.arange(self.backtracking_iters)
             ):
                 new_params = original_params + step_fraction * step_direction

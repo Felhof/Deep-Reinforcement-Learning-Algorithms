@@ -1,11 +1,10 @@
 from typing import Dict, List, Type, Union
 
+from agents.DQN import DQN
+from agents.TRPG import TRPG
+from agents.VPG import VPG
 import matplotlib.pyplot as plt
 import numpy as np
-
-from agents.DQN import DQN
-from agents.VPG import VPG
-from agents.TRPG import TRPG
 
 
 AgentType = Union[Type[DQN], Type[VPG], Type[TRPG]]
@@ -65,7 +64,7 @@ class Plotter:
             results_at_timestep = [
                 episode_results[timestep] for episode_results in results
             ]
-            return np.mean(results_at_timestep)
+            return float(np.mean(results_at_timestep))
 
         timesteps = len(agent_overall_results[0])
         x_vals = list(range(timesteps))
@@ -90,7 +89,7 @@ class Plotter:
                 results_at_timestep = [
                     episode_results[timestep] for episode_results in results
                 ]
-                return np.std(results_at_timestep)
+                return float(np.std(results_at_timestep))
 
             result_std = [
                 get_std_at_timestep(agent_overall_results, t) for t in range(timesteps)

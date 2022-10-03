@@ -28,7 +28,7 @@ config = Config(
             "buffer_size": 40000,
             "initial_exploration_rate": 1,
             "random_episodes": 3,
-            "gradient_clipping_norm": 0.7
+            "gradient_clipping_norm": 0.7,
         },
         "policy_gradient": {
             "episodes_per_training_step": 30,
@@ -51,14 +51,13 @@ config = Config(
             },
             "policy_learning_rate": 0.001,
             "value_net_learning_rate": 0.001,
-        }
+        },
     },
     episode_length=230,
-    training_steps_per_epoch=400
-    ,
+    training_steps_per_epoch=400,
     epochs=5,
     target_score=200,
-    plot_name="Cart Pole"
+    plot_name="Cart Pole",
 )
 
 if __name__ == "__main__":

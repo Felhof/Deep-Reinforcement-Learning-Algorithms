@@ -10,12 +10,14 @@ from utilities.buffer.PGBuffer import PGBuffer
 from utilities.config import Config
 from utilities.nn import create_nn
 from utilities.types import AdamOptimizer, NNParameters
+from utilities.utils import get_dimension_format_string
 
 
 class AbstractPG(ABC):
     def __init__(self: "AbstractPG", config: Config) -> None:
         self.config = config
-        if config.hyperparameters["policy_gradient"].get("use_double_precision", False):
+        self.dtype_name = config.hyperparameters.get("dtype_name", "float32")
+        if self.dtype_name == "float64":
             self.tensor_type = torch.float64
             torch.set_default_tensor_type("torch.DoubleTensor")
         else:
@@ -59,8 +61,7 @@ class AbstractPG(ABC):
                 "value_net_learning_rate"
             ],
         )
-        buffer_size = self.episode_length * self.episodes_per_training_step
-        self.buffer = PGBuffer(config, buffer_size)
+        self.buffer = PGBuffer(config, self.episodes_per_training_step)
 
     @abstractmethod
     def _update_policy(
@@ -75,7 +76,7 @@ class AbstractPG(ABC):
         avg_reward_per_training_step: List[float] = []
 
         for _training_step in range(self.config.training_steps_per_epoch):
-            print(f"Training Step {_training_step}")
+            # print(f"Training Step {_training_step}")
             self.policy_optimizer.zero_grad()
             avg_training_step_reward = self._run_episodes()
 
@@ -93,13 +94,13 @@ class AbstractPG(ABC):
                 torch.tensor(advantages, dtype=self.tensor_type),
             )
 
-            print("Updating Value Net")
+            # print("Updating Value Net")
             self._update_value_net(
                 torch.tensor(obs, dtype=self.tensor_type),
                 torch.tensor(actions, dtype=self.tensor_type),
                 torch.tensor(rewards_to_go, dtype=self.tensor_type),
             )
-            print("Finished Value Net Update")
+            # print("Finished Value Net Update")
 
             avg_reward_per_training_step.append(avg_training_step_reward)
             self.buffer.reset()
@@ -110,6 +111,29 @@ class AbstractPG(ABC):
         episode_rewards: List[float] = []
         for _episode in range(self.episodes_per_training_step):
             episode_reward = 0
+            states = np.zeros(
+                self.episode_length,
+                dtype=get_dimension_format_string(
+                    self.config.observation_dim,
+                    dtype=self.dtype_name,
+                ),
+            )
+            actions = np.zeros(
+                self.episode_length,
+                dtype=get_dimension_format_string(
+                    self.config.action_dim,
+                    dtype=self.dtype_name,
+                ),
+            )
+            values = np.zeros(
+                self.episode_length,
+                dtype=self.dtype_name,
+            )
+            rewards = np.zeros(
+                self.episode_length,
+                dtype=self.dtype_name,
+            )
+
             obs = self.environment.reset()
             for step in range(self.episode_length):
                 action, value = self._get_action_and_value(
@@ -117,18 +141,23 @@ class AbstractPG(ABC):
                 )
                 next_obs, reward, done, info = self.environment.step(action)
                 episode_reward += reward
-                self.buffer.add_transition_data(obs, action, value, reward)
+                states[step] = obs
+                actions[step] = action
+                values[step] = value
+                rewards[step] = reward
                 obs = next_obs
 
                 if done:
-                    self.buffer.end_episode()
+                    self.buffer.add_transition_data(states, actions, values, rewards)
                     episode_rewards.append(episode_reward)
                     break
                 elif step == self.episode_length - 1:
                     _, last_value = self._get_action_and_value(
                         torch.tensor(obs, dtype=self.tensor_type)
                     )
-                    self.buffer.end_episode(last_value=last_value)
+                    self.buffer.add_transition_data(
+                        states, actions, values, rewards, last_value=last_value
+                    )
                     episode_rewards.append(episode_reward)
 
         return float(np.mean(episode_rewards))

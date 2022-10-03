@@ -42,7 +42,7 @@ AgentHyperParameters = TypedDict(
         "backtracking_iterations": int,
         "damping_coefficient": float,
         "conjugate_gradient_iterations": int,
-        "use_double_precision": bool,
+        "dtype_name": str,
     },
     total=False,
 )

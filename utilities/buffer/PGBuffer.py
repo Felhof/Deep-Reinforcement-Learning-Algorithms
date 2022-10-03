@@ -8,14 +8,15 @@ from utilities.utils import get_dimension_format_string
 class PGBuffer:
     def __init__(self: "PGBuffer", config: Config, buffer_size: int) -> None:
         self.buffer_size = buffer_size
-        self.config = config
-        self.current_episode_start_index = 0
+        self.episode_length = config.episode_length
+        self.gamma = config.hyperparameters["policy_gradient"]["discount_rate"]
+        self.lamda = config.hyperparameters["policy_gradient"][
+            "generalized_advantage_estimate_exponential_mean_discount_rate"
+        ]
         self.top_index = 0
-        use_double_precision = config.hyperparameters["policy_gradient"].get(
-            "use_double_precision", False
-        )
-        self.dtype = np.float64 if use_double_precision else np.float32
-        self.dtype_str = "float64" if use_double_precision else "float32"
+        self.observation_dim = config.observation_dim
+        self.action_dim = config.action_dim
+        self.dtype_name: str = config.hyperparameters.get("dtype_name", "float32")
         (
             self.states,
             self.actions,
@@ -28,18 +29,13 @@ class PGBuffer:
     def _get_episode_generalized_advantage_estimates(
         self: "PGBuffer", rewards: np.ndarray, values: np.ndarray
     ) -> np.ndarray:
-        episode_duration = self.top_index - self.current_episode_start_index
-        gamma: float = self.config.hyperparameters["policy_gradient"]["discount_rate"]
-        lamda: float = self.config.hyperparameters["policy_gradient"][
-            "generalized_advantage_estimate_exponential_mean_discount_rate"
-        ]
-        delta: np.ndarray = rewards[:-1] + gamma * values[1:] - values[:-1]
+        delta: np.ndarray = rewards + self.gamma * values[1:] - values[:-1]
 
-        advantage = np.zeros(episode_duration)
+        advantage = np.zeros(self.episode_length)
 
-        for t in reversed(range(episode_duration)):
-            next_advantage = advantage[t + 1] if t < episode_duration - 1 else 0
-            advantage[t] = delta[t] + lamda * gamma * next_advantage
+        for t in reversed(range(self.episode_length)):
+            next_advantage = advantage[t + 1] if t < self.episode_length - 1 else 0
+            advantage[t] = delta[t] + self.lamda * self.gamma * next_advantage
 
         return advantage
 
@@ -49,19 +45,43 @@ class PGBuffer:
         states = np.zeros(
             self.buffer_size,
             dtype=get_dimension_format_string(
-                self.config.observation_dim, dtype=self.dtype_str
+                self.episode_length,
+                y_dim=self.observation_dim,
+                dtype=self.dtype_name,
             ),
         )
         actions = np.zeros(
             self.buffer_size,
             dtype=get_dimension_format_string(
-                self.config.action_dim, dtype=self.dtype_str
+                self.episode_length,
+                y_dim=self.action_dim,
+                dtype=self.dtype_name,
             ),
         )
-        values = np.zeros(self.buffer_size, dtype=self.dtype)
-        rewards = np.zeros(self.buffer_size, dtype=self.dtype)
-        advantages = np.zeros(self.buffer_size, dtype=self.dtype)
-        rewards_to_go = np.zeros(self.buffer_size, dtype=self.dtype)
+        values = np.zeros(
+            self.buffer_size,
+            dtype=get_dimension_format_string(
+                self.episode_length, dtype=self.dtype_name
+            ),
+        )
+        rewards = np.zeros(
+            self.buffer_size,
+            dtype=get_dimension_format_string(
+                self.episode_length, dtype=self.dtype_name
+            ),
+        )
+        advantages = np.zeros(
+            self.buffer_size,
+            dtype=get_dimension_format_string(
+                self.episode_length, dtype=self.dtype_name
+            ),
+        )
+        rewards_to_go = np.zeros(
+            self.buffer_size,
+            dtype=get_dimension_format_string(
+                self.episode_length, dtype=self.dtype_name
+            ),
+        )
 
         return states, actions, values, rewards, advantages, rewards_to_go
 
@@ -69,24 +89,23 @@ class PGBuffer:
         self: "PGBuffer",
         state: np.ndarray,
         action: np.ndarray,
-        value: float,
-        reward: float,
+        value: np.ndarray,
+        reward: np.ndarray,
+        last_value: float = 0.0,
     ) -> None:
         self.states[self.top_index] = state
         self.actions[self.top_index] = action
         self.values[self.top_index] = value
         self.rewards[self.top_index] = reward
-        self.top_index += 1
 
-    def end_episode(self: "PGBuffer", last_value: float = 0) -> None:
-        episode_slice = slice(self.current_episode_start_index, self.top_index)
-        rewards = np.append(self.rewards[episode_slice], last_value)
-        values = np.append(self.values[episode_slice], last_value)
+        value = np.append(value, last_value)
         self.advantages[
-            episode_slice
-        ] = self._get_episode_generalized_advantage_estimates(rewards, values)
-        self.rewards_to_go[episode_slice] = np.cumsum(rewards[::-1])[::-1][:-1]
-        self.current_episode_start_index = self.top_index
+            self.top_index
+        ] = self._get_episode_generalized_advantage_estimates(reward, value)
+
+        self.rewards_to_go[self.top_index] = np.cumsum(reward[::-1])[::-1]
+
+        self.top_index += 1
 
     def get_data(
         self: "PGBuffer",
@@ -100,7 +119,6 @@ class PGBuffer:
         )
 
     def reset(self: "PGBuffer") -> None:
-        self.current_episode_start_index = 0
         self.top_index = 0
         (
             self.states,

@@ -30,6 +30,7 @@ cartpoleConfig = Config(
             "policy_learning_rate": 0.001,
             "value_net_learning_rate": 0.001,
             "use_double_precision": True,
+            "dtype_name": "float64",
         },
         "TRPG": {
             "kl_divergence_limit": 0.01,
@@ -73,6 +74,7 @@ mountainCarConfig = Config(
             "policy_learning_rate": 0.001,
             "value_net_learning_rate": 0.001,
             "use_double_precision": True,
+            "dtype_name": "float64",
         },
         "TRPG": {
             "kl_divergence_limit": 0.01,

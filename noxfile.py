@@ -5,12 +5,22 @@ import nox
 from nox.sessions import Session
 
 nox.options.sessions = "lint", "mypy", "tests"
-locations = "agents", "noxfile.py", "utilities", "train_VPG_for_cartpole.py", "tests"
+lint_annotations_locations = "agents", "noxfile.py", "utilities"
+style_locations = (
+    "agents",
+    "noxfile.py",
+    "utilities",
+    "train_VPG_for_cartpole.py",
+    "train_DQN_for_cartpole.py",
+    "train_TRPG_for_cartpole.py",
+    "tests",
+)
+typing_locations = "agents", "noxfile.py", "utilities"
 
 
 @nox.session(python=["3.10", "3.9.10"])
 def black(session: Session) -> None:
-    args = session.posargs or locations
+    args = session.posargs or style_locations
     install_with_constraints(session, "black")
     session.run("black", *args)
 
@@ -38,11 +48,10 @@ def install_with_constraints(session: Session, *args: str, **kwargs: Any) -> Non
 
 @nox.session(python=["3.10", "3.9.10"])
 def lint(session: Session) -> None:
-    args = session.posargs or locations
+    args = session.posargs or style_locations
     install_with_constraints(
         session,
         "flake8",
-        "flake8-annotations",
         "flake8-black",
         "flake8-bugbear",
         "flake8-import-order",
@@ -51,7 +60,17 @@ def lint(session: Session) -> None:
 
 
 @nox.session(python=["3.10", "3.9.10"])
+def lint_annotations(session: Session) -> None:
+    args = session.posargs or lint_annotations_locations
+    install_with_constraints(
+        session,
+        "flake8-annotations",
+    )
+    session.run("flake8", *args)
+
+
+@nox.session(python=["3.10", "3.9.10"])
 def mypy(session: Session) -> None:
-    args = session.posargs or locations
+    args = session.posargs or typing_locations
     install_with_constraints(session, "mypy", "numpy", "torch")
     session.run("mypy", *args)

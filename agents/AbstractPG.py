@@ -16,7 +16,9 @@ from utilities.utils import get_dimension_format_string
 class AbstractPG(ABC):
     def __init__(self: "AbstractPG", config: Config) -> None:
         self.config = config
-        self.dtype_name = config.hyperparameters.get("dtype_name", "float32")
+        self.dtype_name = config.hyperparameters["policy_gradient"].get(
+            "dtype_name", "float32"
+        )
         if self.dtype_name == "float64":
             self.tensor_type = torch.float64
             torch.set_default_tensor_type("torch.DoubleTensor")

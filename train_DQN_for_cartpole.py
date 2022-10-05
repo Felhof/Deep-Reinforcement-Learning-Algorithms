@@ -27,7 +27,7 @@ config = Config(
             "buffer_size": 40000,
             "initial_exploration_rate": 1,
             "random_episodes": 3,
-            "gradient_clipping_norm": 0.7
+            "gradient_clipping_norm": 0.7,
         }
     },
     episode_length=250,

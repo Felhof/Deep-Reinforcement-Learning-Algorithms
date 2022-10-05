@@ -33,15 +33,15 @@ config = Config(
             },
             "policy_learning_rate": 0.001,
             "value_net_learning_rate": 0.001,
-            "use_double_precision": True
+            "use_double_precision": True,
         },
         "TRPG": {
             "kl_divergence_limit": 0.01,
             "backtracking_coefficient": 0.5,
             "backtracking_iterations": 10,
             "damping_coefficient": 1e-8,
-            "conjugate_gradient_iterations": 10
-        }
+            "conjugate_gradient_iterations": 10,
+        },
     },
     episode_length=230,
     training_steps_per_epoch=400,

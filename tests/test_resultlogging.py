@@ -44,6 +44,17 @@ def test_logger_logs_statistics_correctly(cleanup_test_logs):
     logger.store(scope="epoch", reward=1.0)
     logger.store(scope="epoch", reward=2.0)
     logger.store(scope="epoch", reward=3.0)
+    logger.store(scope="epoch", other=1.0)
+    logger.store(scope="epoch", other=2.0)
+    logger.store(scope="epoch", other=3.0)
+
+    logger.log_table(scope="epoch", level="INFO", attributes=["reward"])
+
+    logfile = Path(PATH_TO_TEST_LOGS)
+    assert logfile.is_file()
+
+    with open(PATH_TO_TEST_LOGS) as log:
+        lines = log.readlines()
 
     expected_table = [
         "+-----------+--------+--------+--------+--------+",
@@ -53,14 +64,7 @@ def test_logger_logs_statistics_correctly(cleanup_test_logs):
         "+-----------+--------+--------+--------+--------+",
     ]
 
-    logger.log_table(scope="epoch", level="INFO")
-
-    logfile = Path(PATH_TO_TEST_LOGS)
-    assert logfile.is_file()
-
-    with open(PATH_TO_TEST_LOGS) as log:
-        lines = log.readlines()
-
+    assert len(lines) == 5
     assert expected_table[0] in lines[0]
     assert expected_table[1] in lines[1]
     assert expected_table[2] in lines[2]

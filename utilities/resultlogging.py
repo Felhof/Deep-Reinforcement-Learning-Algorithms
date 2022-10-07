@@ -79,12 +79,15 @@ class ResultLogger:
         self.data[scope] = defaultdict(lambda: [])
 
     def log_table(
-        self: "ResultLogger", scope: str = "epoch", level: str = "INFO"
+        self: "ResultLogger", scope: str = "epoch", level: str = "INFO", attributes: List[str] = []
     ) -> None:
         table = PrettyTable()
         table.field_names = ["attribute", "mean", "std", "max", "min"]
 
-        for attribute_name, attribute_data in self.data[scope].items():
+        attributes = list(self.data[scope].keys()) if attributes == [] else attributes
+
+        for attribute_name in attributes:
+            attribute_data = self.data[scope][attribute_name]
             mean = format(np.mean(attribute_data), ".4f")
             std = format(np.std(attribute_data), ".4f")
             attribute_max = format(max(attribute_data), ".4f")

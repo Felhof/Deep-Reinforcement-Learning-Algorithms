@@ -15,3 +15,5 @@ class Config:
     epochs: int = 0
     target_score: int = 200
     plot_name: str = ""
+    log_level: str = "WARN"
+    log_filename: str = ""

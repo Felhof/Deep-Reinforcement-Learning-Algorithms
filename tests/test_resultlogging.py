@@ -70,12 +70,15 @@ def test_logger_can_clear_data():
     logger = ResultLogger()
 
     logger.store(scope="episode", reward=1)
-    logger.store(scope="epoch", reward=2)
-    logger.store(scope="training", reward=3)
+    logger.store(scope="training_step", reward=2)
+    logger.store(scope="epoch", reward=3)
+    logger.store(scope="training", reward=4)
 
     logger.clear(scope="episode")
+    logger.clear(scope="training_step")
     logger.clear(scope="epoch")
 
     assert logger.data["episode"]["reward"] == []
+    assert logger.data["training_step"]["reward"] == []
     assert logger.data["epoch"]["reward"] == []
-    assert logger.data["training"]["reward"] == [3]
+    assert logger.data["training"]["reward"] == [4]

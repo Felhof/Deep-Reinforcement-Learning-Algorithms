@@ -58,6 +58,7 @@ class ResultLogger:
 
         self.data: Dict[str, defaultdict[str, List[float]]] = {
             "episode": defaultdict(lambda: []),
+            "training_step": defaultdict(lambda: []),
             "epoch": defaultdict(lambda: []),
             "training": defaultdict(lambda: []),
         }

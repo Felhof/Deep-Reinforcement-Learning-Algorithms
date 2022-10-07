@@ -1,6 +1,7 @@
 from collections import defaultdict
 import logging
 import os
+from timeit import default_timer as timer
 from typing import Dict, List
 
 import numpy as np
@@ -34,18 +35,19 @@ class ResultLogger:
         log_to_file: bool = True,
         filename: str = "logfile",
     ) -> None:
+        self.level = levelmap[level]
         logger = logging.getLogger()
-        logger.setLevel(levelmap[level])
+        logger.setLevel(self.level)
 
         if log_to_file:
             file_handler = logging.FileHandler(f"{LOG_DIRECTORY_PATH}/{filename}.log")
-            file_handler.setLevel(levelmap[level])
+            file_handler.setLevel(self.level)
             file_handler.setFormatter(file_formatter)
             logger.addHandler(file_handler)
 
         if log_to_console:
             console_handler = logging.StreamHandler()
-            console_handler.setLevel(levelmap[level])
+            console_handler.setLevel(self.level)
             console_handler.setFormatter(console_formatter)
             logger.addHandler(console_handler)
 
@@ -61,6 +63,12 @@ class ResultLogger:
             "training_step": defaultdict(lambda: []),
             "epoch": defaultdict(lambda: []),
             "training": defaultdict(lambda: []),
+        }
+        self.timer_start_times: Dict[str, Dict[str, float]] = {
+            "episode": {},
+            "training_step": {},
+            "epoch": {},
+            "training": {},
         }
 
     def store(self: "ResultLogger", scope: str = "epoch", **kwargs) -> None:
@@ -95,3 +103,23 @@ class ResultLogger:
 
         for table_string in table_strings:
             log_function(table_string)
+
+    def start_timer(
+        self: "ResultLogger",
+        scope: str = "epoch",
+        level: str = "INFO",
+        attribute: str = "",
+    ) -> None:
+        if levelmap[level] >= self.level:
+            self.timer_start_times[scope][attribute] = timer()
+
+    def stop_timer(
+        self: "ResultLogger",
+        scope: str = "epoch",
+        level: str = "INFO",
+        attribute: str = "",
+    ) -> None:
+        if levelmap[level] >= self.level:
+            stop_time = timer()
+            start_time = self.timer_start_times[scope][attribute]
+            self.store(scope=scope, **{f"{attribute}_time": stop_time - start_time})

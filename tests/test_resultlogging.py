@@ -1,5 +1,7 @@
+import math
 import os
 from pathlib import Path
+import time
 
 import pytest
 from utilities.resultlogging import LOG_DIRECTORY, ResultLogger
@@ -82,3 +84,24 @@ def test_logger_can_clear_data():
     assert logger.data["training_step"]["reward"] == []
     assert logger.data["epoch"]["reward"] == []
     assert logger.data["training"]["reward"] == [4]
+
+
+def test_logger_can_measure_time():
+    logger = ResultLogger(level="WARN")
+
+    logger.start_timer(scope="epoch", level="WARN", attribute="wait")
+    time.sleep(0.5)
+    logger.stop_timer(scope="epoch", level="WARN", attribute="wait")
+
+    wait_time = logger.data["epoch"]["wait_time"][0]
+
+    assert math.isclose(wait_time, 0.5, rel_tol=1e-2)
+
+
+def test_logger_does_not_measure_time_for_wrong_loglevel():
+    logger = ResultLogger(level="WARN")
+
+    logger.start_timer(scope="epoch", level="INFO", attribute="wait")
+    logger.stop_timer(scope="epoch", level="INFO", attribute="wait")
+
+    assert logger.data["epoch"]["wait_time"] == []

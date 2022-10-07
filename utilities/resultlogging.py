@@ -51,8 +51,3 @@ class ResultLogger:
         self.error = logger.error
         self.critical = logger.critical
         self.logger = logger
-
-
-if __name__ == "__main__":
-    logger = ResultLogger(filename="test_logfile")
-    logger.info("Hello World")

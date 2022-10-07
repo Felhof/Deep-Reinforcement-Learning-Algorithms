@@ -83,10 +83,12 @@ class AbstractPG(ABC):
             self.logger.info(f"Training step {_training_step}")
             self.policy_optimizer.zero_grad()
 
-            self.logger.info(f"Running episodes")
+            self.logger.info("Running episodes")
             avg_training_step_reward = self._run_episodes()
             avg_reward_per_training_step.append(avg_training_step_reward)
-            self.logger.log_table(scope="training_step", level="INFO", attributes=["reward"])
+            self.logger.log_table(
+                scope="training_step", level="INFO", attributes=["reward"]
+            )
 
             (
                 obs,
@@ -96,16 +98,20 @@ class AbstractPG(ABC):
                 rewards_to_go,
             ) = self.buffer.get_data()
 
-            self.logger.info(f"Updating policy")
-            self.logger.start_timer(scope="epoch", level="INFO", attribute="policy_update")
+            self.logger.info("Updating policy")
+            self.logger.start_timer(
+                scope="epoch", level="INFO", attribute="policy_update"
+            )
             self._update_policy(
                 torch.tensor(obs, dtype=self.tensor_type),
                 torch.tensor(actions, dtype=self.tensor_type),
                 torch.tensor(advantages, dtype=self.tensor_type),
             )
-            self.logger.stop_timer(scope="epoch", level="INFO", attribute="policy_update")
+            self.logger.stop_timer(
+                scope="epoch", level="INFO", attribute="policy_update"
+            )
 
-            self.logger.info(f"Updating value net")
+            self.logger.info("Updating value net")
             self._update_value_net(
                 torch.tensor(obs, dtype=self.tensor_type),
                 torch.tensor(actions, dtype=self.tensor_type),
@@ -221,7 +227,9 @@ class AbstractPG(ABC):
         actions: torch.Tensor,
         rewards_to_go: torch.Tensor,
     ) -> None:
-        self.logger.start_timer(scope="epoch", level="INFO", attribute="value_net_update")
+        self.logger.start_timer(
+            scope="epoch", level="INFO", attribute="value_net_update"
+        )
         for _ in range(
             self.config.hyperparameters["policy_gradient"][
                 "value_updates_per_training_step"
@@ -232,7 +240,9 @@ class AbstractPG(ABC):
             q_loss = nn.MSELoss()(state_action_values, rewards_to_go)
             q_loss.backward()
             self.value_net_optimizer.step()
-        self.logger.stop_timer(scope="epoch", level="INFO", attribute="value_net_update")
+        self.logger.stop_timer(
+            scope="epoch", level="INFO", attribute="value_net_update"
+        )
 
     def _log_probs_from_actions(
         self: "AbstractPG", obs: torch.Tensor, actions: torch.Tensor

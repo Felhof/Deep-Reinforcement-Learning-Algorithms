@@ -79,12 +79,15 @@ class ResultLogger:
         self.data[scope] = defaultdict(lambda: [])
 
     def log_table(
-        self: "ResultLogger", scope: str = "epoch", level: str = "INFO", attributes: List[str] = []
+        self: "ResultLogger",
+        scope: str = "epoch",
+        level: str = "INFO",
+        attributes: List[str] = None,
     ) -> None:
         table = PrettyTable()
         table.field_names = ["attribute", "mean", "std", "max", "min"]
 
-        attributes = list(self.data[scope].keys()) if attributes == [] else attributes
+        attributes = list(self.data[scope].keys()) if attributes is None else attributes
 
         for attribute_name in attributes:
             attribute_data = self.data[scope][attribute_name]

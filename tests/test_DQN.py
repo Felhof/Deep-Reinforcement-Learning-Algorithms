@@ -1,4 +1,12 @@
+import os
+
 from agents.DQN import DQN
+import pytest
+from tests.agent_test_helpers import (
+    _assert_n_rows_where_stored,
+    _train_agent_and_store_result,
+    PATH_TO_TEST_RESULTS,
+)
 import torch.nn
 from utilities.config import Config
 
@@ -27,8 +35,9 @@ cartpoleConfig = Config(
     },
     episode_length=5,
     training_steps_per_epoch=5,
-    epochs=1,
+    epochs=3,
     target_score=200,
+    results_filename="cartpole_dqn",
 )
 
 mountainCarConfig = Config(
@@ -56,16 +65,24 @@ mountainCarConfig = Config(
     },
     episode_length=5,
     training_steps_per_epoch=5,
-    epochs=1,
+    epochs=3,
     target_score=200,
+    results_filename="mountaincar_dqn",
 )
 
 
-def test_can_train_with_different_environment_dimensions() -> None:
-    agent = DQN(cartpoleConfig)
-    avg_rewards = agent.train()
-    assert len(avg_rewards) == 5
+@pytest.fixture
+def cleanup_test_results() -> None:
+    yield
+    os.remove(f"{PATH_TO_TEST_RESULTS}cartpole_dqn.csv")
+    os.remove(f"{PATH_TO_TEST_RESULTS}mountaincar_dqn.csv")
 
-    agent = DQN(mountainCarConfig)
-    avg_rewards = agent.train()
-    assert len(avg_rewards) == 5
+
+def test_can_train_with_different_environment_dimensions() -> None:
+    _train_agent_and_store_result(DQN(cartpoleConfig))
+    _assert_n_rows_where_stored(filepath=f"{PATH_TO_TEST_RESULTS}cartpole_dqn.csv", n=3)
+
+    _train_agent_and_store_result(DQN(mountainCarConfig))
+    _assert_n_rows_where_stored(
+        filepath=f"{PATH_TO_TEST_RESULTS}mountaincar_dqn.csv", n=3
+    )

@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import Union
 
 import gym
 import numpy as np
@@ -7,6 +7,7 @@ import torch.nn as nn
 from utilities.buffer.DQNBuffer import DQNBuffer
 from utilities.config import Config
 from utilities.nn import create_nn
+from utilities.results import ResultStorage
 from utilities.types import AdamOptimizer, NNParameters
 
 
@@ -38,10 +39,13 @@ class DQN:
             "gradient_clipping_norm"
         ]
         self.exploration_rate_divisor = 2
+        self.result_storage = ResultStorage(
+            filename=self.config.results_filename,
+            training_steps_per_epoch=self.config.training_steps_per_epoch,
+            epochs=self.config.epochs,
+        )
 
-    def train(self: "DQN") -> List[float]:
-        episode_rewards: List[float] = []
-
+    def train(self: "DQN"):
         def update_q_network() -> None:
             data = self.replayBuffer.get_transition_data()
             states = torch.tensor(data["states"], dtype=torch.float32)
@@ -92,8 +96,10 @@ class DQN:
                         self.exploration_rate = 1 / self.exploration_rate_divisor
                         self.exploration_rate_divisor += 1
                     break
-            episode_rewards.append(episode_reward * self.config.episode_length)
-        return episode_rewards
+            self.result_storage.add_average_training_step_reward(
+                episode_reward * self.config.episode_length
+            )
+        self.result_storage.end_epoch()
 
     def _get_action(self: "DQN", obs: torch.Tensor) -> np.ndarray:
         explore = np.random.binomial(1, p=self.exploration_rate)
@@ -110,3 +116,6 @@ class DQN:
         action = torch.argmax(q_value_tensor)
         self.q_net.train()
         return np.array(action)
+
+    def save_results_to_csv(self: "DQN") -> None:
+        self.result_storage.save_results_to_csv()

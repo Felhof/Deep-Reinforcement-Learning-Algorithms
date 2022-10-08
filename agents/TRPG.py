@@ -3,12 +3,12 @@ from typing import Callable
 from agents.AbstractPG import AbstractPG
 import numpy as np
 import torch
-from utilities.config import Config
 
 
 class TRPG(AbstractPG):
-    def __init__(self: "TRPG", config: Config) -> None:
-        super().__init__(config)
+    def __init__(self: "TRPG", **kwargs) -> None:
+        super().__init__(**kwargs)
+        config = kwargs["config"]
         self.tensor_type = torch.float64
         self.delta = config.hyperparameters["TRPG"]["kl_divergence_limit"]
         self.alpha = config.hyperparameters["TRPG"]["backtracking_coefficient"]

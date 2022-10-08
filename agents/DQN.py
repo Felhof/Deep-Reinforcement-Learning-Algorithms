@@ -5,15 +5,13 @@ import numpy as np
 import torch
 import torch.nn as nn
 from utilities.buffer.DQNBuffer import DQNBuffer
-from utilities.config import Config
 from utilities.nn import create_nn
-from utilities.results import ResultStorage
 from utilities.types import AdamOptimizer, NNParameters
 
 
 class DQN:
-    def __init__(self: "DQN", config: Config) -> None:
-        self.config = config
+    def __init__(self: "DQN", **kwargs) -> None:
+        self.config = kwargs["config"]
         self.environment: gym.Env[np.ndarray, Union[int, np.ndarray]] = gym.make(
             self.config.environment_name
         )
@@ -30,7 +28,7 @@ class DQN:
             self.q_net.parameters(),
             lr=self.config.hyperparameters["DQN"]["q_net_learning_rate"],
         )
-        self.replayBuffer = DQNBuffer(config)
+        self.replayBuffer = DQNBuffer(self.config)
         self.exploration_rate = self.config.hyperparameters["DQN"][
             "initial_exploration_rate"
         ]
@@ -39,11 +37,7 @@ class DQN:
             "gradient_clipping_norm"
         ]
         self.exploration_rate_divisor = 2
-        self.result_storage = ResultStorage(
-            filename=self.config.results_filename,
-            training_steps_per_epoch=self.config.training_steps_per_epoch,
-            epochs=self.config.epochs,
-        )
+        self.result_storage = kwargs["result_storage"]
 
     def train(self: "DQN"):
         def update_q_network() -> None:
@@ -116,6 +110,3 @@ class DQN:
         action = torch.argmax(q_value_tensor)
         self.q_net.train()
         return np.array(action)
-
-    def save_results_to_csv(self: "DQN") -> None:
-        self.result_storage.save_results_to_csv()

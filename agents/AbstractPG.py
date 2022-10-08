@@ -7,18 +7,16 @@ import torch
 from torch.distributions.categorical import Categorical
 import torch.nn as nn
 from utilities.buffer.PGBuffer import PGBuffer
-from utilities.config import Config
 from utilities.nn import create_nn
 from utilities.progress_logging import ProgressLogger
-from utilities.results import ResultStorage
 from utilities.types import AdamOptimizer, NNParameters
 from utilities.utils import get_dimension_format_string
 
 
 class AbstractPG(ABC):
-    def __init__(self: "AbstractPG", config: Config) -> None:
-        self.config = config
-        self.dtype_name = config.hyperparameters["policy_gradient"].get(
+    def __init__(self: "AbstractPG", **kwargs) -> None:
+        self.config = kwargs["config"]
+        self.dtype_name = self.config.hyperparameters["policy_gradient"].get(
             "dtype_name", "float32"
         )
         if self.dtype_name == "float64":
@@ -65,15 +63,11 @@ class AbstractPG(ABC):
                 "value_net_learning_rate"
             ],
         )
-        self.buffer = PGBuffer(config, self.episodes_per_training_step)
+        self.buffer = PGBuffer(self.config, self.episodes_per_training_step)
         self.logger = ProgressLogger(
-            level=config.log_level, filename=config.log_filename
+            level=self.config.log_level, filename=self.config.log_filename
         )
-        self.result_storage = ResultStorage(
-            filename=self.config.results_filename,
-            training_steps_per_epoch=self.config.training_steps_per_epoch,
-            epochs=self.config.epochs,
-        )
+        self.result_storage = kwargs["result_storage"]
 
     @abstractmethod
     def _update_policy(
@@ -126,7 +120,6 @@ class AbstractPG(ABC):
             self.buffer.reset()
             self.logger.clear(scope="training_step")
 
-        self.result_storage.end_epoch()
         self.logger.log_table(scope="epoch", level="INFO")
         self.logger.clear(scope="epoch")
 
@@ -258,6 +251,3 @@ class AbstractPG(ABC):
 
     def _log_probs(self: "AbstractPG", obs: torch.Tensor) -> torch.Tensor:
         return torch.log(self._get_policy(obs).probs)
-
-    def save_results_to_csv(self: "AbstractPG") -> None:
-        self.result_storage.save_results_to_csv()

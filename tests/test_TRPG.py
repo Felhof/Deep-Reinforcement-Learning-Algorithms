@@ -4,8 +4,8 @@ from agents.TRPG import TRPG
 import pytest
 from tests.agent_test_helpers import (
     _assert_n_rows_where_stored,
-    _train_agent_and_store_result,
     PATH_TO_TEST_RESULTS,
+    _train_agent_and_store_result,
 )
 import torch.nn
 from utilities.config import Config
@@ -109,12 +109,12 @@ def cleanup_test_results() -> None:
 
 
 def test_can_train_with_different_environment_dimensions(cleanup_test_results) -> None:
-    _train_agent_and_store_result(TRPG(cartpoleConfig))
+    _train_agent_and_store_result(agent=TRPG, config=cartpoleConfig)
     _assert_n_rows_where_stored(
         filepath=f"{PATH_TO_TEST_RESULTS}cartpole_trpg.csv", n=3
     )
 
-    _train_agent_and_store_result(TRPG(mountainCarConfig))
+    _train_agent_and_store_result(agent=TRPG, config=mountainCarConfig)
     _assert_n_rows_where_stored(
         filepath=f"{PATH_TO_TEST_RESULTS}cartpole_trpg.csv", n=3
     )

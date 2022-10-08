@@ -1,11 +1,10 @@
 from agents.AbstractPG import AbstractPG
 import torch
-from utilities.config import Config
 
 
 class VPG(AbstractPG):
-    def __init__(self: "VPG", config: Config) -> None:
-        super().__init__(config)
+    def __init__(self: "VPG", **kwargs) -> None:
+        super().__init__(**kwargs)
 
     def _update_policy(
         self: "VPG", obs: torch.Tensor, actions: torch.Tensor, advantages: torch.Tensor

@@ -2,12 +2,19 @@ import csv
 import os
 from pathlib import Path
 
-from utilities.results import RESULT_DIRECTORY
+from utilities.config import Config
+from utilities.results import RESULT_DIRECTORY, ResultStorage
 
 
-def _train_agent_and_store_result(agent=None):
+def _train_agent_and_store_result(agent=None, config=None):
+    result_storage = ResultStorage(
+        filename=config.results_filename,
+        training_steps_per_epoch=config.training_steps_per_epoch,
+        epochs=config.epochs,
+    )
+    agent = agent(config=config, result_storage=result_storage)
     agent.train()
-    agent.save_results_to_csv()
+    result_storage.save_results_to_csv()
 
 
 def _assert_n_rows_where_stored(filepath="", n=5):

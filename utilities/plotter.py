@@ -58,7 +58,7 @@ class Plotter:
         self: "Plotter",
         results: List[ResultData],
         show_std: bool = False,
-        timesteps: int = 200,
+        n_episodes: int = 200,
         show_target_score: bool = True,
         title: str = "learning curve",
         filename: str = "results.png",
@@ -69,14 +69,14 @@ class Plotter:
             color = agent_type_to_color[agent_results.agent_type]
             self._plot_agents_average_rewards_over_all_epochs(
                 agent_results.average_epoch_rewards,
-                timesteps=timesteps,
+                n_episodes=n_episodes,
                 color=color,
                 label=label,
                 show_std=show_std,
             )
 
         if show_target_score:
-            self._show_target_score(timesteps=timesteps)
+            self._show_target_score(timesteps=n_episodes)
 
         self._save_plot(title=title, filename=filename)
 
@@ -86,31 +86,31 @@ class Plotter:
     def _plot_agents_average_rewards_over_all_epochs(
         self: "Plotter",
         epoch_rewards: EpochRewards,
-        timesteps: int = 200,
+        n_episodes: int = 200,
         color: str = "#00FF00",
         label: str = "VPG",
         show_std: bool = False,
     ) -> None:
-        def get_mean_result_at_timestep(
+        def get_mean_result_for_episode(
             results: List[List[float]], timestep: int
         ) -> float:
-            results_at_timestep = [
+            results_for_episode = [
                 episode_results[timestep] for episode_results in results
             ]
-            return float(np.mean(results_at_timestep))
+            return float(np.mean(results_for_episode))
 
         mean_results = [
-            get_mean_result_at_timestep(epoch_rewards, t) for t in range(timesteps)
+            get_mean_result_for_episode(epoch_rewards, t) for t in range(n_episodes)
         ]
 
         self.ax.plot(
-            list(range(timesteps)),
+            list(range(n_episodes)),
             mean_results,
             label=label,
             color=color,
         )
 
-        x_vals = list(range(timesteps))
+        x_vals = list(range(n_episodes))
 
         if show_std:
 
@@ -121,7 +121,7 @@ class Plotter:
                 return float(np.std(results_at_timestep))
 
             rewards_std = [
-                get_std_at_timestep(epoch_rewards, t) for t in range(timesteps)
+                get_std_at_timestep(epoch_rewards, t) for t in range(n_episodes)
             ]
             mean_results_plus_std = [
                 timestep_mean + timestep_std

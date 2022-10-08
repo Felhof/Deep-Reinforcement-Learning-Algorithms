@@ -1,5 +1,6 @@
 import csv
 import os
+from typing import List
 
 from utilities.result_data import agent_label_to_type, EpochRewards, ResultData
 
@@ -23,17 +24,14 @@ def _read_results_from_csv(filename: str) -> EpochRewards:
 
 
 def get_result_data_for_agent(
-    agent_label: str = "VPG", number_of_files: int = 1
+    agent_label: str = "VPG",
+    filenames: List[str] = None
 ) -> ResultData:
     agent_type = agent_label_to_type[agent_label]
     average_epoch_rewards: EpochRewards = []
 
-    if number_of_files == 1:
-        average_epoch_rewards = _read_results_from_csv(agent_label)
-    else:
-        for n in range(1, number_of_files + 1):
-            filename = f"{agent_label}_0{n}" if n < 10 else f"{agent_label}_{n}"
-            average_epoch_rewards += _read_results_from_csv(filename)
+    for filename in filenames:
+        average_epoch_rewards += _read_results_from_csv(filename)
 
     return ResultData(
         average_epoch_rewards=average_epoch_rewards, agent_type=agent_type

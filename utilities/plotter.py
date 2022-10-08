@@ -1,15 +1,18 @@
-from typing import Dict, List, Type, Union
+from typing import Dict, List
 
 from agents.DQN import DQN
 from agents.TRPG import TRPG
 from agents.VPG import VPG
 import matplotlib.pyplot as plt
 import numpy as np
+from utilities.result_data import (
+    agent_type_to_label,
+    AgentType,
+    EpochRewards,
+    ResultData,
+)
 
 
-AgentType = Union[Type[DQN], Type[VPG], Type[TRPG]]
-
-agent_type_to_label: Dict[AgentType, str] = {DQN: "DQN", VPG: "VPG", TRPG: "TRPG"}
 agent_type_to_color: Dict[AgentType, str] = {
     DQN: "#0000FF",
     VPG: "#00FF00",
@@ -51,12 +54,42 @@ class Plotter:
         )
         self.ax.text(x_max, y_value * 0.965, label)
 
-    def plot_average_agent_overall_results(
+    def plot(
         self: "Plotter",
-        agent_overall_results: List[List[float]],
-        agent_type: AgentType,
+        results: List[ResultData],
         show_std: bool = False,
-        show_solution_score: bool = True,
+        timesteps: int = 200,
+        show_target_score: bool = True,
+        title: str = "learning curve",
+        filename: str = "results.png",
+        show_plot: bool = False,
+    ) -> None:
+        for agent_results in results:
+            label = agent_type_to_label[agent_results.agent_type]
+            color = agent_type_to_color[agent_results.agent_type]
+            self._plot_agents_average_rewards_over_all_epochs(
+                agent_results.average_epoch_rewards,
+                timesteps=timesteps,
+                color=color,
+                label=label,
+                show_std=show_std,
+            )
+
+        if show_target_score:
+            self._show_target_score(timesteps=timesteps)
+
+        self._save_plot(title=title, filename=filename)
+
+        if show_plot:
+            plt.show()
+
+    def _plot_agents_average_rewards_over_all_epochs(
+        self: "Plotter",
+        epoch_rewards: EpochRewards,
+        timesteps: int = 200,
+        color: str = "#00FF00",
+        label: str = "VPG",
+        show_std: bool = False,
     ) -> None:
         def get_mean_result_at_timestep(
             results: List[List[float]], timestep: int
@@ -66,22 +99,18 @@ class Plotter:
             ]
             return float(np.mean(results_at_timestep))
 
-        timesteps = len(agent_overall_results[0])
-        x_vals = list(range(timesteps))
-
         mean_results = [
-            get_mean_result_at_timestep(agent_overall_results, t)
-            for t in range(timesteps)
+            get_mean_result_at_timestep(epoch_rewards, t) for t in range(timesteps)
         ]
-
-        color = agent_type_to_color[agent_type]
 
         self.ax.plot(
             list(range(timesteps)),
             mean_results,
-            label=agent_type_to_label[agent_type],
+            label=label,
             color=color,
         )
+
+        x_vals = list(range(timesteps))
 
         if show_std:
 
@@ -91,16 +120,16 @@ class Plotter:
                 ]
                 return float(np.std(results_at_timestep))
 
-            result_std = [
-                get_std_at_timestep(agent_overall_results, t) for t in range(timesteps)
+            rewards_std = [
+                get_std_at_timestep(epoch_rewards, t) for t in range(timesteps)
             ]
             mean_results_plus_std = [
                 timestep_mean + timestep_std
-                for (timestep_mean, timestep_std) in zip(mean_results, result_std)
+                for (timestep_mean, timestep_std) in zip(mean_results, rewards_std)
             ]
             mean_results_minus_std = [
                 timestep_mean - timestep_std
-                for (timestep_mean, timestep_std) in zip(mean_results, result_std)
+                for (timestep_mean, timestep_std) in zip(mean_results, rewards_std)
             ]
 
             self.ax.plot(x_vals, mean_results_plus_std, color=color, alpha=0.1)
@@ -115,21 +144,20 @@ class Plotter:
 
         self.ax.set_xlim([0, x_vals[-1]])
 
-        self._adjust_y_limits(agent_overall_results)
+        self._adjust_y_limits(epoch_rewards)
 
-        if show_solution_score:
-            self._draw_horizontal_line_with_label(
-                y_value=200,
-                x_min=0,
-                x_max=timesteps * 1.02,
-                label="Target \n score",
-            )
+    def _show_target_score(self: "Plotter", timesteps: int = 200) -> None:
+        self._draw_horizontal_line_with_label(
+            y_value=200,
+            x_min=0,
+            x_max=timesteps * 1.02,
+            label="Target \n score",
+        )
 
-    def create_plot(
+    def _save_plot(
         self: "Plotter",
         title: str = "learning curve",
         filename: str = "results.png",
-        show: bool = True,
     ) -> None:
         # Shrink current axis's height by 10% on the bottom
         box = self.ax.get_position()
@@ -153,6 +181,3 @@ class Plotter:
             self.ax.spines[spine].set_visible(False)
 
         plt.savefig(f"results/{filename}", bbox_inches="tight")
-
-        if show:
-            plt.show()

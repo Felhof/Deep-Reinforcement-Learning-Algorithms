@@ -1,4 +1,12 @@
+import os
+
 from agents.VPG import VPG
+import pytest
+from tests.agent_test_helpers import (
+    _assert_n_rows_where_stored,
+    _train_agent_and_store_result,
+    PATH_TO_TEST_RESULTS,
+)
 import torch.nn
 from utilities.config import Config
 
@@ -33,8 +41,9 @@ cartpoleConfig = Config(
     },
     episode_length=5,
     training_steps_per_epoch=5,
-    epochs=1,
+    epochs=3,
     target_score=200,
+    results_filename="cartpole_vpg",
 )
 
 mountainCarConfig = Config(
@@ -68,8 +77,9 @@ mountainCarConfig = Config(
     },
     episode_length=5,
     training_steps_per_epoch=5,
-    epochs=1,
+    epochs=3,
     target_score=200,
+    results_filename="mountaincar_vpg",
 )
 
 # TODO: Implement non-categorical actions to make a test with this config work
@@ -104,16 +114,23 @@ mountainCarContinuousConfig = Config(
     },
     episode_length=5,
     training_steps_per_epoch=5,
-    epochs=1,
+    epochs=3,
     target_score=200,
 )
 
 
-def test_can_train_with_different_environment_dimensions() -> None:
-    agent = VPG(cartpoleConfig)
-    avg_rewards = agent.train()
-    assert len(avg_rewards) == 5
+@pytest.fixture
+def cleanup_test_results() -> None:
+    yield
+    os.remove(f"{PATH_TO_TEST_RESULTS}cartpole_vpg.csv")
+    os.remove(f"{PATH_TO_TEST_RESULTS}mountaincar_vpg.csv")
 
-    agent = VPG(mountainCarConfig)
-    avg_rewards = agent.train()
-    assert len(avg_rewards) == 5
+
+def test_can_train_with_different_environment_dimensions(cleanup_test_results) -> None:
+    _train_agent_and_store_result(VPG(cartpoleConfig))
+    _assert_n_rows_where_stored(filepath=f"{PATH_TO_TEST_RESULTS}cartpole_vpg.csv", n=3)
+
+    _train_agent_and_store_result(VPG(mountainCarConfig))
+    _assert_n_rows_where_stored(
+        filepath=f"{PATH_TO_TEST_RESULTS}mountaincar_vpg.csv", n=3
+    )

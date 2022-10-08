@@ -17,3 +17,4 @@ class Config:
     plot_name: str = ""
     log_level: str = "WARN"
     log_filename: str = ""
+    results_filename: str = ""

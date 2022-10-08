@@ -10,6 +10,7 @@ from utilities.buffer.PGBuffer import PGBuffer
 from utilities.config import Config
 from utilities.nn import create_nn
 from utilities.progress_logging import ProgressLogger
+from utilities.results import ResultStorage
 from utilities.types import AdamOptimizer, NNParameters
 from utilities.utils import get_dimension_format_string
 
@@ -68,6 +69,11 @@ class AbstractPG(ABC):
         self.logger = ProgressLogger(
             level=config.log_level, filename=config.log_filename
         )
+        self.result_storage = ResultStorage(
+            filename=self.config.results_filename,
+            training_steps_per_epoch=self.config.training_steps_per_epoch,
+            epochs=self.config.epochs,
+        )
 
     @abstractmethod
     def _update_policy(
@@ -78,16 +84,13 @@ class AbstractPG(ABC):
     ) -> None:
         pass
 
-    def train(self: "AbstractPG") -> List[float]:
-        avg_reward_per_training_step: List[float] = []
-
+    def train(self: "AbstractPG") -> None:
         for _training_step in range(self.config.training_steps_per_epoch):
             self.logger.info(f"Training step {_training_step}")
             self.policy_optimizer.zero_grad()
 
             self.logger.info("Running episodes")
-            avg_training_step_reward = self._run_episodes()
-            avg_reward_per_training_step.append(avg_training_step_reward)
+            self._run_episodes()
             self.logger.log_table(
                 scope="training_step", level="INFO", attributes=["reward"]
             )
@@ -123,11 +126,11 @@ class AbstractPG(ABC):
             self.buffer.reset()
             self.logger.clear(scope="training_step")
 
+        self.result_storage.end_epoch()
         self.logger.log_table(scope="epoch", level="INFO")
         self.logger.clear(scope="epoch")
-        return avg_reward_per_training_step
 
-    def _run_episodes(self: "AbstractPG") -> float:
+    def _run_episodes(self: "AbstractPG") -> None:
         self.logger.start_timer(scope="epoch", level="INFO", attribute="episodes")
         episode_rewards: List[float] = []
         for _episode in range(self.episodes_per_training_step):
@@ -183,8 +186,10 @@ class AbstractPG(ABC):
                     episode_rewards.append(episode_reward)
                     self.logger.store(scope="training_step", reward=episode_reward)
 
+        self.result_storage.add_average_training_step_reward(
+            float(np.mean(episode_rewards))
+        )
         self.logger.stop_timer(scope="epoch", level="INFO", attribute="episodes")
-        return float(np.mean(episode_rewards))
 
     def _get_state_action_value(
         self: "AbstractPG", obs: torch.Tensor, action: torch.Tensor
@@ -253,3 +258,6 @@ class AbstractPG(ABC):
 
     def _log_probs(self: "AbstractPG", obs: torch.Tensor) -> torch.Tensor:
         return torch.log(self._get_policy(obs).probs)
+
+    def save_results_to_csv(self: "AbstractPG") -> None:
+        self.result_storage.save_results_to_csv()

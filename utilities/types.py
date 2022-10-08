@@ -48,3 +48,5 @@ AgentHyperParameters = TypedDict(
 )
 
 HyperParameters = Dict[str, AgentHyperParameters]
+
+EpochRewards = List[List[float]]

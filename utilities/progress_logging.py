@@ -27,9 +27,9 @@ levelmap: Dict[str, int] = {
 }
 
 
-class ResultLogger:
+class ProgressLogger:
     def __init__(
-        self: "ResultLogger",
+        self: "ProgressLogger",
         level: str = "INFO",
         log_to_console: bool = True,
         log_to_file: bool = True,
@@ -71,15 +71,15 @@ class ResultLogger:
             "training": {},
         }
 
-    def store(self: "ResultLogger", scope: str = "epoch", **kwargs) -> None:
+    def store(self: "ProgressLogger", scope: str = "epoch", **kwargs) -> None:
         for key, value in kwargs.items():
             self.data[scope][key].append(value)
 
-    def clear(self: "ResultLogger", scope: str = "epoch") -> None:
+    def clear(self: "ProgressLogger", scope: str = "epoch") -> None:
         self.data[scope] = defaultdict(lambda: [])
 
     def log_table(
-        self: "ResultLogger",
+        self: "ProgressLogger",
         scope: str = "epoch",
         level: str = "INFO",
         attributes: List[str] = None,
@@ -111,7 +111,7 @@ class ResultLogger:
             log_function(table_string)
 
     def start_timer(
-        self: "ResultLogger",
+        self: "ProgressLogger",
         scope: str = "epoch",
         level: str = "INFO",
         attribute: str = "",
@@ -120,7 +120,7 @@ class ResultLogger:
             self.timer_start_times[scope][attribute] = timer()
 
     def stop_timer(
-        self: "ResultLogger",
+        self: "ProgressLogger",
         scope: str = "epoch",
         level: str = "INFO",
         attribute: str = "",

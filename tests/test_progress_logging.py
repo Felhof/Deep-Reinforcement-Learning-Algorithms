@@ -4,7 +4,7 @@ from pathlib import Path
 import time
 
 import pytest
-from utilities.resultlogging import LOG_DIRECTORY, ResultLogger
+from utilities.progress_logging import LOG_DIRECTORY, ProgressLogger
 
 
 TEST_LOGS_FILENAME = "test_logfile"
@@ -19,14 +19,14 @@ def cleanup_test_logs() -> None:
 
 
 def test_logger_logs_to_console_by_default(capfd):
-    logger = ResultLogger(log_to_file=False)
+    logger = ProgressLogger(log_to_file=False)
     logger.info("Hello World")
     _, err = capfd.readouterr()
     assert "Hello World" in err
 
 
 def test_logger_logs_to_file_by_default(cleanup_test_logs):
-    logger = ResultLogger(filename=TEST_LOGS_FILENAME)
+    logger = ProgressLogger(filename=TEST_LOGS_FILENAME)
     logger.info("Hello World")
 
     logfile = Path(PATH_TO_TEST_LOGS)
@@ -39,7 +39,7 @@ def test_logger_logs_to_file_by_default(cleanup_test_logs):
 
 
 def test_logger_logs_statistics_correctly(cleanup_test_logs):
-    logger = ResultLogger(filename=TEST_LOGS_FILENAME)
+    logger = ProgressLogger(filename=TEST_LOGS_FILENAME)
 
     logger.store(scope="epoch", reward=1.0)
     logger.store(scope="epoch", reward=2.0)
@@ -73,7 +73,7 @@ def test_logger_logs_statistics_correctly(cleanup_test_logs):
 
 
 def test_logger_can_clear_data():
-    logger = ResultLogger()
+    logger = ProgressLogger()
 
     logger.store(scope="episode", reward=1)
     logger.store(scope="training_step", reward=2)
@@ -91,7 +91,7 @@ def test_logger_can_clear_data():
 
 
 def test_logger_can_measure_time():
-    logger = ResultLogger(level="WARN")
+    logger = ProgressLogger(level="WARN")
 
     logger.start_timer(scope="epoch", level="WARN", attribute="wait")
     time.sleep(0.5)
@@ -103,7 +103,7 @@ def test_logger_can_measure_time():
 
 
 def test_logger_does_not_measure_time_for_wrong_loglevel():
-    logger = ResultLogger(level="WARN")
+    logger = ProgressLogger(level="WARN")
 
     logger.start_timer(scope="epoch", level="INFO", attribute="wait")
     logger.stop_timer(scope="epoch", level="INFO", attribute="wait")

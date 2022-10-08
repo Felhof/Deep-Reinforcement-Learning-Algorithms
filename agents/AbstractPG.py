@@ -9,7 +9,7 @@ import torch.nn as nn
 from utilities.buffer.PGBuffer import PGBuffer
 from utilities.config import Config
 from utilities.nn import create_nn
-from utilities.resultlogging import ResultLogger
+from utilities.progress_logging import ProgressLogger
 from utilities.types import AdamOptimizer, NNParameters
 from utilities.utils import get_dimension_format_string
 
@@ -65,7 +65,9 @@ class AbstractPG(ABC):
             ],
         )
         self.buffer = PGBuffer(config, self.episodes_per_training_step)
-        self.logger = ResultLogger(level=config.log_level, filename=config.log_filename)
+        self.logger = ProgressLogger(
+            level=config.log_level, filename=config.log_filename
+        )
 
     @abstractmethod
     def _update_policy(

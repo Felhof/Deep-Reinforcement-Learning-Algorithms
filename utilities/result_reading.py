@@ -24,8 +24,7 @@ def _read_results_from_csv(filename: str) -> EpochRewards:
 
 
 def get_result_data_for_agent(
-    agent_label: str = "VPG",
-    filenames: List[str] = None
+    agent_label: str = "VPG", filenames: List[str] = None
 ) -> ResultData:
     agent_type = agent_label_to_type[agent_label]
     average_epoch_rewards: EpochRewards = []

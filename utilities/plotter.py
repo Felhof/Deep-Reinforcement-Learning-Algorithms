@@ -1,6 +1,7 @@
 from typing import Dict, List
 
 from agents.DQN import DQN
+from agents.PPO import PPO
 from agents.TRPG import TRPG
 from agents.VPG import VPG
 import matplotlib.pyplot as plt
@@ -17,6 +18,7 @@ agent_type_to_color: Dict[AgentType, str] = {
     DQN: "#0000FF",
     VPG: "#00FF00",
     TRPG: "#FF0000",
+    PPO: "#fcad03"
 }
 
 

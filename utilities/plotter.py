@@ -1,3 +1,4 @@
+from collections import deque
 from typing import Dict, List
 
 from agents.DQN import DQN
@@ -18,8 +19,19 @@ agent_type_to_color: Dict[AgentType, str] = {
     DQN: "#0000FF",
     VPG: "#00FF00",
     TRPG: "#FF0000",
-    PPO: "#fcad03"
+    PPO: "#fcad03",
 }
+
+
+def smooth_values(rewards: List[float], window_length: int = 3) -> List[float]:
+    window: deque[float] = deque()
+    smoothed_rewards: List[float] = []
+    for reward in rewards:
+        if len(window) == window_length:
+            window.popleft()
+        window.append(reward)
+        smoothed_rewards.append(float(np.mean(window)))
+    return smoothed_rewards
 
 
 class Plotter:
@@ -65,12 +77,21 @@ class Plotter:
         title: str = "learning curve",
         filename: str = "results.png",
         show_plot: bool = False,
+        smooth_curves: bool = True,
     ) -> None:
         for agent_results in results:
             label = agent_type_to_label[agent_results.agent_type]
             color = agent_type_to_color[agent_results.agent_type]
+            epoch_rewards_to_plot = (
+                [
+                    smooth_values(rewards)
+                    for rewards in agent_results.average_epoch_rewards
+                ]
+                if smooth_curves
+                else agent_results.average_epoch_rewards
+            )
             self._plot_agents_average_rewards_over_all_epochs(
-                agent_results.average_epoch_rewards,
+                epoch_rewards_to_plot,
                 n_episodes=n_episodes,
                 color=color,
                 label=label,

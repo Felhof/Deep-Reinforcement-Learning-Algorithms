@@ -65,7 +65,8 @@ class AbstractPG(ABC):
         )
         self.buffer = PGBuffer(self.config, self.episodes_per_training_step)
         self.logger = ProgressLogger(
-            level=self.config.log_level, filename=self.config.log_filename
+            level=self.config.log_level,
+            filename=self.config.log_filename,  # log_to_console=False
         )
         self.result_storage = kwargs["result_storage"]
 
@@ -195,7 +196,7 @@ class AbstractPG(ABC):
     ) -> torch.Tensor:
         q_value_tensor = self.value_net.forward(obs)
         return q_value_tensor.gather(
-            1, actions.unsqueeze(-1).type(torch.int64)
+            2, actions.unsqueeze(-1).type(torch.int64)
         ).squeeze(-1)
 
     def _get_policy(self: "AbstractPG", obs: torch.Tensor) -> Categorical:

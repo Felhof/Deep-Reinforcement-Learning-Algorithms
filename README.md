@@ -13,17 +13,19 @@ The following algorithms have been implemented so far:
 
 The policy gradient algorithms 1, 3, and 4 are using Generalized Advantage Estimation [(Schulman et al 2015a)](https://arxiv.org/abs/1506.02438)
 
+\* the implementation of TRPG occasionally fails during learning due to numerical issues. Results are from successful runs only
+
 ## Results
 The algorithms were trained on OpenAI Gym's [implementation](https://www.gymlibrary.ml/environments/classic_control/cart_pole/)
 of the Cart Pole Environment. Each agent was trained for 400 training steps with episodes automatically terminating after
 230 timesteps. For the exact hyperparameters see [here](train_all_for_cartpole.py). The y value of the learning curves
 represents the mean score of running the algorithm 5 times and the shaded area around the learning curve corresponds to
-the standard deviation.
-
-\* the implementation of TRPG occasionally fails during learning due to numerical issues. Results are from successful runs only
+the standard deviation. The following curves were smoothed using a moving average with a window size of 4.
 
 
-![CartPole Results](results/learning_curves.png)
+
+![Policy Gradient Results](results/policy_gradient_learning_curves.png)
+![DQN Results](results/dqn_learning_curve.png)
 
 Note that just looking at the learning curves is not sufficient to compare two algorithms. Firstly, the same amount of
 training steps does not necessarily require the same amount of computing power and training time. For example, DQN can do
@@ -40,5 +42,5 @@ for things to improve.
 
 Spinning Up's [website](https://spinningup.openai.com/en/latest/index.html) is a great resource to learn about Reinforcement Learning.
 
-This [post](https://towardsdatascience.com/generalized-advantage-estimate-maths-and-code-b5d5bd3ce737) by Rohan Tangri helped me understand
+This [Medium article](https://towardsdatascience.com/generalized-advantage-estimate-maths-and-code-b5d5bd3ce737) by Rohan Tangri helped me understand
 Generalized Advantage Estimation.

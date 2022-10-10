@@ -93,7 +93,6 @@ class DQN:
             self.result_storage.add_average_training_step_reward(
                 episode_reward * self.config.episode_length
             )
-        self.result_storage.end_epoch()
 
     def _get_action(self: "DQN", obs: torch.Tensor) -> np.ndarray:
         explore = np.random.binomial(1, p=self.exploration_rate)

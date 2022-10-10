@@ -30,13 +30,14 @@ config = Config(
             "gradient_clipping_norm": 0.7,
         }
     },
-    episode_length=250,
-    training_steps_per_epoch=200,
+    episode_length=230,
+    training_steps_per_epoch=400,
     epochs=5,
     target_score=200,
+    results_filename="DQN_Cartpole",
 )
 
 if __name__ == "__main__":
-    vpn_trainer = trainer.Trainer(config)
-    vpn_trainer.train_agents([DQN])
-    vpn_trainer.save_results()
+    dqn_trainer = trainer.Trainer(config)
+    dqn_trainer.train_agents([DQN])
+    dqn_trainer.save_results_to_csv()

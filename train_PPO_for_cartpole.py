@@ -1,4 +1,4 @@
-from agents import trainer, VPG
+from agents import trainer, PPO
 import torch.nn
 from utilities.config import Config
 
@@ -33,17 +33,20 @@ config = Config(
             },
             "policy_learning_rate": 0.001,
             "value_net_learning_rate": 0.001,
+        },
+        "PPO": {
+            "clip_range": 0.1
         }
     },
     episode_length=230,
     training_steps_per_epoch=400,
     epochs=5,
-    results_filename="VPG_cartpole_rewards",
+    results_filename="PPO_cartpole_rewards",
     # log_level="INFO",
-    log_filename="VPG_cartpole_debug",
+    log_filename="PPO_cartpole_debug",
 )
 
 if __name__ == "__main__":
-    vpg_trainer = trainer.Trainer(config)
-    vpg_trainer.train_agents([VPG.VPG])
-    vpg_trainer.save_results_to_csv()
+    ppo_trainer = trainer.Trainer(config)
+    ppo_trainer.train_agents([PPO.PPO])
+    ppo_trainer.save_results_to_csv()

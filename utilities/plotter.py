@@ -23,7 +23,7 @@ agent_type_to_color: Dict[AgentType, str] = {
 }
 
 
-def smooth_values(rewards: List[float], window_length: int = 3) -> List[float]:
+def smooth_values(rewards: List[float], window_length: int = 4) -> List[float]:
     window: deque[float] = deque()
     smoothed_rewards: List[float] = []
     for reward in rewards:

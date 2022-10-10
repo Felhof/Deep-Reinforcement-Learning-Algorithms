@@ -38,9 +38,7 @@ cartpoleConfig = Config(
             "policy_learning_rate": 0.001,
             "value_net_learning_rate": 0.001,
         },
-        "PPO" : {
-            "clip_range": 0.1
-        }
+        "PPO": {"clip_range": 0.1},
     },
     episode_length=5,
     training_steps_per_epoch=5,
@@ -77,9 +75,7 @@ mountainCarConfig = Config(
             "policy_learning_rate": 0.001,
             "value_net_learning_rate": 0.001,
         },
-        "PPO" : {
-            "clip_range": 0.1
-        }
+        "PPO": {"clip_range": 0.1},
     },
     episode_length=5,
     training_steps_per_epoch=5,

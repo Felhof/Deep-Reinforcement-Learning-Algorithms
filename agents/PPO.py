@@ -14,7 +14,9 @@ class PPO(AbstractPG):
         self: "PPO", obs: torch.Tensor, actions: torch.Tensor, advantages: torch.Tensor
     ) -> None:
         ppo_clip_objective = self._ppo_clip_objective(obs, actions, advantages)
-        ppo_clip_objective_grad = torch.autograd.grad(ppo_clip_objective, [param for param in self.policy.parameters()])
+        ppo_clip_objective_grad = torch.autograd.grad(
+            ppo_clip_objective, [param for param in self.policy.parameters()]
+        )
         for param, grad in zip(self.policy.parameters(), ppo_clip_objective_grad):
             param.grad = grad
         self.policy_optimizer.step()

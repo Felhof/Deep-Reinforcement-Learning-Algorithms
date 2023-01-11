@@ -25,7 +25,7 @@ config = Config(
                 ],
             },
             "value_net_parameters": {
-                "sizes": [OBSERVATION_DIM, 128, NUMBER_OF_ACTIONS],
+                "sizes": [OBSERVATION_DIM, 128, 1],
                 "activations": [
                     torch.nn.ReLU(),
                     torch.nn.Tanh(),
@@ -38,9 +38,9 @@ config = Config(
     episode_length=230,
     training_steps_per_epoch=400,
     epochs=5,
-    results_filename="VPG_cartpole_rewards",
-    # log_level="INFO",
-    log_filename="VPG_cartpole_debug",
+    results_filename="VPG_cartpole_rewards2",
+    log_level="INFO",
+    log_filename="VPG_cartpole_debug2",
 )
 
 if __name__ == "__main__":

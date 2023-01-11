@@ -114,7 +114,6 @@ class AbstractPG(ABC):
             self.logger.info("Updating value net")
             self._update_value_net(
                 torch.tensor(obs, dtype=self.tensor_type),
-                torch.tensor(actions, dtype=self.tensor_type),
                 torch.tensor(rewards_to_go, dtype=self.tensor_type),
             )
 
@@ -185,19 +184,13 @@ class AbstractPG(ABC):
         )
         self.logger.stop_timer(scope="epoch", level="INFO", attribute="episodes")
 
-    def _get_state_action_value(
-        self: "AbstractPG", obs: torch.Tensor, action: torch.Tensor
-    ) -> float:
-        q_value_tensor = self.value_net.forward(obs)
-        return q_value_tensor[action].item()
+    def _get_state_value(self: "AbstractPG", obs: torch.Tensor) -> float:
+        value_tensor = self.value_net.forward(obs)
+        return value_tensor.item()
 
-    def _get_state_action_values(
-        self: "AbstractPG", obs: torch.Tensor, actions: torch.Tensor
-    ) -> torch.Tensor:
-        q_value_tensor = self.value_net.forward(obs)
-        return q_value_tensor.gather(
-            2, actions.unsqueeze(-1).type(torch.int64)
-        ).squeeze(-1)
+    def _get_state_values(self: "AbstractPG", obs: torch.Tensor) -> torch.Tensor:
+        value_tensor = self.value_net.forward(obs)
+        return value_tensor.squeeze(-1)
 
     def _get_policy(self: "AbstractPG", obs: torch.Tensor) -> Categorical:
         logits: torch.Tensor = self.policy(obs)
@@ -210,7 +203,7 @@ class AbstractPG(ABC):
         self: "AbstractPG", obs: torch.Tensor
     ) -> Tuple[np.ndarray, float]:
         action = self._get_action(obs)
-        value = self._get_state_action_value(obs, action)
+        value = self._get_state_value(obs)
         return action.numpy(), value
 
     def _compute_policy_loss(
@@ -223,10 +216,7 @@ class AbstractPG(ABC):
         return -(log_probs * weights).mean()
 
     def _update_value_net(
-        self: "AbstractPG",
-        obs: torch.Tensor,
-        actions: torch.Tensor,
-        rewards_to_go: torch.Tensor,
+        self: "AbstractPG", obs: torch.Tensor, rewards_to_go: torch.Tensor
     ) -> None:
         self.logger.start_timer(
             scope="epoch", level="INFO", attribute="value_net_update"
@@ -236,9 +226,9 @@ class AbstractPG(ABC):
                 "value_updates_per_training_step"
             ]
         ):
-            state_action_values = self._get_state_action_values(obs, actions)
+            state_values = self._get_state_values(obs)
             self.value_net_optimizer.zero_grad()
-            q_loss = nn.MSELoss()(state_action_values, rewards_to_go)
+            q_loss = nn.MSELoss()(state_values, rewards_to_go)
             q_loss.backward()
             self.value_net_optimizer.step()
         self.logger.stop_timer(

@@ -29,7 +29,7 @@ cartpoleConfig = Config(
                 ],
             },
             "value_net_parameters": {
-                "sizes": [4, 128, 2],
+                "sizes": [4, 128, 1],
                 "activations": [
                     torch.nn.ReLU(),
                     torch.nn.Tanh(),
@@ -74,7 +74,7 @@ mountainCarConfig = Config(
                 ],
             },
             "value_net_parameters": {
-                "sizes": [2, 128, 3],
+                "sizes": [2, 128, 1],
                 "activations": [
                     torch.nn.ReLU(),
                     torch.nn.Tanh(),

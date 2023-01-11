@@ -25,7 +25,7 @@ config = Config(
                 ],
             },
             "value_net_parameters": {
-                "sizes": [OBSERVATION_DIM, 128, NUMBER_OF_ACTIONS],
+                "sizes": [OBSERVATION_DIM, 128, 1],
                 "activations": [
                     torch.nn.ReLU(),
                     torch.nn.Tanh(),

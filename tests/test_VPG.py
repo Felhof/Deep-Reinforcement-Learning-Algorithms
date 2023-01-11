@@ -29,7 +29,7 @@ cartpoleConfig = Config(
                 ],
             },
             "value_net_parameters": {
-                "sizes": [4, 128, 2],
+                "sizes": [4, 128, 1],
                 "activations": [
                     torch.nn.ReLU(),
                     torch.nn.Tanh(),
@@ -65,7 +65,7 @@ mountainCarConfig = Config(
                 ],
             },
             "value_net_parameters": {
-                "sizes": [2, 128, 3],
+                "sizes": [2, 128, 1],
                 "activations": [
                     torch.nn.ReLU(),
                     torch.nn.Tanh(),
@@ -124,6 +124,7 @@ def cleanup_test_results() -> None:
     yield
     os.remove(f"{PATH_TO_TEST_RESULTS}cartpole_vpg.csv")
     os.remove(f"{PATH_TO_TEST_RESULTS}mountaincar_vpg.csv")
+    # os.remove(f"{PATH_TO_TEST_RESULTS}mountaincar_continuous_vpg.csv")
 
 
 def test_can_train_with_different_environment_dimensions(cleanup_test_results) -> None:
@@ -134,3 +135,6 @@ def test_can_train_with_different_environment_dimensions(cleanup_test_results) -
     _assert_n_rows_where_stored(
         filepath=f"{PATH_TO_TEST_RESULTS}mountaincar_vpg.csv", n=3
     )
+
+    # _train_agent_and_store_result(agent=VPG, config=mountainCarContinuousConfig)
+    # _assert_n_rows_where_stored(filepath=f"{PATH_TO_TEST_RESULTS}mountaincar_continuous_vpg.csv", n=3)

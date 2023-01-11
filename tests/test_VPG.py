@@ -4,8 +4,8 @@ from agents.VPG import VPG
 import pytest
 from tests.agent_test_helpers import (
     _assert_n_rows_where_stored,
-    PATH_TO_TEST_RESULTS,
     _train_agent_and_store_result,
+    PATH_TO_TEST_RESULTS,
 )
 import torch.nn
 from utilities.config import Config

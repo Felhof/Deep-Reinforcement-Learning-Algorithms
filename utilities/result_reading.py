@@ -1,6 +1,6 @@
 import csv
 import os
-from typing import List
+from typing import List, Optional
 
 from utilities.result_data import agent_label_to_type, EpochRewards, ResultData
 
@@ -24,12 +24,13 @@ def _read_results_from_csv(filename: str) -> EpochRewards:
 
 
 def get_result_data_for_agent(
-    agent_label: str = "VPG", filenames: List[str] = None
+    agent_label: str = "VPG", filenames: Optional[List[str]] = None
 ) -> ResultData:
+    assert filenames is not None, "You need to provide a list of filenames"
     agent_type = agent_label_to_type[agent_label]
     average_epoch_rewards: EpochRewards = []
 
-    for filename in filenames:
+    for filename in filenames if filenames is not None else []:
         average_epoch_rewards += _read_results_from_csv(filename)
 
     return ResultData(

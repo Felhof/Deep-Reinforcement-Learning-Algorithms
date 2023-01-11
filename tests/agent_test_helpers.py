@@ -2,7 +2,6 @@ import csv
 import os
 from pathlib import Path
 
-from utilities.config import Config
 from utilities.results import RESULT_DIRECTORY, ResultStorage
 
 

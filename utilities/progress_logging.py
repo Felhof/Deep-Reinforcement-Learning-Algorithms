@@ -2,7 +2,7 @@ from collections import defaultdict
 import logging
 import os
 from timeit import default_timer as timer
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import numpy as np
 from prettytable import PrettyTable
@@ -82,7 +82,7 @@ class ProgressLogger:
         self: "ProgressLogger",
         scope: str = "epoch",
         level: str = "INFO",
-        attributes: List[str] = None,
+        attributes: Optional[List[str]] = None,
     ) -> None:
         table = PrettyTable()
         table.field_names = ["attribute", "mean", "std", "max", "min"]

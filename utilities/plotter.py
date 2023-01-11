@@ -30,7 +30,7 @@ def smooth_values(rewards: List[float], window_length: int = 4) -> List[float]:
         if len(window) == window_length:
             window.popleft()
         window.append(reward)
-        smoothed_rewards.append(float(np.mean(window)))
+        smoothed_rewards.append(float(np.mean(list(window))))
     return smoothed_rewards
 
 

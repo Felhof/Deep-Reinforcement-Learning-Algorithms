@@ -16,8 +16,8 @@ config = Config(
             "episodes_per_training_step": 30,
             "value_updates_per_training_step": 20,
             "discount_rate": 0.99,
-            "generalized_advantage_estimate_exponential_mean_discount_rate": 0.92,
-            "policy_parameters": {
+            "gae_exp_mean_discount_rate": 0.92,
+            "policy_net_parameters": {
                 "sizes": [OBSERVATION_DIM, 128, NUMBER_OF_ACTIONS],
                 "activations": [
                     torch.nn.ReLU(),
@@ -33,7 +33,6 @@ config = Config(
             },
             "policy_learning_rate": 0.001,
             "value_net_learning_rate": 0.001,
-            "use_double_precision": True,
         },
         "TRPG": {
             "kl_divergence_limit": 0.01,

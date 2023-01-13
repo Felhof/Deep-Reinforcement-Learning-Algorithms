@@ -5,7 +5,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from utilities.buffer.DQNBuffer import DQNBuffer
-from utilities.nn import create_nn
+from utilities.nn import create_q_net
 from utilities.types import AdamOptimizer, NNParameters
 
 
@@ -20,9 +20,11 @@ class DQN:
         q_net_parameters: NNParameters = self.config.hyperparameters["DQN"][
             "q_net_parameters"
         ]
-        self.q_net: nn.Sequential = create_nn(
-            q_net_parameters["sizes"],
+        self.q_net: nn.Sequential = create_q_net(
             q_net_parameters["activations"],
+            q_net_parameters["hidden_layer_sizes"],
+            self.config.observation_dim,
+            self.config.number_of_actions,
         )
         self.q_net_optimizer: AdamOptimizer = torch.optim.Adam(
             self.q_net.parameters(),

@@ -6,16 +6,21 @@ from utilities.utils import get_dimension_format_string
 
 
 class PGBuffer:
-    def __init__(self: "PGBuffer", config: Config, buffer_size: int) -> None:
+    def __init__(
+        self: "PGBuffer",
+        config: Config,
+        buffer_size: int = 40000,
+        action_dim: int = 1,
+    ) -> None:
         self.buffer_size = buffer_size
         self.episode_length = config.episode_length
         self.gamma = config.hyperparameters["policy_gradient"]["discount_rate"]
         self.lamda = config.hyperparameters["policy_gradient"][
-            "generalized_advantage_estimate_exponential_mean_discount_rate"
+            "gae_exp_mean_discount_rate"
         ]
         self.top_index = 0
         self.observation_dim = config.observation_dim
-        self.action_dim = config.action_dim
+        self.action_dim = action_dim
         self.dtype_name: str = config.hyperparameters["policy_gradient"].get(
             "dtype_name", "float32"
         )

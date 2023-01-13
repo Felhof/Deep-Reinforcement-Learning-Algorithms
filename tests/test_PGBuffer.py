@@ -1,48 +1,12 @@
 import numpy as np
-import torch.nn
 from utilities.buffer.PGBuffer import PGBuffer
-from utilities.config import Config
-
-cartpoleConfig = Config(
-    environment_name="CartPole-v1",
-    action_dim=1,
-    observation_dim=4,
-    number_of_actions=2,
-    hyperparameters={
-        "policy_gradient": {
-            "episodes_per_training_step": 30,
-            "value_updates_per_training_step": 20,
-            "discount_rate": 0.99,
-            "generalized_advantage_estimate_exponential_mean_discount_rate": 0.92,
-            "policy_parameters": {
-                "sizes": [4, 128, 2],
-                "activations": [
-                    torch.nn.ReLU(),
-                    torch.nn.Tanh(),
-                ],
-            },
-            "value_net_parameters": {
-                "sizes": [4, 128, 2],
-                "activations": [
-                    torch.nn.ReLU(),
-                    torch.nn.Tanh(),
-                ],
-            },
-            "policy_learning_rate": 0.001,
-            "value_net_learning_rate": 0.001,
-        },
-    },
-    episode_length=5,
-    training_steps_per_epoch=5,
-    epochs=1,
-    target_score=200,
-)
 
 
-def test_stores_and_returns_transition_batches_correctly() -> None:
+def test_stores_and_returns_transition_batches_correctly(cartpole_config) -> None:
     episode_length = 5
     n_episodes = 2
-    buffer = PGBuffer(cartpoleConfig, n_episodes)
+    config = cartpole_config("")
+    buffer = PGBuffer(config, n_episodes)
 
     obs_1 = np.random.rand(episode_length, 4).astype("float32")
     actions_1 = np.random.randint(0, 2, episode_length, dtype="int")

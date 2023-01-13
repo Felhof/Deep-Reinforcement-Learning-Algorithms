@@ -14,3 +14,31 @@ def create_nn(
         layers.append(activation)
 
     return nn.Sequential(*layers)
+
+
+def create_value_net(
+    activations: List[ActivationFunction],
+    hidden_layer_sizes: List[int],
+    observation_dim: int,
+) -> nn.Sequential:
+    assert (
+        len(activations) == len(hidden_layer_sizes) + 1
+    ), "Value net must be given exactly one more activation function than hidden layers"
+    return create_nn(
+        [observation_dim] + hidden_layer_sizes + [1],
+        activations,
+    )
+
+
+def create_q_net(
+    activations: List[ActivationFunction],
+    hidden_layer_sizes: List[int],
+    observation_dim: int,
+    number_of_actions: int,
+) -> nn.Sequential:
+    assert (
+        len(activations) == len(hidden_layer_sizes) + 1
+    ), "Q net must be given exactly one more activation function than hidden layers"
+    return create_nn(
+        [observation_dim] + hidden_layer_sizes + [number_of_actions], activations
+    )

@@ -1,15 +1,15 @@
 from abc import ABC, abstractmethod
 from typing import List, Tuple, Union
 
+from agents.Policy import create_policy, Policy
 import gym
 import numpy as np
 import torch
-from torch.distributions.categorical import Categorical
 import torch.nn as nn
 from utilities.buffer.PGBuffer import PGBuffer
-from utilities.nn import create_nn
+from utilities.nn import create_value_net
 from utilities.progress_logging import ProgressLogger
-from utilities.types import AdamOptimizer, NNParameters
+from utilities.types import AdamOptimizer, NNParameters, PolicyParameters
 from utilities.utils import get_dimension_format_string
 
 
@@ -37,33 +37,33 @@ class AbstractPG(ABC):
             "discount_rate"
         ]
         self.lamda: float = self.config.hyperparameters["policy_gradient"][
-            "generalized_advantage_estimate_exponential_mean_discount_rate"
+            "gae_exp_mean_discount_rate"
         ]
-        policy_parameters: NNParameters = self.config.hyperparameters[
-            "policy_gradient"
-        ]["policy_parameters"]
+        policy_parameters: PolicyParameters = {
+            "action_type": self.config.action_type,
+            "number_of_actions": self.config.number_of_actions,
+            "observation_dim": self.config.observation_dim,
+            "policy_net_parameters": self.config.hyperparameters["policy_gradient"][
+                "policy_net_parameters"
+            ],
+        }
+        self.policy: Policy = create_policy(policy_parameters)
         value_net_parameters: NNParameters = self.config.hyperparameters[
             "policy_gradient"
         ]["value_net_parameters"]
-        self.policy: nn.Sequential = create_nn(
-            policy_parameters["sizes"],
-            policy_parameters["activations"],
-        )
-        self.value_net: nn.Sequential = create_nn(
-            value_net_parameters["sizes"],
+        self.value_net: nn.Sequential = create_value_net(
             value_net_parameters["activations"],
-        )
-        self.policy_optimizer: AdamOptimizer = torch.optim.Adam(
-            self.policy.parameters(),
-            lr=self.config.hyperparameters["policy_gradient"]["policy_learning_rate"],
+            value_net_parameters["hidden_layer_sizes"],
+            self.config.observation_dim,
         )
         self.value_net_optimizer: AdamOptimizer = torch.optim.Adam(
-            self.value_net.parameters(),
-            lr=self.config.hyperparameters["policy_gradient"][
-                "value_net_learning_rate"
-            ],
+            self.value_net.parameters(), lr=value_net_parameters["learning_rate"]
         )
-        self.buffer = PGBuffer(self.config, self.episodes_per_training_step)
+        self.buffer = PGBuffer(
+            self.config,
+            self.episodes_per_training_step,
+            self.policy.action_dim,
+        )
         self.logger = ProgressLogger(
             level=self.config.log_level,
             filename=self.config.log_filename,  # log_to_console=False
@@ -82,7 +82,7 @@ class AbstractPG(ABC):
     def train(self: "AbstractPG") -> None:
         for _training_step in range(self.config.training_steps_per_epoch):
             self.logger.info(f"Training step {_training_step}")
-            self.policy_optimizer.zero_grad()
+            self.policy.reset_gradients()
 
             self.logger.info("Running episodes")
             self._run_episodes()
@@ -131,14 +131,14 @@ class AbstractPG(ABC):
             states = np.zeros(
                 self.episode_length,
                 dtype=get_dimension_format_string(
-                    self.config.observation_dim,
+                    self.policy.observation_dim,
                     dtype=self.dtype_name,
                 ),
             )
             actions = np.zeros(
                 self.episode_length,
                 dtype=get_dimension_format_string(
-                    self.config.action_dim,
+                    self.policy.action_dim,
                     dtype=self.dtype_name,
                 ),
             )
@@ -192,28 +192,12 @@ class AbstractPG(ABC):
         value_tensor = self.value_net.forward(obs)
         return value_tensor.squeeze(-1)
 
-    def _get_policy(self: "AbstractPG", obs: torch.Tensor) -> Categorical:
-        logits: torch.Tensor = self.policy(obs)
-        return Categorical(logits=logits)
-
-    def _get_action(self: "AbstractPG", obs: torch.Tensor) -> torch.Tensor:
-        return self._get_policy(obs).sample()
-
     def _get_action_and_value(
         self: "AbstractPG", obs: torch.Tensor
     ) -> Tuple[np.ndarray, float]:
-        action = self._get_action(obs)
+        action = self.policy.get_action(obs)
         value = self._get_state_value(obs)
         return action.numpy(), value
-
-    def _compute_policy_loss(
-        self: "AbstractPG",
-        obs: torch.Tensor,
-        actions: torch.Tensor,
-        weights: torch.Tensor,
-    ) -> torch.Tensor:
-        log_probs = self._log_probs_from_actions(obs, actions)
-        return -(log_probs * weights).mean()
 
     def _update_value_net(
         self: "AbstractPG", obs: torch.Tensor, rewards_to_go: torch.Tensor
@@ -228,17 +212,9 @@ class AbstractPG(ABC):
         ):
             state_values = self._get_state_values(obs)
             self.value_net_optimizer.zero_grad()
-            q_loss = nn.MSELoss()(state_values, rewards_to_go)
-            q_loss.backward()
+            loss = nn.MSELoss()(state_values, rewards_to_go)
+            loss.backward()
             self.value_net_optimizer.step()
         self.logger.stop_timer(
             scope="epoch", level="INFO", attribute="value_net_update"
         )
-
-    def _log_probs_from_actions(
-        self: "AbstractPG", obs: torch.Tensor, actions: torch.Tensor
-    ) -> torch.Tensor:
-        return self._get_policy(obs).log_prob(actions)
-
-    def _log_probs(self: "AbstractPG", obs: torch.Tensor) -> torch.Tensor:
-        return torch.log(self._get_policy(obs).probs)

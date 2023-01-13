@@ -14,16 +14,18 @@ class PPO(AbstractPG):
     ) -> None:
         ppo_clip_objective = self._ppo_clip_objective(obs, actions, advantages)
         ppo_clip_objective_grad = torch.autograd.grad(
-            ppo_clip_objective, [param for param in self.policy.parameters()]
+            ppo_clip_objective, [param for param in self.policy.get_parameters()]
         )
-        for param, grad in zip(self.policy.parameters(), ppo_clip_objective_grad):
+        for param, grad in zip(self.policy.get_parameters(), ppo_clip_objective_grad):
             param.grad = grad
-        self.policy_optimizer.step()
+        self.policy.update_gradients()
 
     def _ppo_clip_objective(
         self: "PPO", obs: torch.Tensor, actions: torch.Tensor, advantages: torch.Tensor
     ) -> torch.Tensor:
-        action_log_probs = torch.exp(self._log_probs_from_actions(obs, actions))
+        action_log_probs = torch.exp(
+            self.policy.get_log_probs_from_actions(obs, actions)
+        )
         fixed_action_log_probs = action_log_probs.detach()
         action_log_prob_ratio = action_log_probs / fixed_action_log_probs
         advantages_scaled_by_log_probs = action_log_prob_ratio * advantages

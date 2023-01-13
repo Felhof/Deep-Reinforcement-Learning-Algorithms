@@ -21,15 +21,15 @@ class TRPG(AbstractPG):
     def _update_policy(
         self: "TRPG", obs: torch.Tensor, actions: torch.Tensor, advantages: torch.Tensor
     ) -> None:
-        loss = self._compute_policy_loss(obs, actions, advantages)
+        loss = self.policy.compute_loss(obs, actions, advantages)
         loss_grad = torch.autograd.grad(
-            loss, [param for param in self.policy.parameters()]
+            loss, [param for param in self.policy.get_parameters()]
         )
         flat_loss_grad = torch.cat([grad.view(-1) for grad in loss_grad]).data
         flat_loss_grad *= -1
 
         def kl_hessian_vector_product(v: torch.Tensor) -> torch.Tensor:
-            log_probs = self._log_probs(obs)
+            log_probs = self.policy.get_log_probs(obs)
 
             kl_loss = torch.nn.functional.kl_div(
                 log_probs,
@@ -39,14 +39,14 @@ class TRPG(AbstractPG):
             )
             kl_loss_grad = torch.autograd.grad(
                 kl_loss,
-                [param for param in self.policy.parameters()],
+                [param for param in self.policy.get_parameters()],
                 create_graph=True,
             )
             flat_kl_loss_grad = torch.cat([grad.view(-1) for grad in kl_loss_grad])
 
             kl_v = torch.dot(flat_kl_loss_grad, v.detach())
             kl_v_grad = torch.autograd.grad(
-                kl_v, [param for param in self.policy.parameters()]
+                kl_v, [param for param in self.policy.get_parameters()]
             )
             hvp = torch.cat([grad.contiguous().view(-1) for grad in kl_v_grad]).data
 
@@ -63,13 +63,13 @@ class TRPG(AbstractPG):
         )
 
         def backtracking_line_search(original_params: torch.Tensor) -> None:
-            log_probs = self._log_probs(obs)
+            log_probs = self.policy.get_log_probs(obs)
             for _, step_fraction in enumerate(
                 self.alpha ** np.arange(self.backtracking_iters)
             ):
                 new_params = original_params + step_fraction * step_direction
                 self._set_flat_params(new_params)
-                new_log_probs = self._log_probs(obs)
+                new_log_probs = self.policy.get_log_probs(obs)
                 kl = torch.nn.functional.kl_div(
                     new_log_probs, log_probs, log_target=True, reduction="batchmean"
                 )
@@ -103,7 +103,7 @@ class TRPG(AbstractPG):
 
     def _get_flat_params(self: "TRPG") -> torch.Tensor:
         params = []
-        for param in self.policy.parameters():
+        for param in self.policy.get_parameters():
             params.append(param.data.view(-1))
 
         flat_params = torch.cat(params)
@@ -111,8 +111,8 @@ class TRPG(AbstractPG):
 
     def _set_flat_params(self: "TRPG", flat_params: torch.Tensor) -> None:
         prev_ind = 0
-        state_dict = self.policy.state_dict()
-        for key, params in self.policy.state_dict().items():
+        state_dict = self.policy.get_state_dict()
+        for key, params in self.policy.get_state_dict().items():
             flat_size = int(np.prod(list(params.size())))
             state_dict[key] = flat_params[prev_ind : prev_ind + flat_size].view(
                 params.size()

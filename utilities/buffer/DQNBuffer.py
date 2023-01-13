@@ -15,7 +15,7 @@ class DQNBuffer:
         )
         self.actions = np.zeros(
             self.buffer_size,
-            dtype=get_dimension_format_string(config.action_dim),
+            dtype=get_dimension_format_string(1),
         )
         self.rewards = np.zeros(self.buffer_size, dtype=np.float32)
         self.next_states = np.zeros(

@@ -1,6 +1,6 @@
 from typing import Union
 
-import gym
+import gymnasium as gym
 import numpy as np
 import torch
 import torch.nn as nn
@@ -73,12 +73,16 @@ class DQN:
 
         for episode in range(self.config.training_steps_per_epoch):
             episode_reward = 0
-            obs = self.environment.reset()
+            obs, _ = self.environment.reset()
             for _step in range(self.config.episode_length):
                 action = self._get_action(torch.tensor(obs, dtype=torch.float32))
-                next_obs, reward, done, info = self.environment.step(action)
+                next_obs, reward, terminated, truncated, info = self.environment.step(
+                    action
+                )
                 reward /= self.config.episode_length
-                self.replayBuffer.add_transition(obs, action, reward, next_obs, done)
+                self.replayBuffer.add_transition(
+                    obs, action, reward, next_obs, terminated or truncated
+                )
                 episode_reward += reward
                 obs = next_obs
                 learning = (
@@ -87,7 +91,7 @@ class DQN:
                 )
                 if learning:
                     update_q_network()
-                if done or _step == self.config.episode_length - 1:
+                if terminated or truncated or _step == self.config.episode_length - 1:
                     if episode > self.random_episodes and learning:
                         self.exploration_rate = 1 / self.exploration_rate_divisor
                         self.exploration_rate_divisor += 1

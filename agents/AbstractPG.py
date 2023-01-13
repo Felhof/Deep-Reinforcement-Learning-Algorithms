@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Tuple
 
 from agents.Policy import create_policy, Policy
-import gym
+import gymnasium as gym
 import numpy as np
 import torch
 import torch.nn as nn
@@ -152,25 +152,27 @@ class AbstractPG(ABC):
                 dtype=self.dtype_name,
             )
 
-            obs = self.environment.reset()
+            obs, _ = self.environment.reset()
             for step in range(self.episode_length):
                 action, value = self._get_action_and_value(
                     torch.tensor(obs, dtype=self.tensor_type)
                 )
-                next_obs, reward, done, info = self.environment.step(action)
-                episode_reward += reward
+                next_obs, reward, terminated, truncated, info = self.environment.step(
+                    action
+                )
+                episode_reward += float(reward)
                 states[step] = obs
                 actions[step] = action
                 values[step] = value
-                rewards[step] = reward
+                rewards[step] = float(reward)
                 obs = next_obs
 
-                if done:
+                if terminated:
                     self.buffer.add_transition_data(states, actions, values, rewards)
                     episode_rewards.append(episode_reward)
                     self.logger.store(scope="training_step", reward=episode_reward)
                     break
-                elif step == self.episode_length - 1:
+                elif step == self.episode_length - 1 or truncated:
                     _, last_value = self._get_action_and_value(
                         torch.tensor(obs, dtype=self.tensor_type)
                     )

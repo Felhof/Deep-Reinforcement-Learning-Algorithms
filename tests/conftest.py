@@ -139,7 +139,6 @@ def mountain_car_config() -> Callable[[str, str], Config]:
     return _create_config
 
 
-# TODO: Implement non-categorical actions to make a test with this config work
 @pytest.fixture
 def mountain_car_continuous_config() -> Callable[[str, str], Config]:
     def _create_config(results_filename, dtype_name: str = "float32") -> Config:

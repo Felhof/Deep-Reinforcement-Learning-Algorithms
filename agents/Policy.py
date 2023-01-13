@@ -18,12 +18,12 @@ ACTION_TYPES = ["Discrete", "Continuous"]
 
 class Policy(ABC):
     def __init__(
-        self: "Policy",
-        activations: List[ActivationFunction],
-        hidden_layer_sizes: List[int],
-        learning_rate: float,
-        action_outputs: int,
-        observation_dim: int,
+            self: "Policy",
+            activations: List[ActivationFunction],
+            hidden_layer_sizes: List[int],
+            learning_rate: float,
+            action_outputs: int,
+            observation_dim: int,
     ) -> None:
         sizes = [observation_dim] + hidden_layer_sizes + [action_outputs]
         self.observation_dim = observation_dim
@@ -39,15 +39,15 @@ class Policy(ABC):
 
     @abstractmethod
     def get_policy(
-        self: "Policy", obs: torch.Tensor, detached: bool = False
+            self: "Policy", obs: torch.Tensor, detached: bool = False
     ) -> Distribution:
         pass
 
     def compute_loss(
-        self: "Policy",
-        obs: torch.Tensor,
-        actions: torch.Tensor,
-        weights: torch.Tensor,
+            self: "Policy",
+            obs: torch.Tensor,
+            actions: torch.Tensor,
+            weights: torch.Tensor,
     ) -> torch.Tensor:
         log_probs = self.get_log_probs_from_actions(obs, actions)
         return -(log_probs * weights).mean()
@@ -56,7 +56,7 @@ class Policy(ABC):
         return self.get_policy(obs).sample()
 
     def get_log_probs_from_actions(
-        self: "Policy", obs: torch.Tensor, actions: torch.Tensor
+            self: "Policy", obs: torch.Tensor, actions: torch.Tensor
     ) -> torch.Tensor:
         return self.get_policy(obs).log_prob(actions)
 
@@ -67,7 +67,7 @@ class Policy(ABC):
         return self.policy_net.state_dict()
 
     def load_state_dict(
-        self: "Policy", state_dict: OrderedDict[str, torch.Tensor]
+            self: "Policy", state_dict: OrderedDict[str, torch.Tensor]
     ) -> None:
         self.policy_net.load_state_dict(state_dict)
 
@@ -75,20 +75,20 @@ class Policy(ABC):
         self.optimizer.zero_grad()
 
     def update_gradients(
-        self: "Policy",
+            self: "Policy",
     ) -> None:
         self.optimizer.step()
 
 
 class CategoricalPolicy(Policy):
     def __init__(
-        self: "CategoricalPolicy",
-        number_of_actions: int,
-        observation_dim: int,
-        policy_net_parameters: NNParameters,
+            self: "CategoricalPolicy",
+            number_of_actions: int,
+            observation_dim: int,
+            policy_net_parameters: NNParameters,
     ) -> None:
         assert (
-            number_of_actions > 1
+                number_of_actions > 1
         ), "Must have more than 1 action for categorical policy."
         super().__init__(
             policy_net_parameters["activations"],
@@ -99,7 +99,7 @@ class CategoricalPolicy(Policy):
         )
 
     def get_policy(
-        self: "CategoricalPolicy", obs: torch.Tensor, detached: bool = False
+            self: "CategoricalPolicy", obs: torch.Tensor, detached: bool = False
     ) -> Categorical:
         logits: torch.Tensor = self.policy_net(obs)
         if detached:
@@ -119,10 +119,10 @@ class CategoricalPolicy(Policy):
 
 class ContinuousPolicy(Policy):
     def __init__(
-        self: "ContinuousPolicy",
-        number_of_actions: int,
-        observation_dim: int,
-        policy_net_parameters: NNParameters,
+            self: "ContinuousPolicy",
+            number_of_actions: int,
+            observation_dim: int,
+            policy_net_parameters: NNParameters,
     ):
         self.number_of_actions = number_of_actions
         super().__init__(
@@ -134,7 +134,7 @@ class ContinuousPolicy(Policy):
         )
 
     def get_policy(
-        self: "ContinuousPolicy", obs: torch.Tensor, detached: bool = False
+            self: "ContinuousPolicy", obs: torch.Tensor, detached: bool = False
     ) -> Distribution:
         mean, log_std = self.policy_net(obs).split(self.number_of_actions, dim=-1)
         mean = mean.squeeze(-1)
@@ -147,7 +147,7 @@ class ContinuousPolicy(Policy):
 def create_policy(parameters: PolicyParameters) -> Policy:
     action_type = parameters["action_type"]
     assert (
-        action_type in ACTION_TYPES
+            action_type in ACTION_TYPES
     ), f"Action type must be one of {', '.join(ACTION_TYPES)}."
 
     number_of_actions = parameters["number_of_actions"]
@@ -157,7 +157,6 @@ def create_policy(parameters: PolicyParameters) -> Policy:
         return CategoricalPolicy(
             number_of_actions, observation_dim, policy_net_parameters
         )
-    # TODO: Implement continuous policies
     if action_type == "Continuous":
         return ContinuousPolicy(
             number_of_actions, observation_dim, policy_net_parameters

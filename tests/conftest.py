@@ -4,7 +4,7 @@ import gymnasium as gym
 import pytest
 import torch.nn
 from utilities.config import Config
-from utilities.environments import EnvironmentWrapper
+from utilities.environments import BaseEnvironmentWrapper
 
 
 @pytest.fixture
@@ -262,21 +262,21 @@ def adventure_config() -> Callable[[str, str], Config]:
 
 
 @pytest.fixture
-def cartpole_environment() -> EnvironmentWrapper:
-    return EnvironmentWrapper(
+def cartpole_environment() -> BaseEnvironmentWrapper:
+    return BaseEnvironmentWrapper(
         gym.make("CartPole-v1")
     )
 
 
 @pytest.fixture
-def mountain_car_environment() -> EnvironmentWrapper:
-    return EnvironmentWrapper(
+def mountain_car_environment() -> BaseEnvironmentWrapper:
+    return BaseEnvironmentWrapper(
         gym.make("MountainCar-v0")
     )
 
 
 @pytest.fixture
-def continuous_mountain_car_environment() -> EnvironmentWrapper:
-    return EnvironmentWrapper(
+def continuous_mountain_car_environment() -> BaseEnvironmentWrapper:
+    return BaseEnvironmentWrapper(
         gym.make("MountainCarContinuous-v0")
     )

@@ -2,7 +2,7 @@ from agents import trainer, PPO
 import gymnasium as gym
 import torch.nn
 from utilities.config import Config
-from utilities.environments import EnvironmentWrapper
+from utilities.environments import BaseEnvironmentWrapper
 
 NUMBER_OF_ACTIONS: int = 2
 ACTION_DIM: int = 1
@@ -44,7 +44,7 @@ config = Config(
     log_filename="PPO_cartpole_debug2",
 )
 
-env = EnvironmentWrapper(gym.make("CartPole-v1"))
+env = BaseEnvironmentWrapper(gym.make("CartPole-v1"))
 
 if __name__ == "__main__":
     ppo_trainer = trainer.Trainer(config)

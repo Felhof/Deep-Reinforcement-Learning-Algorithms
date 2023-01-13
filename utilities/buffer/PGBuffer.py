@@ -11,7 +11,7 @@ class PGBuffer:
             config: Config,
             buffer_size: int = 40000,
             action_dim: int = 1,
-            observation_dim: Union[int, Tuple[int, ...]] = 2
+            observation_dim: Union[Tuple[int, ...]] = 2
     ) -> None:
         self.buffer_size = buffer_size
         self.episode_length = config.episode_length
@@ -53,16 +53,14 @@ class PGBuffer:
         states = np.zeros(
             self.buffer_size,
             dtype=get_dimension_format_string(
-                self.episode_length,
-                y_dim=self.observation_dim,
+                (self.episode_length,) + self.observation_dim,
                 dtype=self.dtype_name,
             ),
         )
         actions = np.zeros(
             self.buffer_size,
             dtype=get_dimension_format_string(
-                self.episode_length,
-                y_dim=self.action_dim,
+                (self.episode_length,) + (self.action_dim,),
                 dtype=self.dtype_name,
             ),
         )

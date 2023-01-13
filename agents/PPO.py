@@ -1,11 +1,11 @@
 from agents.AbstractPG import AbstractPG
 import torch
 from utilities.config import Config
-from utilities.environments import EnvironmentWrapper
+from utilities.environments import BaseEnvironmentWrapper
 
 
 class PPO(AbstractPG):
-    def __init__(self: "PPO", environment: EnvironmentWrapper, **kwargs) -> None:
+    def __init__(self: "PPO", environment: BaseEnvironmentWrapper, **kwargs) -> None:
         super().__init__(environment, **kwargs)
         config: Config = kwargs["config"]
         self.clip_range = config.hyperparameters["PPO"]["clip_range"]

@@ -1,11 +1,11 @@
 from agents.AbstractPG import AbstractPG
 import torch
 
-from utilities.environments import EnvironmentWrapper
+from utilities.environments import BaseEnvironmentWrapper
 
 
 class VPG(AbstractPG):
-    def __init__(self: "VPG", environment: EnvironmentWrapper, **kwargs) -> None:
+    def __init__(self: "VPG", environment: BaseEnvironmentWrapper, **kwargs) -> None:
         super().__init__(environment, **kwargs)
 
     def _update_policy(

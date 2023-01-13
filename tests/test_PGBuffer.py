@@ -6,7 +6,7 @@ def test_stores_and_returns_transition_batches_correctly(cartpole_config) -> Non
     episode_length = 5
     n_episodes = 2
     config = cartpole_config("")
-    buffer = PGBuffer(config, n_episodes, observation_dim=4)
+    buffer = PGBuffer(config, n_episodes, observation_dim=(4,))
 
     obs_1 = np.random.rand(episode_length, 4).astype("float32")
     actions_1 = np.random.randint(0, 2, episode_length, dtype="int")

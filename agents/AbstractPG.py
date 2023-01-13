@@ -6,15 +6,15 @@ import numpy as np
 import torch
 import torch.nn as nn
 from utilities.buffer.PGBuffer import PGBuffer
-from utilities.environments import EnvironmentWrapper
+from utilities.environments import BaseEnvironmentWrapper
 from utilities.nn import create_value_net
 from utilities.progress_logging import ProgressLogger
-from utilities.types import AdamOptimizer, NNParameters, PolicyParameters
+from utilities.types import AdamOptimizer, FFNNParameters, PolicyParameters
 from utilities.utils import get_dimension_format_string
 
 
 class AbstractPG(ABC):
-    def __init__(self: "AbstractPG", environment: EnvironmentWrapper, **kwargs) -> None:
+    def __init__(self: "AbstractPG", environment: BaseEnvironmentWrapper, **kwargs) -> None:
         self.config = kwargs["config"]
         self.dtype_name = self.config.hyperparameters["policy_gradient"].get(
             "dtype_name", "float32"
@@ -46,7 +46,7 @@ class AbstractPG(ABC):
             ],
         }
         self.policy: Policy = create_policy(policy_parameters)
-        value_net_parameters: NNParameters = self.config.hyperparameters[
+        value_net_parameters: FFNNParameters = self.config.hyperparameters[
             "policy_gradient"
         ]["value_net_parameters"]
         self.value_net: nn.Sequential = create_value_net(
@@ -60,8 +60,8 @@ class AbstractPG(ABC):
         self.buffer = PGBuffer(
             self.config,
             buffer_size=self.episodes_per_training_step,
-            action_dim=self.policy.action_dim,
-            observation_dim=self.policy.observation_dim
+            action_dim=self.environment.action_dim,
+            observation_dim=self.environment.observation_dim
         )
         self.logger = ProgressLogger(
             level=self.config.log_level,
@@ -130,14 +130,14 @@ class AbstractPG(ABC):
             states = np.zeros(
                 self.episode_length,
                 dtype=get_dimension_format_string(
-                    self.policy.observation_dim,
+                    self.environment.observation_dim,
                     dtype=self.dtype_name,
                 ),
             )
             actions = np.zeros(
                 self.episode_length,
                 dtype=get_dimension_format_string(
-                    self.policy.action_dim,
+                    self.environment.action_dim,
                     dtype=self.dtype_name,
                 ),
             )

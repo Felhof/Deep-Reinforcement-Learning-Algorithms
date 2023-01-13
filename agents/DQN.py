@@ -2,18 +2,18 @@ import numpy as np
 import torch
 import torch.nn as nn
 from utilities.buffer.DQNBuffer import DQNBuffer
-from utilities.environments import EnvironmentWrapper
+from utilities.environments import BaseEnvironmentWrapper
 from utilities.nn import create_q_net
-from utilities.types import AdamOptimizer, NNParameters
+from utilities.types import AdamOptimizer, FFNNParameters
 
 
 class DQN:
-    def __init__(self: "DQN", environment: EnvironmentWrapper, **kwargs) -> None:
+    def __init__(self: "DQN", environment: BaseEnvironmentWrapper, **kwargs) -> None:
         self.config = kwargs["config"]
         self.environment = environment
         self.episode_length: int = self.config.episode_length
         self.gamma: float = self.config.hyperparameters["DQN"]["discount_rate"]
-        q_net_parameters: NNParameters = self.config.hyperparameters["DQN"][
+        q_net_parameters: FFNNParameters = self.config.hyperparameters["DQN"][
             "q_net_parameters"
         ]
         self.q_net: nn.Sequential = create_q_net(

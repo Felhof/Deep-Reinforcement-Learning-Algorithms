@@ -2,7 +2,7 @@ from agents import trainer, VPG
 import gymnasium as gym
 import torch.nn
 from utilities.config import Config
-from utilities.environments import EnvironmentWrapper
+from utilities.environments import BaseEnvironmentWrapper
 
 NUMBER_OF_ACTIONS: int = 2
 OBSERVATION_DIM: int = 4
@@ -40,7 +40,7 @@ config = Config(
     log_filename="VPG_cartpole_debug3",
 )
 
-env = EnvironmentWrapper(gym.make("CartPole-v1"))
+env = BaseEnvironmentWrapper(gym.make("CartPole-v1"))
 
 if __name__ == "__main__":
     vpg_trainer = trainer.Trainer(config)

@@ -1,7 +1,7 @@
 from typing import List
 
 from utilities.config import Config
-from utilities.environments import EnvironmentWrapper
+from utilities.environments import BaseEnvironmentWrapper
 from utilities.results import ResultStorage
 
 
@@ -14,7 +14,7 @@ class Trainer:
             epochs=config.epochs,
         )
 
-    def _train_agent(self: "Trainer", agent_type: type, environment: EnvironmentWrapper) -> None:
+    def _train_agent(self: "Trainer", agent_type: type, environment: BaseEnvironmentWrapper) -> None:
         assert self.config is not None
         assert self.config.epochs >= 1
 
@@ -23,7 +23,7 @@ class Trainer:
             agent.train()
             self.result_storage.end_epoch()
 
-    def train_agents(self: "Trainer", agent_types: List[type], environment: EnvironmentWrapper) -> None:
+    def train_agents(self: "Trainer", agent_types: List[type], environment: BaseEnvironmentWrapper) -> None:
         for agent_type in agent_types:
             self._train_agent(agent_type, environment)
 

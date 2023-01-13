@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Iterator, List, OrderedDict
+from typing import Iterator, List, OrderedDict, Tuple
 
 import torch
 from torch import nn
@@ -9,7 +9,7 @@ from utilities.nn import create_nn
 from utilities.types import (
     ActivationFunction,
     AdamOptimizer,
-    NNParameters,
+    FFNNParameters,
     PolicyParameters,
 )
 
@@ -26,8 +26,6 @@ class Policy(ABC):
             observation_dim: Tuple[int, ...],
     ) -> None:
         sizes = [observation_dim[0]] + hidden_layer_sizes + [action_outputs]
-        self.observation_dim = observation_dim[0]
-        self.action_dim = 1
         self.policy_net: nn.Sequential = create_nn(
             sizes,
             activations,
@@ -85,7 +83,7 @@ class CategoricalPolicy(Policy):
             self: "CategoricalPolicy",
             number_of_actions: int,
             observation_dim: Tuple[int, ...],
-            policy_net_parameters: NNParameters,
+            policy_net_parameters: FFNNParameters,
     ) -> None:
         assert (
                 number_of_actions > 1
@@ -122,7 +120,7 @@ class ContinuousPolicy(Policy):
             self: "ContinuousPolicy",
             number_of_actions: int,
             observation_dim: Tuple[int, ...],
-            policy_net_parameters: NNParameters,
+            policy_net_parameters: FFNNParameters,
     ):
         self.number_of_actions = number_of_actions
         super().__init__(

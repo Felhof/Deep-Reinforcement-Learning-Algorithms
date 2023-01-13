@@ -12,8 +12,15 @@ AdamOptimizer: TypeAlias = torch.optim.Adam
 
 LinearLayer: TypeAlias = nn.Linear
 
-NNParameters = TypedDict(
-    "NNParameters",
+CNNParameters = TypedDict(
+    "CNNParameters",
+    {
+        
+    }
+)
+
+FFNNParameters = TypedDict(
+    "FFNNParameters",
     {
         "activations": List[ActivationFunction],
         "hidden_layer_sizes": List[int],
@@ -27,7 +34,7 @@ PolicyParameters = TypedDict(
         "action_type": str,
         "number_of_actions": int,
         "observation_dim": int,
-        "policy_net_parameters": NNParameters,
+        "policy_net_parameters": FFNNParameters,
     },
 )
 
@@ -42,9 +49,9 @@ AgentHyperParameters = TypedDict(
         "value_updates_per_training_step": int,
         "discount_rate": float,
         "gae_exp_mean_discount_rate": float,
-        "policy_net_parameters": NNParameters,
-        "q_net_parameters": NNParameters,
-        "value_net_parameters": NNParameters,
+        "policy_net_parameters": FFNNParameters,
+        "q_net_parameters": FFNNParameters,
+        "value_net_parameters": FFNNParameters,
         "minibatch_size": int,
         "buffer_size": int,
         "initial_exploration_rate": float,

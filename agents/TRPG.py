@@ -4,11 +4,11 @@ from agents.AbstractPG import AbstractPG
 import numpy as np
 import torch
 
-from utilities.environments import EnvironmentWrapper
+from utilities.environments import BaseEnvironmentWrapper
 
 
 class TRPG(AbstractPG):
-    def __init__(self: "TRPG", environment: EnvironmentWrapper, **kwargs) -> None:
+    def __init__(self: "TRPG", environment: BaseEnvironmentWrapper, **kwargs) -> None:
         super().__init__(environment, **kwargs)
         config = kwargs["config"]
         self.tensor_type = torch.float64

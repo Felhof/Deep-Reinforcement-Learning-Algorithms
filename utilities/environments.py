@@ -1,13 +1,16 @@
+from collections import deque
 from typing import Any, SupportsFloat, Tuple
 
+import cv2
 import gymnasium as gym
 import numpy as np
 
 
-class EnvironmentWrapper:
-    def __init__(self: "EnvironmentWrapper", environment: gym.Env) -> None:
+class BaseEnvironmentWrapper:
+    def __init__(self: "BaseEnvironmentWrapper", environment: gym.Env) -> None:
         self.environment = environment
         self.action_space = self.environment.action_space
+        self.action_dim = 1
         self.reset = environment.reset
         self.observation_dim = environment.observation_space.shape
         if isinstance(
@@ -28,7 +31,38 @@ class EnvironmentWrapper:
             self.action_type = "Discrete"
 
     def continuous_step(
-            self: "EnvironmentWrapper", action: np.ndarray
+            self: "BaseEnvironmentWrapper", action: np.ndarray
     ) -> Tuple[Any, SupportsFloat, bool, bool, dict[str, Any]]:
         gym_action = np.array([action])
         return self.environment.step(gym_action)
+
+
+class AtariWrapper(BaseEnvironmentWrapper):
+    def __init__(self: "AtariWrapper", environment: gym.Env, width=84, height=84, greyscale=True, max_frames=4) -> None:
+        super().__init__(environment)
+        self.environment = environment
+        self.frames = deque([], maxlen=max_frames)
+        self.greyscale = greyscale
+        self.width = width
+        self.height = height
+
+    def _preprocess_observation(self: "AtariWrapper", obs: Any) -> Any:
+        if self.greyscale:
+            obs = cv2.cvtColor(obs, cv2.COLOR_RGB2GRAY)
+        obs = cv2.resize(
+            obs, (self.width, self.height), interpolation=cv2.INTER_AREA
+        )
+        if self.greyscale:
+            obs = np.expand_dims(obs, -1)
+        self.frames.append(obs)
+        return np.concatenate(self.frames)
+
+    def reset(self: "AtariWrapper") -> Tuple[Any, dict[str, Any]]:
+        frame, info = self.environment.reset()
+        obs = self._preprocess_observation(frame)
+        return obs, info
+
+    def step(self: "AtariWrapper", action: int) -> Tuple[Any, SupportsFloat, bool, bool, dict[str, Any]]:
+        frame, reward, terminated, truncated, info = self.environment.step(action)
+        obs = self._preprocess_observation(frame)
+        return obs, reward, terminated, truncated, info

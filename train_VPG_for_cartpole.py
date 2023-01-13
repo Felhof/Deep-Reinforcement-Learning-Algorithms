@@ -1,15 +1,13 @@
 from agents import trainer, VPG
+import gymnasium as gym
 import torch.nn
 from utilities.config import Config
+from utilities.environments import EnvironmentWrapper
 
 NUMBER_OF_ACTIONS: int = 2
 OBSERVATION_DIM: int = 4
 
 config = Config(
-    environment_name="CartPole-v1",
-    action_type="Discrete",
-    number_of_actions=2,
-    observation_dim=4,
     hyperparameters={
         "policy_gradient": {
             "episodes_per_training_step": 30,
@@ -42,7 +40,9 @@ config = Config(
     log_filename="VPG_cartpole_debug3",
 )
 
+env = EnvironmentWrapper(gym.make("CartPole-v1"))
+
 if __name__ == "__main__":
     vpg_trainer = trainer.Trainer(config)
-    vpg_trainer.train_agents([VPG.VPG])
+    vpg_trainer.train_agents([VPG.VPG], environment=env)
     vpg_trainer.save_results_to_csv()

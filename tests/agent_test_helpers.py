@@ -5,13 +5,13 @@ from pathlib import Path
 from utilities.results import RESULT_DIRECTORY, ResultStorage
 
 
-def _train_agent_and_store_result(agent=None, config=None):
+def _train_agent_and_store_result(agent=None, config=None, environment=None):
     result_storage = ResultStorage(
         filename=config.results_filename,
         training_steps_per_epoch=config.training_steps_per_epoch,
         epochs=config.epochs,
     )
-    agent = agent(config=config, result_storage=result_storage)
+    agent = agent(environment, config=config, result_storage=result_storage)
     agent.train()
     result_storage.save_results_to_csv()
 

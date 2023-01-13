@@ -27,28 +27,32 @@ def cleanup_continuous_test_results() -> None:
 
 
 def test_can_train_with_different_environment_dimensions(
-    cartpole_config, cleanup_discrete_test_results, mountain_car_config
+        cartpole_environment,
+        mountain_car_environment,
+        cartpole_config,
+        mountain_car_config,
+        cleanup_discrete_test_results,
 ) -> None:
     config = cartpole_config(CARTPOLE_TEST_RESULTS, dtype_name="float64")
-    _train_agent_and_store_result(agent=TRPG, config=config)
+    _train_agent_and_store_result(agent=TRPG, config=config, environment=cartpole_environment)
     _assert_n_rows_where_stored(
         filepath=f"{PATH_TO_TEST_RESULTS}{CARTPOLE_TEST_RESULTS}.csv", n=3
     )
 
     config = mountain_car_config(MOUNTAIN_CAR_TEST_RESULTS, dtype_name="float64")
-    _train_agent_and_store_result(agent=TRPG, config=config)
+    _train_agent_and_store_result(agent=TRPG, config=config, environment=mountain_car_environment)
     _assert_n_rows_where_stored(
         filepath=f"{PATH_TO_TEST_RESULTS}{MOUNTAIN_CAR_TEST_RESULTS}.csv", n=3
     )
 
 
 def test_can_train_for_continuous_environments(
-    cleanup_continuous_test_results, mountain_car_continuous_config
+        continuous_mountain_car_environment, mountain_car_continuous_config, cleanup_continuous_test_results
 ):
     config = mountain_car_continuous_config(
         MOUNTAIN_CAR_CONTINUOUS_TEST_RESULTS, dtype_name="float64"
     )
-    _train_agent_and_store_result(agent=TRPG, config=config)
+    _train_agent_and_store_result(agent=TRPG, config=config, environment=continuous_mountain_car_environment)
     _assert_n_rows_where_stored(
         filepath=f"{PATH_TO_TEST_RESULTS}{MOUNTAIN_CAR_CONTINUOUS_TEST_RESULTS}.csv",
         n=3,

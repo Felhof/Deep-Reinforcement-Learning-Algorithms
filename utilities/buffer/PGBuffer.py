@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Union
 
 import numpy as np
 from utilities.config import Config
@@ -7,10 +7,11 @@ from utilities.utils import get_dimension_format_string
 
 class PGBuffer:
     def __init__(
-        self: "PGBuffer",
-        config: Config,
-        buffer_size: int = 40000,
-        action_dim: int = 1,
+            self: "PGBuffer",
+            config: Config,
+            buffer_size: int = 40000,
+            action_dim: int = 1,
+            observation_dim: Union[int, Tuple[int, ...]] = 2
     ) -> None:
         self.buffer_size = buffer_size
         self.episode_length = config.episode_length
@@ -19,7 +20,7 @@ class PGBuffer:
             "gae_exp_mean_discount_rate"
         ]
         self.top_index = 0
-        self.observation_dim = config.observation_dim
+        self.observation_dim = observation_dim
         self.action_dim = action_dim
         self.dtype_name: str = config.hyperparameters["policy_gradient"].get(
             "dtype_name", "float32"
@@ -34,7 +35,7 @@ class PGBuffer:
         ) = self._create_empty_buffers()
 
     def _get_episode_generalized_advantage_estimates(
-        self: "PGBuffer", rewards: np.ndarray, values: np.ndarray
+            self: "PGBuffer", rewards: np.ndarray, values: np.ndarray
     ) -> np.ndarray:
         delta: np.ndarray = rewards + self.gamma * values[1:] - values[:-1]
 
@@ -47,7 +48,7 @@ class PGBuffer:
         return advantage
 
     def _create_empty_buffers(
-        self: "PGBuffer",
+            self: "PGBuffer",
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray,]:
         states = np.zeros(
             self.buffer_size,
@@ -93,12 +94,12 @@ class PGBuffer:
         return states, actions, values, rewards, advantages, rewards_to_go
 
     def add_transition_data(
-        self: "PGBuffer",
-        state: np.ndarray,
-        action: np.ndarray,
-        value: np.ndarray,
-        reward: np.ndarray,
-        last_value: float = 0.0,
+            self: "PGBuffer",
+            state: np.ndarray,
+            action: np.ndarray,
+            value: np.ndarray,
+            reward: np.ndarray,
+            last_value: float = 0.0,
     ) -> None:
         self.states[self.top_index] = state
         self.actions[self.top_index] = action
@@ -115,7 +116,7 @@ class PGBuffer:
         self.top_index += 1
 
     def get_data(
-        self: "PGBuffer",
+            self: "PGBuffer",
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray,]:
         return (
             self.states,

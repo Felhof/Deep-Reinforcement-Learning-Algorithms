@@ -20,16 +20,20 @@ def cleanup_test_results() -> None:
 
 
 def test_can_train_with_different_environment_dimensions(
-    cartpole_config, cleanup_test_results, mountain_car_config
+        cartpole_environment,
+        mountain_car_environment,
+        cartpole_config,
+        mountain_car_config,
+        cleanup_test_results,
 ) -> None:
     config = cartpole_config(CARTPOLE_TEST_RESULTS)
-    _train_agent_and_store_result(agent=DQN, config=config)
+    _train_agent_and_store_result(agent=DQN, config=config, environment=cartpole_environment)
     _assert_n_rows_where_stored(
         filepath=f"{PATH_TO_TEST_RESULTS}{CARTPOLE_TEST_RESULTS}.csv", n=3
     )
 
     config = mountain_car_config(MOUNTAIN_CAR_TEST_RESULTS)
-    _train_agent_and_store_result(agent=DQN, config=config)
+    _train_agent_and_store_result(agent=DQN, config=config, environment=mountain_car_environment)
     _assert_n_rows_where_stored(
         filepath=f"{PATH_TO_TEST_RESULTS}{MOUNTAIN_CAR_TEST_RESULTS}.csv", n=3
     )

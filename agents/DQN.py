@@ -1,20 +1,16 @@
-from typing import Union
-
-import gymnasium as gym
 import numpy as np
 import torch
 import torch.nn as nn
 from utilities.buffer.DQNBuffer import DQNBuffer
+from utilities.environments import EnvironmentWrapper
 from utilities.nn import create_q_net
 from utilities.types import AdamOptimizer, NNParameters
 
 
 class DQN:
-    def __init__(self: "DQN", **kwargs) -> None:
+    def __init__(self: "DQN", environment: EnvironmentWrapper, **kwargs) -> None:
         self.config = kwargs["config"]
-        self.environment: gym.Env[np.ndarray, Union[int, np.ndarray]] = gym.make(
-            self.config.environment_name
-        )
+        self.environment = environment
         self.episode_length: int = self.config.episode_length
         self.gamma: float = self.config.hyperparameters["DQN"]["discount_rate"]
         q_net_parameters: NNParameters = self.config.hyperparameters["DQN"][
@@ -23,14 +19,14 @@ class DQN:
         self.q_net: nn.Sequential = create_q_net(
             q_net_parameters["activations"],
             q_net_parameters["hidden_layer_sizes"],
-            self.config.observation_dim,
-            self.config.number_of_actions,
+            self.environment.observation_dim[0],
+            self.environment.number_of_actions,
         )
         self.q_net_optimizer: AdamOptimizer = torch.optim.Adam(
             self.q_net.parameters(),
             lr=self.config.hyperparameters["DQN"]["q_net_learning_rate"],
         )
-        self.replayBuffer = DQNBuffer(self.config)
+        self.replayBuffer = DQNBuffer(self.config, self.environment.observation_dim[0])
         self.exploration_rate = self.config.hyperparameters["DQN"][
             "initial_exploration_rate"
         ]
@@ -54,7 +50,7 @@ class DQN:
                 next_state_q_values = self.q_net(next_states)
                 best_next_state_q_values = torch.max(next_state_q_values, dim=1).values
                 q_value_targets = (
-                    rewards + (1 - done) * self.gamma * best_next_state_q_values
+                        rewards + (1 - done) * self.gamma * best_next_state_q_values
                 )
             actual_q_values = (
                 self.q_net(states)
@@ -86,8 +82,8 @@ class DQN:
                 episode_reward += reward
                 obs = next_obs
                 learning = (
-                    self.replayBuffer.get_number_of_stored_transitions()
-                    >= self.config.hyperparameters["DQN"]["minibatch_size"]
+                        self.replayBuffer.get_number_of_stored_transitions()
+                        >= self.config.hyperparameters["DQN"]["minibatch_size"]
                 )
                 if learning:
                     update_q_network()

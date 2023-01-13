@@ -1,16 +1,14 @@
 from agents import trainer, TRPG
+import gymnasium as gym
 import torch.nn
 from utilities.config import Config
+from utilities.environments import EnvironmentWrapper
 
 NUMBER_OF_ACTIONS: int = 2
 ACTION_DIM: int = 1
 OBSERVATION_DIM: int = 4
 
 config = Config(
-    environment_name="CartPole-v1",
-    action_type="Discrete",
-    number_of_actions=2,
-    observation_dim=4,
     hyperparameters={
         "policy_gradient": {
             "episodes_per_training_step": 30,
@@ -50,6 +48,8 @@ config = Config(
     log_level="INFO",
     log_filename="TRPG_cartpole_debug2",
 )
+
+env = EnvironmentWrapper(gym.make("CartPole-v1"))
 
 if __name__ == "__main__":
     vpn_trainer = trainer.Trainer(config)

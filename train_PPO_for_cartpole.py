@@ -1,16 +1,14 @@
 from agents import trainer, PPO
+import gymnasium as gym
 import torch.nn
 from utilities.config import Config
+from utilities.environments import EnvironmentWrapper
 
 NUMBER_OF_ACTIONS: int = 2
 ACTION_DIM: int = 1
 OBSERVATION_DIM: int = 4
 
 config = Config(
-    environment_name="CartPole-v1",
-    action_type="Discrete",
-    number_of_actions=2,
-    observation_dim=4,
     hyperparameters={
         "policy_gradient": {
             "episodes_per_training_step": 30,
@@ -46,7 +44,9 @@ config = Config(
     log_filename="PPO_cartpole_debug2",
 )
 
+env = EnvironmentWrapper(gym.make("CartPole-v1"))
+
 if __name__ == "__main__":
     ppo_trainer = trainer.Trainer(config)
-    ppo_trainer.train_agents([PPO.PPO])
+    ppo_trainer.train_agents([PPO.PPO], environment=env)
     ppo_trainer.save_results_to_csv()

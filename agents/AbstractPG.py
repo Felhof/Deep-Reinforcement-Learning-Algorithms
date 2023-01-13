@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from typing import List, Tuple
 
 from agents.Policy import create_policy, Policy
-import gymnasium as gym
 import numpy as np
 import torch
 import torch.nn as nn
@@ -15,7 +14,7 @@ from utilities.utils import get_dimension_format_string
 
 
 class AbstractPG(ABC):
-    def __init__(self: "AbstractPG", **kwargs) -> None:
+    def __init__(self: "AbstractPG", environment: EnvironmentWrapper, **kwargs) -> None:
         self.config = kwargs["config"]
         self.dtype_name = self.config.hyperparameters["policy_gradient"].get(
             "dtype_name", "float32"
@@ -26,9 +25,7 @@ class AbstractPG(ABC):
         else:
             self.tensor_type = torch.float32
             torch.set_default_tensor_type(torch.FloatTensor)
-        self.environment: EnvironmentWrapper = EnvironmentWrapper(
-            gym.make(self.config.environment_name)
-        )
+        self.environment = environment
         self.episode_length: int = self.config.episode_length
 
         self.episodes_per_training_step: int = self.config.hyperparameters[
@@ -41,9 +38,9 @@ class AbstractPG(ABC):
             "gae_exp_mean_discount_rate"
         ]
         policy_parameters: PolicyParameters = {
-            "action_type": self.config.action_type,
-            "number_of_actions": self.config.number_of_actions,
-            "observation_dim": self.config.observation_dim,
+            "action_type": self.environment.action_type,
+            "number_of_actions": self.environment.number_of_actions,
+            "observation_dim": self.environment.observation_dim,
             "policy_net_parameters": self.config.hyperparameters["policy_gradient"][
                 "policy_net_parameters"
             ],
@@ -55,15 +52,16 @@ class AbstractPG(ABC):
         self.value_net: nn.Sequential = create_value_net(
             value_net_parameters["activations"],
             value_net_parameters["hidden_layer_sizes"],
-            self.config.observation_dim,
+            self.environment.observation_dim[0],
         )
         self.value_net_optimizer: AdamOptimizer = torch.optim.Adam(
             self.value_net.parameters(), lr=value_net_parameters["learning_rate"]
         )
         self.buffer = PGBuffer(
             self.config,
-            self.episodes_per_training_step,
-            self.policy.action_dim,
+            buffer_size=self.episodes_per_training_step,
+            action_dim=self.policy.action_dim,
+            observation_dim=self.policy.observation_dim
         )
         self.logger = ProgressLogger(
             level=self.config.log_level,

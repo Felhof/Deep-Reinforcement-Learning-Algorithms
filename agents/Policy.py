@@ -23,10 +23,10 @@ class Policy(ABC):
             hidden_layer_sizes: List[int],
             learning_rate: float,
             action_outputs: int,
-            observation_dim: int,
+            observation_dim: Tuple[int, ...],
     ) -> None:
-        sizes = [observation_dim] + hidden_layer_sizes + [action_outputs]
-        self.observation_dim = observation_dim
+        sizes = [observation_dim[0]] + hidden_layer_sizes + [action_outputs]
+        self.observation_dim = observation_dim[0]
         self.action_dim = 1
         self.policy_net: nn.Sequential = create_nn(
             sizes,
@@ -84,7 +84,7 @@ class CategoricalPolicy(Policy):
     def __init__(
             self: "CategoricalPolicy",
             number_of_actions: int,
-            observation_dim: int,
+            observation_dim: Tuple[int, ...],
             policy_net_parameters: NNParameters,
     ) -> None:
         assert (
@@ -121,7 +121,7 @@ class ContinuousPolicy(Policy):
     def __init__(
             self: "ContinuousPolicy",
             number_of_actions: int,
-            observation_dim: int,
+            observation_dim: Tuple[int, ...],
             policy_net_parameters: NNParameters,
     ):
         self.number_of_actions = number_of_actions

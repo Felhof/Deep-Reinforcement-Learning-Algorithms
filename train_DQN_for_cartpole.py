@@ -1,17 +1,15 @@
 from agents import trainer
 from agents.DQN import DQN
+import gymnasium as gym
 import torch.nn
 from utilities.config import Config
+from utilities.environments import EnvironmentWrapper
 
 NUMBER_OF_ACTIONS: int = 2
 ACTION_DIM: int = 1
 OBSERVATION_DIM: int = 4
 
 config = Config(
-    environment_name="CartPole-v1",
-    action_type="Discrete",
-    number_of_actions=2,
-    observation_dim=4,
     hyperparameters={
         "DQN": {
             "discount_rate": 0.99,
@@ -39,7 +37,9 @@ config = Config(
     log_filename="VPG_cartpole_debug3",
 )
 
+env = EnvironmentWrapper(gym.make("CartPole-v1"))
+
 if __name__ == "__main__":
     dqn_trainer = trainer.Trainer(config)
-    dqn_trainer.train_agents([DQN])
+    dqn_trainer.train_agents([DQN], environment=env)
     dqn_trainer.save_results_to_csv()

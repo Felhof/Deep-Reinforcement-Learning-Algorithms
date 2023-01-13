@@ -29,14 +29,17 @@ class TRPG(AbstractPG):
         flat_loss_grad *= -1
 
         def kl_hessian_vector_product(v: torch.Tensor) -> torch.Tensor:
-            log_probs = self.policy.get_log_probs(obs)
-
-            kl_loss = torch.nn.functional.kl_div(
-                log_probs,
-                log_probs.clone().detach(),
-                log_target=True,
-                reduction="batchmean",
-            )
+            # log_probs = self.policy.get_log_probs(obs)
+            #
+            # kl_loss = torch.nn.functional.kl_div(
+            #     log_probs,
+            #     log_probs.clone().detach(),
+            #     log_target=True,
+            #     reduction="batchmean",
+            # )
+            kl_loss = torch.distributions.kl.kl_divergence(
+                self.policy.get_policy(obs), self.policy.get_policy(obs, detached=True)
+            ).mean()
             kl_loss_grad = torch.autograd.grad(
                 kl_loss,
                 [param for param in self.policy.get_parameters()],
@@ -63,17 +66,20 @@ class TRPG(AbstractPG):
         )
 
         def backtracking_line_search(original_params: torch.Tensor) -> None:
-            log_probs = self.policy.get_log_probs(obs)
+            old_policy = self.policy.get_policy(obs, detached=True)
             for _, step_fraction in enumerate(
                 self.alpha ** np.arange(self.backtracking_iters)
             ):
                 new_params = original_params + step_fraction * step_direction
                 self._set_flat_params(new_params)
-                new_log_probs = self.policy.get_log_probs(obs)
-                kl = torch.nn.functional.kl_div(
-                    new_log_probs, log_probs, log_target=True, reduction="batchmean"
-                )
-                if kl < self.delta:
+                new_policy = self.policy.get_policy(obs)
+                # kl = torch.nn.functional.kl_div(
+                #     new_log_probs, log_probs, log_target=True, reduction="batchmean"
+                # )
+                kl_loss = torch.distributions.kl.kl_divergence(
+                    new_policy, old_policy
+                ).mean()
+                if kl_loss < self.delta:
                     return
             self._set_flat_params(original_params)
 

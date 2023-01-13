@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Tuple, Union
+from typing import List, Tuple
 
 from agents.Policy import create_policy, Policy
 import gym
@@ -7,6 +7,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from utilities.buffer.PGBuffer import PGBuffer
+from utilities.environments import EnvironmentWrapper
 from utilities.nn import create_value_net
 from utilities.progress_logging import ProgressLogger
 from utilities.types import AdamOptimizer, NNParameters, PolicyParameters
@@ -25,8 +26,8 @@ class AbstractPG(ABC):
         else:
             self.tensor_type = torch.float32
             torch.set_default_tensor_type(torch.FloatTensor)
-        self.environment: gym.Env[np.ndarray, Union[int, np.ndarray]] = gym.make(
-            self.config.environment_name
+        self.environment: EnvironmentWrapper = EnvironmentWrapper(
+            gym.make(self.config.environment_name)
         )
         self.episode_length: int = self.config.episode_length
 
@@ -72,10 +73,10 @@ class AbstractPG(ABC):
 
     @abstractmethod
     def _update_policy(
-        self: "AbstractPG",
-        obs: torch.Tensor,
-        actions: torch.Tensor,
-        advantages: torch.Tensor,
+            self: "AbstractPG",
+            obs: torch.Tensor,
+            actions: torch.Tensor,
+            advantages: torch.Tensor,
     ) -> None:
         pass
 
@@ -127,7 +128,7 @@ class AbstractPG(ABC):
         self.logger.start_timer(scope="epoch", level="INFO", attribute="episodes")
         episode_rewards: List[float] = []
         for _episode in range(self.episodes_per_training_step):
-            episode_reward = 0
+            episode_reward: float = 0
             states = np.zeros(
                 self.episode_length,
                 dtype=get_dimension_format_string(
@@ -193,22 +194,22 @@ class AbstractPG(ABC):
         return value_tensor.squeeze(-1)
 
     def _get_action_and_value(
-        self: "AbstractPG", obs: torch.Tensor
+            self: "AbstractPG", obs: torch.Tensor
     ) -> Tuple[np.ndarray, float]:
         action = self.policy.get_action(obs)
         value = self._get_state_value(obs)
         return action.numpy(), value
 
     def _update_value_net(
-        self: "AbstractPG", obs: torch.Tensor, rewards_to_go: torch.Tensor
+            self: "AbstractPG", obs: torch.Tensor, rewards_to_go: torch.Tensor
     ) -> None:
         self.logger.start_timer(
             scope="epoch", level="INFO", attribute="value_net_update"
         )
         for _ in range(
-            self.config.hyperparameters["policy_gradient"][
-                "value_updates_per_training_step"
-            ]
+                self.config.hyperparameters["policy_gradient"][
+                    "value_updates_per_training_step"
+                ]
         ):
             state_values = self._get_state_values(obs)
             self.value_net_optimizer.zero_grad()

@@ -9,14 +9,14 @@ OBSERVATION_DIM: int = 4
 
 config = Config(
     environment_name="CartPole-v1",
-    action_dim=ACTION_DIM,
-    observation_dim=OBSERVATION_DIM,
-    number_of_actions=NUMBER_OF_ACTIONS,
+    action_type="Discrete",
+    number_of_actions=2,
+    observation_dim=4,
     hyperparameters={
         "DQN": {
             "discount_rate": 0.99,
             "q_net_parameters": {
-                "sizes": [OBSERVATION_DIM, 64, NUMBER_OF_ACTIONS],
+                "hidden_layer_sizes": [64],
                 "activations": [
                     torch.nn.ReLU(),
                     torch.nn.Tanh(),
@@ -28,13 +28,15 @@ config = Config(
             "initial_exploration_rate": 1,
             "random_episodes": 3,
             "gradient_clipping_norm": 0.7,
-        }
+        },
     },
     episode_length=230,
     training_steps_per_epoch=400,
     epochs=5,
     target_score=200,
-    results_filename="DQN_Cartpole",
+    results_filename="VPG_cartpole_rewards3",
+    log_level="INFO",
+    log_filename="VPG_cartpole_debug3",
 )
 
 if __name__ == "__main__":

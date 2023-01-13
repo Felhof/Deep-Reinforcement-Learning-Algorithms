@@ -7,6 +7,9 @@ OBSERVATION_DIM: int = 4
 
 config = Config(
     environment_name="CartPole-v1",
+    action_type="Discrete",
+    number_of_actions=2,
+    observation_dim=4,
     hyperparameters={
         "policy_gradient": {
             "episodes_per_training_step": 30,
@@ -14,17 +17,12 @@ config = Config(
             "discount_rate": 0.99,
             "gae_exp_mean_discount_rate": 0.92,
             "policy_net_parameters": {
-                "action_type": "Categorical",
-                "number_of_actions": NUMBER_OF_ACTIONS,
-                "observation_dim": OBSERVATION_DIM,
-                "policy_net_parameters": {
-                    "hidden_layer_sizes": [128],
-                    "activations": [
-                        torch.nn.ReLU(),
-                        torch.nn.Tanh(),
-                    ],
-                    "learning_rate": 0.001,
-                },
+                "hidden_layer_sizes": [128],
+                "activations": [
+                    torch.nn.ReLU(),
+                    torch.nn.Tanh(),
+                ],
+                "learning_rate": 0.001,
             },
             "value_net_parameters": {
                 "hidden_layer_sizes": [128],
@@ -39,9 +37,9 @@ config = Config(
     episode_length=230,
     training_steps_per_epoch=400,
     epochs=5,
-    results_filename="VPG_cartpole_rewards2",
+    results_filename="VPG_cartpole_rewards3",
     log_level="INFO",
-    log_filename="VPG_cartpole_debug2",
+    log_filename="VPG_cartpole_debug3",
 )
 
 if __name__ == "__main__":

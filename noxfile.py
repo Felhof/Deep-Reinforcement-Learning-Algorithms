@@ -18,14 +18,14 @@ style_locations = (
 typing_locations = "agents", "noxfile.py", "utilities"
 
 
-@nox.session(python=["3.10", "3.9.10"])
+@nox.session(python=["3.10"])
 def black(session: Session) -> None:
     args = session.posargs or style_locations
     install_with_constraints(session, "black")
     session.run("black", *args)
 
 
-@nox.session(python=["3.10", "3.9.10"])
+@nox.session(python=["3.10"])
 def tests(session: Session) -> None:
     args = session.posargs
     session.run("poetry", "install", external=True)
@@ -33,20 +33,28 @@ def tests(session: Session) -> None:
 
 
 def install_with_constraints(session: Session, *args: str, **kwargs: Any) -> None:
-    with tempfile.NamedTemporaryFile() as requirements:
+    with tempfile.NamedTemporaryFile() as tmp:
         session.run(
             "poetry",
             "export",
             "--dev",
             "--format=requirements.txt",
             "--without-hashes",
-            f"--output={requirements.name}",
+            f"--output={tmp.name}",
             external=True,
         )
-        session.install(f"--constraint={requirements.name}", *args, **kwargs)
+        # remove lines with extra constrains e.g. gymnasium[accept-rom-license]
+        # as they cause a pip error
+        requirements = tmp.readlines()
+        tmp.seek(0)
+        for line in requirements:
+            if "[" not in str(line):
+                tmp.write(line)
+        tmp.truncate()
+        session.install(f"--constraint={tmp.name}", *args, **kwargs)
 
 
-@nox.session(python=["3.10", "3.9.10"])
+@nox.session(python=["3.10"])
 def lint(session: Session) -> None:
     args = session.posargs or style_locations
     install_with_constraints(
@@ -59,7 +67,7 @@ def lint(session: Session) -> None:
     session.run("flake8", *args)
 
 
-@nox.session(python=["3.10", "3.9.10"])
+@nox.session(python=["3.10"])
 def lint_annotations(session: Session) -> None:
     args = session.posargs or lint_annotations_locations
     install_with_constraints(
@@ -69,7 +77,7 @@ def lint_annotations(session: Session) -> None:
     session.run("flake8", *args)
 
 
-@nox.session(python=["3.10", "3.9.10"])
+@nox.session(python=["3.10"])
 def mypy(session: Session) -> None:
     args = session.posargs or typing_locations
     install_with_constraints(session, "mypy", "numpy", "torch")

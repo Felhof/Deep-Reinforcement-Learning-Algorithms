@@ -4,7 +4,7 @@ import gymnasium as gym
 import pytest
 import torch.nn
 from utilities.config import Config
-from utilities.environments import BaseEnvironmentWrapper
+from utilities.environments import BaseEnvironmentWrapper, AtariWrapper
 
 
 @pytest.fixture
@@ -199,6 +199,13 @@ def mountain_car_continuous_config() -> Callable[[str, str], Config]:
 
 @pytest.fixture
 def adventure_config() -> Callable[[str, str], Config]:
+    network_parameters = {
+        "convolutions": [(32, 8, 4), (64, 4, 2), (64, 3, 1)],
+        "linear_layer_activations": [torch.nn.ReLU(), torch.nn.ReLU(), torch.nn.Tanh()],
+        "linear_layer_sizes": [3136, 512],
+        "learning_rate": 0.00025
+    }
+
     def _create_config(results_filename, dtype_name: str = "float32") -> Config:
         return Config(
             hyperparameters={
@@ -207,22 +214,8 @@ def adventure_config() -> Callable[[str, str], Config]:
                     "value_updates_per_training_step": 20,
                     "discount_rate": 0.99,
                     "gae_exp_mean_discount_rate": 0.92,
-                    "policy_net_parameters": {
-                        "linear_layer_sizes": [128],
-                        "linear_layer_activations": [
-                            torch.nn.ReLU(),
-                            torch.nn.Tanh(),
-                        ],
-                        "learning_rate": 0.001,
-                    },
-                    "value_net_parameters": {
-                        "linear_layer_sizes": [128],
-                        "linear_layer_activations": [
-                            torch.nn.ReLU(),
-                            torch.nn.Tanh(),
-                        ],
-                        "learning_rate": 0.001,
-                    },
+                    "policy_net_parameters": network_parameters,
+                    "value_net_parameters": network_parameters,
                     "use_double_precision": True,
                     "dtype_name": dtype_name,
                 },
@@ -236,14 +229,8 @@ def adventure_config() -> Callable[[str, str], Config]:
                 "PPO": {"clip_range": 0.1},
                 "DQN": {
                     "discount_rate": 0.99,
-                    "q_net_parameters": {
-                        "linear_layer_sizes": [64],
-                        "linear_layer_activations": [
-                            torch.nn.ReLU(),
-                            torch.nn.Tanh(),
-                        ],
-                    },
-                    "q_net_learning_rate": 0.001,
+                    "q_net_parameters": network_parameters,
+                    "q_net_learning_rate": 0.00025,
                     "minibatch_size": 256,
                     "buffer_size": 40000,
                     "initial_exploration_rate": 1,
@@ -274,3 +261,8 @@ def mountain_car_environment() -> BaseEnvironmentWrapper:
 @pytest.fixture
 def continuous_mountain_car_environment() -> BaseEnvironmentWrapper:
     return BaseEnvironmentWrapper(gym.make("MountainCarContinuous-v0"))
+
+
+@pytest.fixture
+def adventure_environment() -> AtariWrapper:
+    return AtariWrapper(gym.make("ALE/Adventure-v5"))

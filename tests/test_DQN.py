@@ -10,6 +10,7 @@ from tests.agent_test_helpers import (
 
 CARTPOLE_TEST_RESULTS = "cartpole_dqn_test"
 MOUNTAIN_CAR_TEST_RESULTS = "mountain_car_dqn_test"
+ATARI_TEST_RESULTS = "atari_vpg_test"
 
 
 @pytest.fixture
@@ -19,12 +20,18 @@ def cleanup_test_results() -> None:
     os.remove(f"{PATH_TO_TEST_RESULTS}{MOUNTAIN_CAR_TEST_RESULTS}.csv")
 
 
+@pytest.fixture()
+def cleanup_atari_test_results() -> None:
+    yield
+    os.remove(f"{PATH_TO_TEST_RESULTS}{ATARI_TEST_RESULTS}.csv")
+
+
 def test_can_train_with_different_environment_dimensions(
-    cartpole_environment,
-    mountain_car_environment,
-    cartpole_config,
-    mountain_car_config,
-    cleanup_test_results,
+        cartpole_environment,
+        mountain_car_environment,
+        cartpole_config,
+        mountain_car_config,
+        cleanup_test_results,
 ) -> None:
     config = cartpole_config(CARTPOLE_TEST_RESULTS)
     _train_agent_and_store_result(
@@ -40,4 +47,19 @@ def test_can_train_with_different_environment_dimensions(
     )
     _assert_n_rows_where_stored(
         filepath=f"{PATH_TO_TEST_RESULTS}{MOUNTAIN_CAR_TEST_RESULTS}.csv", n=3
+    )
+
+
+def test_can_train_for_atari_environments(
+        adventure_environment,
+        adventure_config,
+        cleanup_atari_test_results
+):
+    config = adventure_config(ATARI_TEST_RESULTS)
+    _train_agent_and_store_result(
+        agent=DQN, config=config, environment=adventure_environment
+    )
+    _assert_n_rows_where_stored(
+        filepath=f"{PATH_TO_TEST_RESULTS}{ATARI_TEST_RESULTS}.csv",
+        n=3,
     )

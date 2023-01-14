@@ -2,11 +2,14 @@ from typing import Dict
 
 import numpy as np
 from utilities.config import Config
+from utilities.types import ObservationDim
 from utilities.utils import get_dimension_format_string
 
 
 class DQNBuffer:
-    def __init__(self: "DQNBuffer", config: Config, observation_dim: int = 2) -> None:
+    def __init__(
+        self: "DQNBuffer", config: Config, observation_dim: ObservationDim = 2
+    ) -> None:
         self.minibatch_size = config.hyperparameters["DQN"]["minibatch_size"]
         self.buffer_size = config.hyperparameters["DQN"]["buffer_size"]
         self.states = np.zeros(
@@ -27,12 +30,12 @@ class DQNBuffer:
         self.number_of_stored_transitions = 0
 
     def add_transition(
-            self: "DQNBuffer",
-            state: np.ndarray,
-            action: np.ndarray,
-            reward: float,
-            next_state: np.ndarray,
-            done: bool,
+        self: "DQNBuffer",
+        state: np.ndarray,
+        action: np.ndarray,
+        reward: float,
+        next_state: np.ndarray,
+        done: bool,
     ) -> None:
         self.states[self.index] = state
         self.actions[self.index] = action
@@ -48,7 +51,7 @@ class DQNBuffer:
         return self.number_of_stored_transitions
 
     def get_transition_data(
-            self: "DQNBuffer",
+        self: "DQNBuffer",
     ) -> Dict[str, np.ndarray]:
         transition_indices = np.random.choice(
             np.arange(self.number_of_stored_transitions), size=self.minibatch_size

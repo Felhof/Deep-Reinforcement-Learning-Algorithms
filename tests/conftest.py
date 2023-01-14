@@ -18,16 +18,16 @@ def cartpole_config() -> Callable[[str, str], Config]:
                     "discount_rate": 0.99,
                     "gae_exp_mean_discount_rate": 0.92,
                     "policy_net_parameters": {
-                        "hidden_layer_sizes": [128],
-                        "activations": [
+                        "linear_layer_sizes": [128],
+                        "linear_layer_activations": [
                             torch.nn.ReLU(),
                             torch.nn.Tanh(),
                         ],
                         "learning_rate": 0.001,
                     },
                     "value_net_parameters": {
-                        "hidden_layer_sizes": [128],
-                        "activations": [
+                        "linear_layer_sizes": [128],
+                        "linear_layer_activations": [
                             torch.nn.ReLU(),
                             torch.nn.Tanh(),
                         ],
@@ -46,8 +46,8 @@ def cartpole_config() -> Callable[[str, str], Config]:
                 "DQN": {
                     "discount_rate": 0.99,
                     "q_net_parameters": {
-                        "hidden_layer_sizes": [64],
-                        "activations": [
+                        "linear_layer_sizes": [64],
+                        "linear_layer_activations": [
                             torch.nn.ReLU(),
                             torch.nn.Tanh(),
                         ],
@@ -81,16 +81,16 @@ def mountain_car_config() -> Callable[[str, str], Config]:
                     "discount_rate": 0.99,
                     "gae_exp_mean_discount_rate": 0.92,
                     "policy_net_parameters": {
-                        "hidden_layer_sizes": [128],
-                        "activations": [
+                        "linear_layer_sizes": [128],
+                        "linear_layer_activations": [
                             torch.nn.ReLU(),
                             torch.nn.Tanh(),
                         ],
                         "learning_rate": 0.001,
                     },
                     "value_net_parameters": {
-                        "hidden_layer_sizes": [128],
-                        "activations": [
+                        "linear_layer_sizes": [128],
+                        "linear_layer_activations": [
                             torch.nn.ReLU(),
                             torch.nn.Tanh(),
                         ],
@@ -109,8 +109,8 @@ def mountain_car_config() -> Callable[[str, str], Config]:
                 "DQN": {
                     "discount_rate": 0.99,
                     "q_net_parameters": {
-                        "hidden_layer_sizes": [64],
-                        "activations": [
+                        "linear_layer_sizes": [64],
+                        "linear_layer_activations": [
                             torch.nn.ReLU(),
                             torch.nn.Tanh(),
                         ],
@@ -144,16 +144,16 @@ def mountain_car_continuous_config() -> Callable[[str, str], Config]:
                     "discount_rate": 0.99,
                     "gae_exp_mean_discount_rate": 0.92,
                     "policy_net_parameters": {
-                        "hidden_layer_sizes": [128],
-                        "activations": [
+                        "linear_layer_sizes": [128],
+                        "linear_layer_activations": [
                             torch.nn.ReLU(),
                             torch.nn.Tanh(),
                         ],
                         "learning_rate": 0.001,
                     },
                     "value_net_parameters": {
-                        "hidden_layer_sizes": [128],
-                        "activations": [
+                        "linear_layer_sizes": [128],
+                        "linear_layer_activations": [
                             torch.nn.ReLU(),
                             torch.nn.Tanh(),
                         ],
@@ -173,8 +173,8 @@ def mountain_car_continuous_config() -> Callable[[str, str], Config]:
                 "DQN": {
                     "discount_rate": 0.99,
                     "q_net_parameters": {
-                        "hidden_layer_sizes": [64],
-                        "activations": [
+                        "linear_layer_sizes": [64],
+                        "linear_layer_activations": [
                             torch.nn.ReLU(),
                             torch.nn.Tanh(),
                         ],
@@ -208,16 +208,16 @@ def adventure_config() -> Callable[[str, str], Config]:
                     "discount_rate": 0.99,
                     "gae_exp_mean_discount_rate": 0.92,
                     "policy_net_parameters": {
-                        "hidden_layer_sizes": [128],
-                        "activations": [
+                        "linear_layer_sizes": [128],
+                        "linear_layer_activations": [
                             torch.nn.ReLU(),
                             torch.nn.Tanh(),
                         ],
                         "learning_rate": 0.001,
                     },
                     "value_net_parameters": {
-                        "hidden_layer_sizes": [128],
-                        "activations": [
+                        "linear_layer_sizes": [128],
+                        "linear_layer_activations": [
                             torch.nn.ReLU(),
                             torch.nn.Tanh(),
                         ],
@@ -237,8 +237,8 @@ def adventure_config() -> Callable[[str, str], Config]:
                 "DQN": {
                     "discount_rate": 0.99,
                     "q_net_parameters": {
-                        "hidden_layer_sizes": [64],
-                        "activations": [
+                        "linear_layer_sizes": [64],
+                        "linear_layer_activations": [
                             torch.nn.ReLU(),
                             torch.nn.Tanh(),
                         ],
@@ -263,20 +263,14 @@ def adventure_config() -> Callable[[str, str], Config]:
 
 @pytest.fixture
 def cartpole_environment() -> BaseEnvironmentWrapper:
-    return BaseEnvironmentWrapper(
-        gym.make("CartPole-v1")
-    )
+    return BaseEnvironmentWrapper(gym.make("CartPole-v1"))
 
 
 @pytest.fixture
 def mountain_car_environment() -> BaseEnvironmentWrapper:
-    return BaseEnvironmentWrapper(
-        gym.make("MountainCar-v0")
-    )
+    return BaseEnvironmentWrapper(gym.make("MountainCar-v0"))
 
 
 @pytest.fixture
 def continuous_mountain_car_environment() -> BaseEnvironmentWrapper:
-    return BaseEnvironmentWrapper(
-        gym.make("MountainCarContinuous-v0")
-    )
+    return BaseEnvironmentWrapper(gym.make("MountainCarContinuous-v0"))

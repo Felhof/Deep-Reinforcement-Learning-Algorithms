@@ -9,12 +9,14 @@ from utilities.buffer.PGBuffer import PGBuffer
 from utilities.environments import BaseEnvironmentWrapper
 from utilities.nn import create_value_net
 from utilities.progress_logging import ProgressLogger
-from utilities.types import AdamOptimizer, FFNNParameters, PolicyParameters
+from utilities.types import AdamOptimizer, NNParameters, PolicyParameters
 from utilities.utils import get_dimension_format_string
 
 
 class AbstractPG(ABC):
-    def __init__(self: "AbstractPG", environment: BaseEnvironmentWrapper, **kwargs) -> None:
+    def __init__(
+        self: "AbstractPG", environment: BaseEnvironmentWrapper, **kwargs
+    ) -> None:
         self.config = kwargs["config"]
         self.dtype_name = self.config.hyperparameters["policy_gradient"].get(
             "dtype_name", "float32"
@@ -46,13 +48,12 @@ class AbstractPG(ABC):
             ],
         }
         self.policy: Policy = create_policy(policy_parameters)
-        value_net_parameters: FFNNParameters = self.config.hyperparameters[
+        value_net_parameters: NNParameters = self.config.hyperparameters[
             "policy_gradient"
         ]["value_net_parameters"]
         self.value_net: nn.Sequential = create_value_net(
-            value_net_parameters["activations"],
-            value_net_parameters["hidden_layer_sizes"],
-            self.environment.observation_dim[0],
+            observation_dim=self.environment.observation_dim,
+            parameters=value_net_parameters,
         )
         self.value_net_optimizer: AdamOptimizer = torch.optim.Adam(
             self.value_net.parameters(), lr=value_net_parameters["learning_rate"]
@@ -61,7 +62,7 @@ class AbstractPG(ABC):
             self.config,
             buffer_size=self.episodes_per_training_step,
             action_dim=self.environment.action_dim,
-            observation_dim=self.environment.observation_dim
+            observation_dim=self.environment.observation_dim,
         )
         self.logger = ProgressLogger(
             level=self.config.log_level,
@@ -71,10 +72,10 @@ class AbstractPG(ABC):
 
     @abstractmethod
     def _update_policy(
-            self: "AbstractPG",
-            obs: torch.Tensor,
-            actions: torch.Tensor,
-            advantages: torch.Tensor,
+        self: "AbstractPG",
+        obs: torch.Tensor,
+        actions: torch.Tensor,
+        advantages: torch.Tensor,
     ) -> None:
         pass
 
@@ -194,22 +195,22 @@ class AbstractPG(ABC):
         return value_tensor.squeeze(-1)
 
     def _get_action_and_value(
-            self: "AbstractPG", obs: torch.Tensor
+        self: "AbstractPG", obs: torch.Tensor
     ) -> Tuple[np.ndarray, float]:
         action = self.policy.get_action(obs)
         value = self._get_state_value(obs)
         return action.numpy(), value
 
     def _update_value_net(
-            self: "AbstractPG", obs: torch.Tensor, rewards_to_go: torch.Tensor
+        self: "AbstractPG", obs: torch.Tensor, rewards_to_go: torch.Tensor
     ) -> None:
         self.logger.start_timer(
             scope="epoch", level="INFO", attribute="value_net_update"
         )
         for _ in range(
-                self.config.hyperparameters["policy_gradient"][
-                    "value_updates_per_training_step"
-                ]
+            self.config.hyperparameters["policy_gradient"][
+                "value_updates_per_training_step"
+            ]
         ):
             state_values = self._get_state_values(obs)
             self.value_net_optimizer.zero_grad()

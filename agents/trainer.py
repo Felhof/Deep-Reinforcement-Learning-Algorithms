@@ -14,16 +14,22 @@ class Trainer:
             epochs=config.epochs,
         )
 
-    def _train_agent(self: "Trainer", agent_type: type, environment: BaseEnvironmentWrapper) -> None:
+    def _train_agent(
+        self: "Trainer", agent_type: type, environment: BaseEnvironmentWrapper
+    ) -> None:
         assert self.config is not None
         assert self.config.epochs >= 1
 
         for _epoch in range(self.config.epochs):
-            agent = agent_type(environment, config=self.config, result_storage=self.result_storage)
+            agent = agent_type(
+                environment, config=self.config, result_storage=self.result_storage
+            )
             agent.train()
             self.result_storage.end_epoch()
 
-    def train_agents(self: "Trainer", agent_types: List[type], environment: BaseEnvironmentWrapper) -> None:
+    def train_agents(
+        self: "Trainer", agent_types: List[type], environment: BaseEnvironmentWrapper
+    ) -> None:
         for agent_type in agent_types:
             self._train_agent(agent_type, environment)
 

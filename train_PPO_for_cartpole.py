@@ -16,7 +16,7 @@ config = Config(
             "discount_rate": 0.99,
             "gae_exp_mean_discount_rate": 0.92,
             "policy_net_parameters": {
-                "hidden_layer_sizes": [128],
+                "linear_layer_sizes": [128],
                 "activations": [
                     torch.nn.ReLU(),
                     torch.nn.Tanh(),
@@ -24,7 +24,7 @@ config = Config(
                 "learning_rate": 0.001,
             },
             "value_net_parameters": {
-                "hidden_layer_sizes": [128],
+                "linear_layer_sizes": [128],
                 "activations": [
                     torch.nn.ReLU(),
                     torch.nn.Tanh(),

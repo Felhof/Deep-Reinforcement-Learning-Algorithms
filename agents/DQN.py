@@ -4,7 +4,7 @@ import torch.nn as nn
 from utilities.buffer.DQNBuffer import DQNBuffer
 from utilities.environments import BaseEnvironmentWrapper
 from utilities.nn import create_q_net
-from utilities.types import AdamOptimizer, FFNNParameters
+from utilities.types import AdamOptimizer, NNParameters
 
 
 class DQN:
@@ -13,20 +13,19 @@ class DQN:
         self.environment = environment
         self.episode_length: int = self.config.episode_length
         self.gamma: float = self.config.hyperparameters["DQN"]["discount_rate"]
-        q_net_parameters: FFNNParameters = self.config.hyperparameters["DQN"][
+        q_net_parameters: NNParameters = self.config.hyperparameters["DQN"][
             "q_net_parameters"
         ]
         self.q_net: nn.Sequential = create_q_net(
-            q_net_parameters["activations"],
-            q_net_parameters["hidden_layer_sizes"],
-            self.environment.observation_dim[0],
-            self.environment.number_of_actions,
+            observation_dim=self.environment.observation_dim,
+            number_of_actions=self.environment.number_of_actions,
+            parameters=q_net_parameters,
         )
         self.q_net_optimizer: AdamOptimizer = torch.optim.Adam(
             self.q_net.parameters(),
             lr=self.config.hyperparameters["DQN"]["q_net_learning_rate"],
         )
-        self.replayBuffer = DQNBuffer(self.config, self.environment.observation_dim[0])
+        self.replayBuffer = DQNBuffer(self.config, self.environment.observation_dim)
         self.exploration_rate = self.config.hyperparameters["DQN"][
             "initial_exploration_rate"
         ]
@@ -50,7 +49,7 @@ class DQN:
                 next_state_q_values = self.q_net(next_states)
                 best_next_state_q_values = torch.max(next_state_q_values, dim=1).values
                 q_value_targets = (
-                        rewards + (1 - done) * self.gamma * best_next_state_q_values
+                    rewards + (1 - done) * self.gamma * best_next_state_q_values
                 )
             actual_q_values = (
                 self.q_net(states)
@@ -68,7 +67,7 @@ class DQN:
             self.q_net_optimizer.step()
 
         for episode in range(self.config.training_steps_per_epoch):
-            episode_reward = 0
+            episode_reward: float = 0
             obs, _ = self.environment.reset()
             for _step in range(self.config.episode_length):
                 action = self._get_action(torch.tensor(obs, dtype=torch.float32))
@@ -77,13 +76,13 @@ class DQN:
                 )
                 reward /= self.config.episode_length
                 self.replayBuffer.add_transition(
-                    obs, action, reward, next_obs, terminated or truncated
+                    obs, action, float(reward), next_obs, terminated or truncated
                 )
-                episode_reward += reward
+                episode_reward += float(reward)
                 obs = next_obs
                 learning = (
-                        self.replayBuffer.get_number_of_stored_transitions()
-                        >= self.config.hyperparameters["DQN"]["minibatch_size"]
+                    self.replayBuffer.get_number_of_stored_transitions()
+                    >= self.config.hyperparameters["DQN"]["minibatch_size"]
                 )
                 if learning:
                     update_q_network()

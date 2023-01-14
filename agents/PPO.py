@@ -11,7 +11,7 @@ class PPO(AbstractPG):
         self.clip_range = config.hyperparameters["PPO"]["clip_range"]
 
     def _update_policy(
-            self: "PPO", obs: torch.Tensor, actions: torch.Tensor, advantages: torch.Tensor
+        self: "PPO", obs: torch.Tensor, actions: torch.Tensor, advantages: torch.Tensor
     ) -> None:
         ppo_clip_objective = self._ppo_clip_objective(obs, actions, advantages)
         ppo_clip_objective_grad = torch.autograd.grad(
@@ -22,7 +22,7 @@ class PPO(AbstractPG):
         self.policy.update_gradients()
 
     def _ppo_clip_objective(
-            self: "PPO", obs: torch.Tensor, actions: torch.Tensor, advantages: torch.Tensor
+        self: "PPO", obs: torch.Tensor, actions: torch.Tensor, advantages: torch.Tensor
     ) -> torch.Tensor:
         action_log_probs = torch.exp(
             self.policy.get_log_probs_from_actions(obs, actions)
@@ -37,5 +37,5 @@ class PPO(AbstractPG):
 
     def _g(self: "PPO", advantages: torch.Tensor) -> torch.Tensor:
         return (advantages >= 0) * (1 + self.clip_range) * advantages + (
-                advantages < 0
+            advantages < 0
         ) * (1 - self.clip_range) * advantages

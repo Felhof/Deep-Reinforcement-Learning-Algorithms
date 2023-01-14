@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, TypedDict, Union
+from typing import Dict, List, Optional, Tuple, TypedDict, Union
 
 import torch
 import torch.nn as nn
@@ -12,29 +12,30 @@ AdamOptimizer: TypeAlias = torch.optim.Adam
 
 LinearLayer: TypeAlias = nn.Linear
 
-CNNParameters = TypedDict(
-    "CNNParameters",
-    {
-        
-    }
-)
+ConvolutionSpec = Tuple[int, int, int]
+PoolingLayerSpec = Tuple[str, int]
 
-FFNNParameters = TypedDict(
-    "FFNNParameters",
+NNParameters = TypedDict(
+    "NNParameters",
     {
-        "activations": List[ActivationFunction],
-        "hidden_layer_sizes": List[int],
+        "convolutions": List[ConvolutionSpec],
+        "pooling_layers": List[PoolingLayerSpec],
+        "linear_layer_activations": List[ActivationFunction],
+        "linear_layer_sizes": List[int],
         "learning_rate": float,
     },
+    total=False,
 )
+
+ObservationDim = Union[int, Tuple[int, int, int]]
 
 PolicyParameters = TypedDict(
     "PolicyParameters",
     {
         "action_type": str,
         "number_of_actions": int,
-        "observation_dim": int,
-        "policy_net_parameters": FFNNParameters,
+        "observation_dim": ObservationDim,
+        "policy_net_parameters": NNParameters,
     },
 )
 
@@ -49,9 +50,9 @@ AgentHyperParameters = TypedDict(
         "value_updates_per_training_step": int,
         "discount_rate": float,
         "gae_exp_mean_discount_rate": float,
-        "policy_net_parameters": FFNNParameters,
-        "q_net_parameters": FFNNParameters,
-        "value_net_parameters": FFNNParameters,
+        "policy_net_parameters": NNParameters,
+        "q_net_parameters": NNParameters,
+        "value_net_parameters": NNParameters,
         "minibatch_size": int,
         "buffer_size": int,
         "initial_exploration_rate": float,

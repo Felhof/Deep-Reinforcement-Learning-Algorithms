@@ -14,7 +14,7 @@ config = Config(
         "DQN": {
             "discount_rate": 0.99,
             "q_net_parameters": {
-                "hidden_layer_sizes": [64],
+                "linear_layer_sizes": [64],
                 "activations": [
                     torch.nn.ReLU(),
                     torch.nn.Tanh(),

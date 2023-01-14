@@ -3,7 +3,6 @@ from typing import Callable
 from agents.AbstractPG import AbstractPG
 import numpy as np
 import torch
-
 from utilities.environments import BaseEnvironmentWrapper
 
 
@@ -21,7 +20,7 @@ class TRPG(AbstractPG):
         self.cg_iters = config.hyperparameters["TRPG"]["conjugate_gradient_iterations"]
 
     def _update_policy(
-            self: "TRPG", obs: torch.Tensor, actions: torch.Tensor, advantages: torch.Tensor
+        self: "TRPG", obs: torch.Tensor, actions: torch.Tensor, advantages: torch.Tensor
     ) -> None:
         loss = self.policy.compute_loss(obs, actions, advantages)
         loss_grad = torch.autograd.grad(
@@ -59,18 +58,18 @@ class TRPG(AbstractPG):
 
         x = self._cga(flat_loss_grad, kl_hessian_vector_product)
         step_direction = (
-                torch.sqrt(
-                    2
-                    * self.delta
-                    / (torch.dot(x, kl_hessian_vector_product(x)) + self.damping_coeff)
-                )
-                * x
+            torch.sqrt(
+                2
+                * self.delta
+                / (torch.dot(x, kl_hessian_vector_product(x)) + self.damping_coeff)
+            )
+            * x
         )
 
         def backtracking_line_search(original_params: torch.Tensor) -> None:
             old_policy = self.policy.get_policy(obs, detached=True)
             for _, step_fraction in enumerate(
-                    self.alpha ** np.arange(self.backtracking_iters)
+                self.alpha ** np.arange(self.backtracking_iters)
             ):
                 new_params = original_params + step_fraction * step_direction
                 self._set_flat_params(new_params)
@@ -89,9 +88,9 @@ class TRPG(AbstractPG):
         backtracking_line_search(flat_params)
 
     def _cga(
-            self: "TRPG",
-            g: torch.Tensor,
-            hessian_vector_product: Callable[[torch.Tensor], torch.Tensor],
+        self: "TRPG",
+        g: torch.Tensor,
+        hessian_vector_product: Callable[[torch.Tensor], torch.Tensor],
     ) -> torch.Tensor:
         x = torch.zeros_like(g)
         r = g.clone()
@@ -122,7 +121,7 @@ class TRPG(AbstractPG):
         state_dict = self.policy.get_state_dict()
         for key, params in self.policy.get_state_dict().items():
             flat_size = int(np.prod(list(params.size())))
-            state_dict[key] = flat_params[prev_ind: prev_ind + flat_size].view(
+            state_dict[key] = flat_params[prev_ind : prev_ind + flat_size].view(
                 params.size()
             )
             prev_ind += flat_size

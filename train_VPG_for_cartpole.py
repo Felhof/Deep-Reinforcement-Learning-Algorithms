@@ -16,7 +16,7 @@ config = Config(
             "gae_exp_mean_discount_rate": 0.92,
             "policy_net_parameters": {
                 "linear_layer_sizes": [128],
-                "activations": [
+                "linear_layer_activations": [
                     torch.nn.ReLU(),
                     torch.nn.Tanh(),
                 ],
@@ -24,7 +24,7 @@ config = Config(
             },
             "value_net_parameters": {
                 "linear_layer_sizes": [128],
-                "activations": [
+                "linear_layer_activations": [
                     torch.nn.ReLU(),
                     torch.nn.Tanh(),
                 ],
@@ -38,6 +38,7 @@ config = Config(
     results_filename="VPG_cartpole_rewards3",
     log_level="INFO",
     log_filename="VPG_cartpole_debug3",
+    model_filename="VPG_test",
 )
 
 env = BaseEnvironmentWrapper(gym.make("CartPole-v1"))

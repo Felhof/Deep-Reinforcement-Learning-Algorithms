@@ -34,6 +34,10 @@ class Policy(ABC):
         )
 
     @abstractmethod
+    def get_best_action(self: "Policy", obs: torch.Tensor) -> torch.Tensor:
+        pass
+
+    @abstractmethod
     def get_policy(
         self: "Policy", obs: torch.Tensor, detached: bool = False
     ) -> Distribution:
@@ -92,6 +96,10 @@ class CategoricalPolicy(Policy):
             parameters=policy_net_parameters,
         )
 
+    def get_best_action(self: "CategoricalPolicy", obs: torch.Tensor) -> torch.Tensor:
+        policy = self.get_policy(obs)
+        return torch.argmax(policy.probs)
+
     def get_policy(
         self: "CategoricalPolicy", obs: torch.Tensor, detached: bool = False
     ) -> Categorical:
@@ -125,6 +133,10 @@ class ContinuousPolicy(Policy):
             observation_dim=observation_dim,
             parameters=policy_net_parameters,
         )
+
+    def get_best_action(self: "ContinuousPolicy", obs: torch.Tensor) -> torch.Tensor:
+        policy = self.get_policy(obs)
+        return policy.mean
 
     def get_policy(
         self: "ContinuousPolicy", obs: torch.Tensor, detached: bool = False

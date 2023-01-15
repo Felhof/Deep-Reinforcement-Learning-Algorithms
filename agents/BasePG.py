@@ -15,6 +15,9 @@ from utilities.utils import get_dimension_format_string
 class BasePG(BaseAgent):
     def __init__(self: "BasePG", **kwargs) -> None:
         super().__init__(**kwargs)
+        self.gamma: float = self.config.hyperparameters["policy_gradient"][
+            "discount_rate"
+        ]
         self.dtype_name = self.config.hyperparameters["policy_gradient"].get(
             "dtype_name", "float32"
         )
@@ -66,13 +69,23 @@ class BasePG(BaseAgent):
     ) -> None:
         pass
 
+    def get_best_action(self: "BasePG", obs: torch.Tensor) -> np.ndarray:
+        best_action = self.policy.get_best_action(obs)
+        return best_action.numpy()
+
+    def load(self: "BasePG", filename) -> None:
+        self.policy.policy_net.load_state_dict(
+            torch.load(f"{filename}_policy_model.pt")
+        )
+        self.value_net.load_state_dict(torch.load(f"{filename}_value_model.pt"))
+
     def train(self: "BasePG") -> None:
-        for _training_step in range(self.config.training_steps_per_epoch):
-            self.logger.info(f"Training step {_training_step}")
+        for training_step in range(self.config.training_steps_per_epoch):
+            self.logger.info(f"Training step {training_step}")
             self.policy.reset_gradients()
 
             self.logger.info("Running episodes")
-            self._run_episodes()
+            self._run_episodes(training_step)
             self.logger.log_table(
                 scope="training_step", level="INFO", attributes=["reward"]
             )
@@ -110,7 +123,7 @@ class BasePG(BaseAgent):
         self.logger.log_table(scope="epoch", level="INFO")
         self.logger.clear(scope="epoch")
 
-    def _run_episodes(self: "BasePG") -> None:
+    def _run_episodes(self: "BasePG", step: int) -> None:
         self.logger.start_timer(scope="epoch", level="INFO", attribute="episodes")
         episode_rewards: List[float] = []
         for _episode in range(self.episodes_per_training_step):
@@ -168,9 +181,10 @@ class BasePG(BaseAgent):
                     episode_rewards.append(episode_reward)
                     self.logger.store(scope="training_step", reward=episode_reward)
 
-        self.result_storage.add_average_training_step_reward(
-            float(np.mean(episode_rewards))
-        )
+        mean_reward = float(np.mean(episode_rewards))
+        if step % self.config.save_interval == 0:
+            self.model_saver.save_model_if_best(self, mean_reward)
+        self.result_storage.add_average_training_step_reward(mean_reward)
         self.logger.stop_timer(scope="epoch", level="INFO", attribute="episodes")
 
     def _get_state_value(self: "BasePG", obs: torch.Tensor) -> float:

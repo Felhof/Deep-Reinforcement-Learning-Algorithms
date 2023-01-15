@@ -2,7 +2,7 @@ from typing import List
 
 from utilities.config import Config
 from utilities.environments import BaseEnvironmentWrapper
-from utilities.results import ResultStorage
+from utilities.results import ModelSaver, ResultStorage
 
 
 class Trainer:
@@ -26,6 +26,10 @@ class Trainer:
                 environment=environment,
                 config=self.config,
                 result_storage=self.result_storage,
+                model_saver=ModelSaver(
+                    filename=self.config.model_filename,
+                    directory=self.config.model_directory,
+                ),
             )
             agent.train()
             self.result_storage.end_epoch()

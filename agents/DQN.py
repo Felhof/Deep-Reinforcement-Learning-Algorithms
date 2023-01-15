@@ -10,6 +10,7 @@ from utilities.types import AdamOptimizer, NNParameters
 class DQN(BaseAgent):
     def __init__(self: "DQN", **kwargs) -> None:
         super().__init__(**kwargs)
+        self.gamma: float = self.config.hyperparameters["DQN"]["discount_rate"]
         q_net_parameters: NNParameters = self.config.hyperparameters["DQN"][
             "q_net_parameters"
         ]
@@ -31,6 +32,9 @@ class DQN(BaseAgent):
             "gradient_clipping_norm"
         ]
         self.exploration_rate_divisor = 2
+
+    def load(self: "DQN", filename) -> None:
+        self.q_net.load_state_dict(torch.load(f"{filename}_q_net.pt"))
 
     def train(self: "DQN") -> None:
         def update_q_network() -> None:
@@ -96,10 +100,10 @@ class DQN(BaseAgent):
         if explore:
             action = self.environment.action_space.sample()
         else:
-            action = self._get_best_action(obs)
+            action = self.get_best_action(obs)
         return action
 
-    def _get_best_action(self: "DQN", obs: torch.Tensor) -> np.ndarray:
+    def get_best_action(self: "DQN", obs: torch.Tensor) -> np.ndarray:
         self.q_net.eval()
         with torch.no_grad():
             q_value_tensor = self.q_net.forward(obs)

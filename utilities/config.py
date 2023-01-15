@@ -16,3 +16,6 @@ class Config:
     log_directory: str = ""
     results_filename: str = ""
     results_directory: str = ""
+    model_filename: str = ""
+    model_directory: str = ""
+    save_interval: int = 5

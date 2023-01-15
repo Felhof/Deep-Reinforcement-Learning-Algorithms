@@ -34,13 +34,15 @@ class ProgressLogger:
         log_to_console: bool = True,
         log_to_file: bool = True,
         filename: str = "logfile",
+        directory: str = "",
     ) -> None:
+        self.directory = LOG_DIRECTORY_PATH if directory == "" else directory
         self.level = levelmap[level]
         logger = logging.getLogger()
         logger.setLevel(self.level)
 
         if log_to_file:
-            file_handler = logging.FileHandler(f"{LOG_DIRECTORY_PATH}/{filename}.log")
+            file_handler = logging.FileHandler(f"{self.directory}/{filename}.log")
             file_handler.setLevel(self.level)
             file_handler.setFormatter(file_formatter)
             logger.addHandler(file_handler)

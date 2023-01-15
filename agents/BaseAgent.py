@@ -12,6 +12,7 @@ class BaseAgent(ABC):
         self.logger = ProgressLogger(
             level=self.config.log_level,
             filename=self.config.log_filename,  # log_to_console=False
+            directory=self.config.log_directory,
         )
         self.result_storage = kwargs["result_storage"]
 

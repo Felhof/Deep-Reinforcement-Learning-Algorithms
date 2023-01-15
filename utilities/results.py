@@ -15,6 +15,7 @@ class ResultStorage:
         filename: str = "VPG",
         training_steps_per_epoch: int = 400,
         epochs=5,
+        directory="",
     ) -> None:
         self.rewards = np.zeros(
             epochs,
@@ -25,6 +26,7 @@ class ResultStorage:
         self.episode_idx = 0
         self.training_step_idx = 0
         self.filename = filename
+        self.directory = RESULT_DIRECTORY_PATH if directory == "" else directory
 
     def add_average_training_step_reward(self: "ResultStorage", reward: float) -> None:
         self.rewards[self.training_step_idx][self.episode_idx] = reward
@@ -35,9 +37,7 @@ class ResultStorage:
         self.training_step_idx += 1
 
     def save_results_to_csv(self: "ResultStorage") -> None:
-        with open(
-            f"{RESULT_DIRECTORY_PATH}/{self.filename}.csv", mode="w"
-        ) as result_file:
+        with open(f"{self.directory}/{self.filename}.csv", mode="w") as result_file:
             result_writer = csv.writer(
                 result_file, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL
             )

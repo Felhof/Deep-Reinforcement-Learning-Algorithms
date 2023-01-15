@@ -10,6 +10,7 @@ class Trainer:
         self.config = config
         self.result_storage = ResultStorage(
             filename=config.results_filename,
+            directory=config.results_directory,
             training_steps_per_epoch=config.training_steps_per_epoch,
             epochs=config.epochs,
         )

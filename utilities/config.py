@@ -13,4 +13,6 @@ class Config:
     plot_name: str = ""
     log_level: str = "WARN"
     log_filename: str = ""
+    log_directory: str = ""
     results_filename: str = ""
+    results_directory: str = ""

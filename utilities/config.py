@@ -18,5 +18,6 @@ class Config:
     results_directory: str = ""
     model_filename: str = ""
     model_directory: str = ""
+    save: bool = True
     save_interval: int = 5
     evaluation_interval: int = 1

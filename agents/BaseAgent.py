@@ -25,7 +25,8 @@ class BaseAgent(ABC):
             directory=self.config.log_directory,
         )
         self.result_storage = kwargs["result_storage"]
-        self.model_saver = kwargs["model_saver"]
+        if self.config.save:
+            self.model_saver = kwargs["model_saver"]
 
     @abstractmethod
     def get_best_action(self: "BaseAgent", obs: torch.Tensor) -> np.ndarray:

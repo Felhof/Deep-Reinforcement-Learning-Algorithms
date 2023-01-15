@@ -4,7 +4,7 @@ import gymnasium as gym
 import pytest
 import torch.nn
 from utilities.config import Config
-from utilities.environments import BaseEnvironmentWrapper, AtariWrapper
+from utilities.environments import AtariWrapper, BaseEnvironmentWrapper
 
 
 @pytest.fixture
@@ -203,7 +203,7 @@ def adventure_config() -> Callable[[str, str], Config]:
         "convolutions": [(32, 8, 4), (64, 4, 2), (64, 3, 1)],
         "linear_layer_activations": [torch.nn.ReLU(), torch.nn.ReLU(), torch.nn.Tanh()],
         "linear_layer_sizes": [3136, 512],
-        "learning_rate": 0.00025
+        "learning_rate": 0.00025,
     }
 
     def _create_config(results_filename, dtype_name: str = "float32") -> Config:

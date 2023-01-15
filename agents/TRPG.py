@@ -1,14 +1,13 @@
 from typing import Callable
 
-from agents.AbstractPG import AbstractPG
+from agents.BasePG import BasePG
 import numpy as np
 import torch
-from utilities.environments import BaseEnvironmentWrapper
 
 
-class TRPG(AbstractPG):
-    def __init__(self: "TRPG", environment: BaseEnvironmentWrapper, **kwargs) -> None:
-        super().__init__(environment, **kwargs)
+class TRPG(BasePG):
+    def __init__(self: "TRPG", **kwargs) -> None:
+        super().__init__(**kwargs)
         config = kwargs["config"]
         self.tensor_type = torch.float64
         self.delta = config.hyperparameters["TRPG"]["kl_divergence_limit"]
@@ -30,14 +29,6 @@ class TRPG(AbstractPG):
         flat_loss_grad *= -1
 
         def kl_hessian_vector_product(v: torch.Tensor) -> torch.Tensor:
-            # log_probs = self.policy.get_log_probs(obs)
-            #
-            # kl_loss = torch.nn.functional.kl_div(
-            #     log_probs,
-            #     log_probs.clone().detach(),
-            #     log_target=True,
-            #     reduction="batchmean",
-            # )
             kl_loss = torch.distributions.kl.kl_divergence(
                 self.policy.get_policy(obs), self.policy.get_policy(obs, detached=True)
             ).mean()
@@ -74,9 +65,6 @@ class TRPG(AbstractPG):
                 new_params = original_params + step_fraction * step_direction
                 self._set_flat_params(new_params)
                 new_policy = self.policy.get_policy(obs)
-                # kl = torch.nn.functional.kl_div(
-                #     new_log_probs, log_probs, log_target=True, reduction="batchmean"
-                # )
                 kl_loss = torch.distributions.kl.kl_divergence(
                     new_policy, old_policy
                 ).mean()

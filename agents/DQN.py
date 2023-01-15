@@ -1,18 +1,15 @@
+from agents.BaseAgent import BaseAgent
 import numpy as np
 import torch
 import torch.nn as nn
 from utilities.buffer.DQNBuffer import DQNBuffer
-from utilities.environments import BaseEnvironmentWrapper
 from utilities.nn import create_q_net
 from utilities.types import AdamOptimizer, NNParameters
 
 
-class DQN:
-    def __init__(self: "DQN", environment: BaseEnvironmentWrapper, **kwargs) -> None:
-        self.config = kwargs["config"]
-        self.environment = environment
-        self.episode_length: int = self.config.episode_length
-        self.gamma: float = self.config.hyperparameters["DQN"]["discount_rate"]
+class DQN(BaseAgent):
+    def __init__(self: "DQN", **kwargs) -> None:
+        super().__init__(**kwargs)
         q_net_parameters: NNParameters = self.config.hyperparameters["DQN"][
             "q_net_parameters"
         ]
@@ -34,9 +31,8 @@ class DQN:
             "gradient_clipping_norm"
         ]
         self.exploration_rate_divisor = 2
-        self.result_storage = kwargs["result_storage"]
 
-    def train(self: "DQN"):
+    def train(self: "DQN") -> None:
         def update_q_network() -> None:
             data = self.replayBuffer.get_transition_data()
             states = torch.tensor(data["states"], dtype=torch.float32)

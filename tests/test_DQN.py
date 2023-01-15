@@ -27,11 +27,11 @@ def cleanup_atari_test_results() -> None:
 
 
 def test_can_train_with_different_environment_dimensions(
-        cartpole_environment,
-        mountain_car_environment,
-        cartpole_config,
-        mountain_car_config,
-        cleanup_test_results,
+    cartpole_environment,
+    mountain_car_environment,
+    cartpole_config,
+    mountain_car_config,
+    cleanup_test_results,
 ) -> None:
     config = cartpole_config(CARTPOLE_TEST_RESULTS)
     _train_agent_and_store_result(
@@ -51,9 +51,7 @@ def test_can_train_with_different_environment_dimensions(
 
 
 def test_can_train_for_atari_environments(
-        adventure_environment,
-        adventure_config,
-        cleanup_atari_test_results
+    adventure_environment, adventure_config, cleanup_atari_test_results
 ):
     config = adventure_config(ATARI_TEST_RESULTS)
     _train_agent_and_store_result(

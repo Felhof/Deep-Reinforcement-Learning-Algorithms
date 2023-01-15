@@ -1,11 +1,10 @@
-from agents.AbstractPG import AbstractPG
+from agents.BasePG import BasePG
 import torch
-from utilities.environments import BaseEnvironmentWrapper
 
 
-class VPG(AbstractPG):
-    def __init__(self: "VPG", environment: BaseEnvironmentWrapper, **kwargs) -> None:
-        super().__init__(environment, **kwargs)
+class VPG(BasePG):
+    def __init__(self: "VPG", **kwargs) -> None:
+        super().__init__(**kwargs)
 
     def _update_policy(
         self: "VPG", obs: torch.Tensor, actions: torch.Tensor, advantages: torch.Tensor

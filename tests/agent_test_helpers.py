@@ -11,7 +11,7 @@ def _train_agent_and_store_result(agent=None, config=None, environment=None):
         training_steps_per_epoch=config.training_steps_per_epoch,
         epochs=config.epochs,
     )
-    agent = agent(environment, config=config, result_storage=result_storage)
+    agent = agent(environment=environment, config=config, result_storage=result_storage)
     agent.train()
     result_storage.save_results_to_csv()
 

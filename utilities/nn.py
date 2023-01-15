@@ -13,10 +13,10 @@ from utilities.types import (
 
 
 def _add_convolutional_layers(
-        model: nn.Sequential,
-        in_channels: int,
-        convolutions: List[ConvolutionSpec],
-        pooling_layers: List[PoolingLayerSpec],
+    model: nn.Sequential,
+    in_channels: int,
+    convolutions: List[ConvolutionSpec],
+    pooling_layers: List[PoolingLayerSpec],
 ) -> None:
     pooling_deque = deque(pooling_layers)
     for out_channels, kernel_size, stride in convolutions:
@@ -39,9 +39,9 @@ def _add_convolutional_layers(
 
 
 def _add_linear_layers(
-        model: nn.Sequential,
-        sizes: List[int],
-        activations: List[ActivationFunction],
+    model: nn.Sequential,
+    sizes: List[int],
+    activations: List[ActivationFunction],
 ) -> None:
     for in_size, out_size, activation in zip(sizes, sizes[1:], activations):
         model.append(nn.Linear(in_features=in_size, out_features=out_size))
@@ -49,15 +49,15 @@ def _add_linear_layers(
 
 
 def create_nn(
-        observation_dim: ObservationDim, output_size: int, parameters: NNParameters
+    observation_dim: ObservationDim, output_size: int, parameters: NNParameters
 ) -> nn.Sequential:
     convolutions = parameters.get("convolutions", [])
     assert (
-            isinstance(observation_dim, int) or convolutions != []
+        isinstance(observation_dim, int) or convolutions != []
     ), "If the observation is an image there must be a convolutional layer."
 
     if convolutions:
-        model = ConvolutionWrapper()
+        model: nn.Sequential = ConvolutionWrapper()
         in_channels = cast(tuple, observation_dim)[0]
         pooling_layers = parameters.get("pooling_layers", [])
         _add_convolutional_layers(
@@ -73,8 +73,8 @@ def create_nn(
         parameters["linear_layer_sizes"] + [output_size]
         if convolutions
         else [cast(int, observation_dim)]
-             + parameters["linear_layer_sizes"]
-             + [output_size]
+        + parameters["linear_layer_sizes"]
+        + [output_size]
     )
     _add_linear_layers(
         model, sizes=sizes, activations=parameters["linear_layer_activations"]
@@ -84,12 +84,12 @@ def create_nn(
 
 
 def create_value_net(
-        observation_dim: ObservationDim,
-        parameters: NNParameters,
+    observation_dim: ObservationDim,
+    parameters: NNParameters,
 ) -> nn.Sequential:
     assert (
-            len(parameters["linear_layer_activations"])
-            == len(parameters["linear_layer_sizes"]) + 1
+        len(parameters["linear_layer_activations"])
+        == len(parameters["linear_layer_sizes"]) + 1
     ), "Value net must be given exactly one more activation function than hidden layers"
     return create_nn(
         observation_dim=observation_dim, output_size=1, parameters=parameters
@@ -97,13 +97,13 @@ def create_value_net(
 
 
 def create_q_net(
-        observation_dim: ObservationDim,
-        number_of_actions: int,
-        parameters: NNParameters,
+    observation_dim: ObservationDim,
+    number_of_actions: int,
+    parameters: NNParameters,
 ) -> nn.Sequential:
     assert (
-            len(parameters["linear_layer_activations"])
-            == len(parameters["linear_layer_sizes"]) + 1
+        len(parameters["linear_layer_activations"])
+        == len(parameters["linear_layer_sizes"]) + 1
     ), "Q net must be given exactly one more activation function than hidden layers"
     return create_nn(
         observation_dim=observation_dim,
@@ -115,7 +115,9 @@ def create_q_net(
 class ConvolutionWrapper(nn.Sequential):
     def forward(self, inp: torch.Tensor) -> torch.Tensor:
         shape = inp.shape
-        assert len(shape) == 3 or len(shape) == 5, "Input to convolution must be 3- or 5-dimensional"
+        assert (
+            len(shape) == 3 or len(shape) == 5
+        ), "Input to convolution must be 3- or 5-dimensional"
         if len(shape) == 3:
             inp = inp.unsqueeze(0)
             output = super().forward(inp)

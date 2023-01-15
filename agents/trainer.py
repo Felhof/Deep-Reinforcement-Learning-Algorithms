@@ -22,7 +22,9 @@ class Trainer:
 
         for _epoch in range(self.config.epochs):
             agent = agent_type(
-                environment, config=self.config, result_storage=self.result_storage
+                environment=environment,
+                config=self.config,
+                result_storage=self.result_storage,
             )
             agent.train()
             self.result_storage.end_epoch()

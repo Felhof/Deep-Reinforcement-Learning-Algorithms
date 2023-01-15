@@ -2,7 +2,7 @@ from typing import Tuple, Union
 
 
 def get_dimension_format_string(
-        dims: Union[int, Tuple[int, ...]], dtype: str = "float32"
+    dims: Union[int, Tuple[int, ...]], dtype: str = "float32"
 ) -> str:
     if isinstance(dims, int):
         return f"{dims}{dtype}" if dims > 1 else dtype

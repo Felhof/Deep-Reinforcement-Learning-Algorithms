@@ -10,7 +10,7 @@ from utilities.types import ObservationDim
 def _get_observation_dim_from_environment(environment: gym.Env) -> ObservationDim:
     shape = environment.observation_space.shape
     assert (
-            len(shape) == 1 or len(shape) == 3
+        len(shape) == 1 or len(shape) == 3
     ), "Only 1 or 3 dimensional observations supported"
     if len(shape) == 1:
         return shape[0]
@@ -27,7 +27,7 @@ class BaseEnvironmentWrapper:
             environment
         )
         if isinstance(
-                self.environment.action_space, gym.spaces.Box
+            self.environment.action_space, gym.spaces.Box
         ) and self.environment.action_space.shape == (1,):
             self.step = self.continuous_step
             self.number_of_actions = 1
@@ -42,7 +42,7 @@ class BaseEnvironmentWrapper:
             self.action_type = "Discrete"
 
     def continuous_step(
-            self: "BaseEnvironmentWrapper", action: np.ndarray
+        self: "BaseEnvironmentWrapper", action: np.ndarray
     ) -> Tuple[Any, SupportsFloat, bool, bool, dict[str, Any]]:
         gym_action = np.array([action])
         return self.environment.step(gym_action)
@@ -50,12 +50,12 @@ class BaseEnvironmentWrapper:
 
 class AtariWrapper(BaseEnvironmentWrapper):
     def __init__(
-            self: "AtariWrapper",
-            environment: gym.Env,
-            width=84,
-            height=84,
-            greyscale=True,
-            max_frames=4,
+        self: "AtariWrapper",
+        environment: gym.Env,
+        width=84,
+        height=84,
+        greyscale=True,
+        max_frames=4,
     ) -> None:
         super().__init__(environment)
         self.environment = environment
@@ -70,8 +70,11 @@ class AtariWrapper(BaseEnvironmentWrapper):
     def _initialize_frame_stack(self: "AtariWrapper", max_frames: int = 4) -> deque:
         color_channels = 1 if self.greyscale else 3
         return deque(
-            [np.zeros((color_channels, self.height, self.width)) for _ in range(max_frames)],
-            maxlen=max_frames
+            [
+                np.zeros((color_channels, self.height, self.width))
+                for _ in range(max_frames)
+            ],
+            maxlen=max_frames,
         )
 
     def _preprocess_observation(self: "AtariWrapper", obs: Any) -> Any:
@@ -89,7 +92,7 @@ class AtariWrapper(BaseEnvironmentWrapper):
         return obs, info
 
     def _step(
-            self: "AtariWrapper", action: np.ndarray[Any, Any]
+        self: "AtariWrapper", action: np.ndarray[Any, Any]
     ) -> Tuple[Any, SupportsFloat, bool, bool, dict[str, Any]]:
         frame, reward, terminated, truncated, info = self.environment.step(action)
         obs = self._preprocess_observation(frame)

@@ -1,23 +1,20 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import List, Tuple
 
+from agents.BaseAgent import BaseAgent
 from agents.Policy import create_policy, Policy
 import numpy as np
 import torch
 import torch.nn as nn
 from utilities.buffer.PGBuffer import PGBuffer
-from utilities.environments import BaseEnvironmentWrapper
 from utilities.nn import create_value_net
-from utilities.progress_logging import ProgressLogger
 from utilities.types import AdamOptimizer, NNParameters, PolicyParameters
 from utilities.utils import get_dimension_format_string
 
 
-class AbstractPG(ABC):
-    def __init__(
-        self: "AbstractPG", environment: BaseEnvironmentWrapper, **kwargs
-    ) -> None:
-        self.config = kwargs["config"]
+class BasePG(BaseAgent):
+    def __init__(self: "BasePG", **kwargs) -> None:
+        super().__init__(**kwargs)
         self.dtype_name = self.config.hyperparameters["policy_gradient"].get(
             "dtype_name", "float32"
         )
@@ -27,15 +24,9 @@ class AbstractPG(ABC):
         else:
             self.tensor_type = torch.float32
             torch.set_default_tensor_type(torch.FloatTensor)
-        self.environment = environment
-        self.episode_length: int = self.config.episode_length
-
         self.episodes_per_training_step: int = self.config.hyperparameters[
             "policy_gradient"
         ]["episodes_per_training_step"]
-        self.gamma: float = self.config.hyperparameters["policy_gradient"][
-            "discount_rate"
-        ]
         self.lamda: float = self.config.hyperparameters["policy_gradient"][
             "gae_exp_mean_discount_rate"
         ]
@@ -64,22 +55,18 @@ class AbstractPG(ABC):
             action_dim=self.environment.action_dim,
             observation_dim=self.environment.observation_dim,
         )
-        self.logger = ProgressLogger(
-            level=self.config.log_level,
-            filename=self.config.log_filename,  # log_to_console=False
-        )
         self.result_storage = kwargs["result_storage"]
 
     @abstractmethod
     def _update_policy(
-        self: "AbstractPG",
+        self: "BasePG",
         obs: torch.Tensor,
         actions: torch.Tensor,
         advantages: torch.Tensor,
     ) -> None:
         pass
 
-    def train(self: "AbstractPG") -> None:
+    def train(self: "BasePG") -> None:
         for _training_step in range(self.config.training_steps_per_epoch):
             self.logger.info(f"Training step {_training_step}")
             self.policy.reset_gradients()
@@ -123,7 +110,7 @@ class AbstractPG(ABC):
         self.logger.log_table(scope="epoch", level="INFO")
         self.logger.clear(scope="epoch")
 
-    def _run_episodes(self: "AbstractPG") -> None:
+    def _run_episodes(self: "BasePG") -> None:
         self.logger.start_timer(scope="epoch", level="INFO", attribute="episodes")
         episode_rewards: List[float] = []
         for _episode in range(self.episodes_per_training_step):
@@ -186,23 +173,23 @@ class AbstractPG(ABC):
         )
         self.logger.stop_timer(scope="epoch", level="INFO", attribute="episodes")
 
-    def _get_state_value(self: "AbstractPG", obs: torch.Tensor) -> float:
+    def _get_state_value(self: "BasePG", obs: torch.Tensor) -> float:
         value_tensor = self.value_net.forward(obs)
         return value_tensor.item()
 
-    def _get_state_values(self: "AbstractPG", obs: torch.Tensor) -> torch.Tensor:
+    def _get_state_values(self: "BasePG", obs: torch.Tensor) -> torch.Tensor:
         value_tensor = self.value_net.forward(obs)
         return value_tensor.squeeze(-1)
 
     def _get_action_and_value(
-        self: "AbstractPG", obs: torch.Tensor
+        self: "BasePG", obs: torch.Tensor
     ) -> Tuple[np.ndarray, float]:
         action = self.policy.get_action(obs)
         value = self._get_state_value(obs)
         return action.numpy(), value
 
     def _update_value_net(
-        self: "AbstractPG", obs: torch.Tensor, rewards_to_go: torch.Tensor
+        self: "BasePG", obs: torch.Tensor, rewards_to_go: torch.Tensor
     ) -> None:
         self.logger.start_timer(
             scope="epoch", level="INFO", attribute="value_net_update"

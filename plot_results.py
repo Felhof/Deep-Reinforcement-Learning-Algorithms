@@ -2,7 +2,7 @@ from utilities.result_reading import get_result_data_for_agent
 from utilities.plotter import Plotter
 
 if __name__ == "__main__":
-    vpg_results = get_result_data_for_agent(agent_label="VPG", filenames=["VPG_cartpole_rewards2"])
+    vpg_results = get_result_data_for_agent(agent_label="VPG", filenames=["VPG_cartpole_rewards3"])
     ppo_results = get_result_data_for_agent(agent_label="PPO", filenames=["PPO_cartpole_rewards"])
     trpg_results = get_result_data_for_agent(agent_label="TRPG", filenames=['TRPG_02', 'TRPG_03', 'TRPG_04', 'TRPG_08', 'TRPG_12'])
     # dqn_results = get_result_data_for_agent(agent_label="DQN", filenames=["DQN_Cartpole"])

@@ -32,7 +32,7 @@ config = Config(
             },
         },
     },
-    episode_length=230,
+    episode_length=200,
     training_steps_per_epoch=400,
     epochs=5,
     results_filename="VPG_cartpole_rewards3",

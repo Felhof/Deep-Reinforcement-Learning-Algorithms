@@ -111,9 +111,6 @@ class DQN(BaseAgent):
                     break
             if episode % self.config.evaluation_interval == 0:
                 self.evaluate(time_to_save=episode % self.config.save_interval == 0)
-            # self.result_storage.add_average_training_step_reward(
-            #     episode_reward * self.config.episode_length
-            # )
 
     def _get_action(self: "DQN", obs: torch.Tensor) -> np.ndarray:
         explore = np.random.binomial(1, p=self.exploration_rate)

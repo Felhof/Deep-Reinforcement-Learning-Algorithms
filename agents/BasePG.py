@@ -125,6 +125,7 @@ class BasePG(BaseAgent):
 
         self.logger.log_table(scope="epoch", level="INFO")
         self.logger.clear(scope="epoch")
+        self.logger.clear_handlers()
 
     def _run_episodes(self: "BasePG", step: int) -> None:
         self.logger.start_timer(scope="epoch", level="INFO", attribute="episodes")

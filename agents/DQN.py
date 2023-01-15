@@ -112,6 +112,7 @@ class DQN(BaseAgent):
                     break
             if episode % self.config.evaluation_interval == 0:
                 self.evaluate(time_to_save=episode % self.config.save_interval == 0)
+        self.logger.clear_handlers()
 
     def _get_action(self: "DQN", obs: torch.Tensor) -> np.ndarray:
         explore = np.random.binomial(1, p=self.exploration_rate)

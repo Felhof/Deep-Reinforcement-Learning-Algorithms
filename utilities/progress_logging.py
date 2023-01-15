@@ -38,6 +38,7 @@ class ProgressLogger:
     ) -> None:
         self.directory = LOG_DIRECTORY_PATH if directory == "" else directory
         self.level = levelmap[level]
+
         logger = logging.getLogger()
         logger.setLevel(self.level)
 
@@ -131,3 +132,6 @@ class ProgressLogger:
             stop_time = timer()
             start_time = self.timer_start_times[scope][attribute]
             self.store(scope=scope, **{f"{attribute}_time": stop_time - start_time})
+
+    def clear_handlers(self: "ProgressLogger") -> None:
+        self.logger.handlers.clear()

@@ -30,12 +30,13 @@ class BasePG(BaseAgent):
             "observation_dim": self.environment.observation_dim,
             "policy_net_parameters": self.config.hyperparameters["policy_gradient"][
                 "policy_net_parameters"
-            ],
+            ]
+            | {"device": self.device},
         }
         self.policy: Policy = create_policy(policy_parameters)
         value_net_parameters: NNParameters = self.config.hyperparameters[
             "policy_gradient"
-        ]["value_net_parameters"]
+        ]["value_net_parameters"] | {"device": self.device}
         self.value_net: nn.Sequential = create_value_net(
             observation_dim=self.environment.observation_dim,
             parameters=value_net_parameters,
@@ -179,7 +180,6 @@ class BasePG(BaseAgent):
                         states, actions, values, rewards, last_value=last_value
                     )
                     self.logger.store(scope="training_step", reward=episode_reward)
-
         if step % self.config.evaluation_interval == 0:
             self.evaluate(time_to_save=step % self.config.save_interval == 0)
         self.logger.stop_timer(scope="epoch", level="INFO", attribute="episodes")

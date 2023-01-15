@@ -14,6 +14,7 @@ class DQN(BaseAgent):
         q_net_parameters: NNParameters = self.config.hyperparameters["DQN"][
             "q_net_parameters"
         ]
+        q_net_parameters["device"] = self.device
         self.q_net: nn.Sequential = create_q_net(
             observation_dim=self.environment.observation_dim,
             number_of_actions=self.environment.number_of_actions,

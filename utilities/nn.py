@@ -79,8 +79,7 @@ def create_nn(
     _add_linear_layers(
         model, sizes=sizes, activations=parameters["linear_layer_activations"]
     )
-
-    if torch.cuda.is_available():
+    if torch.cuda.is_available() and parameters["device"] != "cpu":
         model = model.cuda()
 
     return model

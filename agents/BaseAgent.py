@@ -8,7 +8,9 @@ from utilities.progress_logging import ProgressLogger
 class BaseAgent(ABC):
     def __init__(self: "BaseAgent", **kwargs) -> None:
         self.config = kwargs["config"]
-        self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
+        self.device = (
+            "cuda:0" if torch.cuda.is_available() and self.config.use_cuda else "cpu"
+        )
         self.environment = kwargs["environment"]
         self.episode_length: int = self.config.episode_length
         self.dtype_name = self.config.hyperparameters["policy_gradient"].get(

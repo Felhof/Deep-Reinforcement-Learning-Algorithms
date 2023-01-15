@@ -23,6 +23,7 @@ NNParameters = TypedDict(
         "linear_layer_activations": List[ActivationFunction],
         "linear_layer_sizes": List[int],
         "learning_rate": float,
+        "device": str,
     },
     total=False,
 )

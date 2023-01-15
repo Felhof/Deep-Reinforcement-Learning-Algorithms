@@ -95,13 +95,13 @@ accept-rom-license = ["AutoROM.accept-rom-license"]
 
 [[package]]
 name = "autorom-accept-rom-license"
-version = "0.5.1"
+version = "0.5.4"
 description = "Automated installation of Atari ROMs for Gym/ALE-Py"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "AutoROM.accept-rom-license-0.5.1.tar.gz", hash = "sha256:afaba52537adac668afd3885f917f0d963d5f197b77b6655a4dc1038ef5bbafa"},
+    {file = "AutoROM.accept-rom-license-0.5.4.tar.gz", hash = "sha256:9f447ab800467c324dc6b1ca71ed51ac18641aeec0d00b38c0522eb76b402fd1"},
 ]
 
 [package.dependencies]
@@ -1295,14 +1295,14 @@ diagrams = ["jinja2", "railroad-diagrams"]
 
 [[package]]
 name = "pytest"
-version = "7.2.0"
+version = "7.2.1"
 description = "pytest: simple powerful testing with Python"
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "pytest-7.2.0-py3-none-any.whl", hash = "sha256:892f933d339f068883b6fd5a459f03d85bfcb355e4981e146d2c7616c21fef71"},
-    {file = "pytest-7.2.0.tar.gz", hash = "sha256:c4014eb40e10f11f355ad4e3c2fb2c6c6d1919c73f3b5a433de4708202cade59"},
+    {file = "pytest-7.2.1-py3-none-any.whl", hash = "sha256:c7c6ca206e93355074ae32f7403e8ea12163b1163c976fee7d4d84027c162be5"},
+    {file = "pytest-7.2.1.tar.gz", hash = "sha256:d45e0952f3727241918b8fd0f376f5ff6b301cc0777c6f9a556935c92d8a7d42"},
 ]
 
 [package.dependencies]
@@ -1428,23 +1428,6 @@ category = "main"
 optional = false
 python-versions = ">=3.7.0"
 files = [
-    {file = "torch-1.11.0%2Bcpu-cp310-cp310-linux_x86_64.whl", hash = "sha256:32fa00d974707c0183bc4dd0c1d69e853d0f15cc60f157b71ac5718847808943"},
-]
-
-[package.dependencies]
-typing-extensions = "*"
-
-[package.source]
-type = "url"
-url = "https://download.pytorch.org/whl/cpu/torch-1.11.0%2Bcpu-cp310-cp310-linux_x86_64.whl"
-[[package]]
-name = "torch"
-version = "1.11.0+cpu"
-description = "Tensors and Dynamic neural networks in Python with strong GPU acceleration"
-category = "main"
-optional = false
-python-versions = ">=3.7.0"
-files = [
     {file = "torch-1.11.0%2Bcpu-cp310-cp310-win_amd64.whl", hash = "sha256:bd984fa8676b2f7c9611b40af3a7c168fb90be3e29028219f822696bb357f472"},
 ]
 
@@ -1488,6 +1471,26 @@ typing-extensions = "*"
 [package.source]
 type = "url"
 url = "https://download.pytorch.org/whl/cpu/torch-1.11.0%2Bcpu-cp39-cp39-win_amd64.whl"
+[[package]]
+name = "torch"
+version = "1.13.0+cu117"
+description = "Tensors and Dynamic neural networks in Python with strong GPU acceleration"
+category = "main"
+optional = false
+python-versions = ">=3.7.0"
+files = [
+    {file = "torch-1.13.0%2Bcu117-cp310-cp310-linux_x86_64.whl", hash = "sha256:7f013d8097cb3741ac8d6745a63ef3c945df9be40514fbc026409261c234c2e2"},
+]
+
+[package.dependencies]
+typing-extensions = "*"
+
+[package.extras]
+opt-einsum = ["opt-einsum (>=3.3)"]
+
+[package.source]
+type = "url"
+url = "https://download.pytorch.org/whl/cu117/torch-1.13.0%2Bcu117-cp310-cp310-linux_x86_64.whl"
 [[package]]
 name = "tqdm"
 version = "4.64.1"
@@ -1561,14 +1564,13 @@ testing = ["coverage (>=6.2)", "coverage-enable-subprocess (>=1)", "flaky (>=3.7
 
 [[package]]
 name = "wcwidth"
-version = "0.2.5"
+version = "0.2.6"
 description = "Measures the displayed width of unicode strings in a terminal"
 category = "main"
 optional = false
 python-versions = "*"
 files = [
-    {file = "wcwidth-0.2.5-py2.py3-none-any.whl", hash = "sha256:beb4802a9cebb9144e99086eff703a642a13d6a0052920003a230f3294bbe784"},
-    {file = "wcwidth-0.2.5.tar.gz", hash = "sha256:c4d647b99872929fdb7bdcaa4fbe7f01413ed3d98077df798530e5b04f116c83"},
+    {file = "wcwidth-0.2.6.tar.gz", hash = "sha256:a5220780a404dbe3353789870978e472cfe477761f06ee55077256e509b156d0"},
 ]
 
 [[package]]
@@ -1590,4 +1592,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "814c18623f60b60fd63132b6b1769ee73c5f12d4cc3ac88980afb811257ce5bc"
+content-hash = "c707cc022d3cd96235e5d22147dce8b93c16dde175030e65ce059c3ce9a5329d"

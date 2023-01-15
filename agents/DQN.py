@@ -33,17 +33,33 @@ class DQN(BaseAgent):
         ]
         self.exploration_rate_divisor = 2
 
+    def evaluate(self: "DQN", time_to_save: bool = False) -> float:
+        self.q_net.eval()
+        reward = super().evaluate(time_to_save=time_to_save)
+        self.q_net.train()
+        return reward
+
     def load(self: "DQN", filename) -> None:
         self.q_net.load_state_dict(torch.load(f"{filename}_q_net.pt"))
+        if torch.cuda.is_available():
+            self.q_net = self.q_net.cuda()
 
     def train(self: "DQN") -> None:
         def update_q_network() -> None:
             data = self.replayBuffer.get_transition_data()
-            states = torch.tensor(data["states"], dtype=torch.float32)
-            actions = torch.tensor(data["actions"], dtype=torch.float32)
-            rewards = torch.tensor(data["rewards"], dtype=torch.float32)
-            next_states = torch.tensor(data["next_states"], dtype=torch.float32)
-            done = torch.tensor(data["done"], dtype=torch.float32)
+            states = torch.tensor(
+                data["states"], dtype=torch.float32, device=self.device
+            )
+            actions = torch.tensor(
+                data["actions"], dtype=torch.float32, device=self.device
+            )
+            rewards = torch.tensor(
+                data["rewards"], dtype=torch.float32, device=self.device
+            )
+            next_states = torch.tensor(
+                data["next_states"], dtype=torch.float32, device=self.device
+            )
+            done = torch.tensor(data["done"], dtype=torch.float32, device=self.device)
 
             with torch.no_grad():
                 next_state_q_values = self.q_net(next_states)
@@ -70,7 +86,9 @@ class DQN(BaseAgent):
             episode_reward: float = 0
             obs, _ = self.environment.reset()
             for _step in range(self.config.episode_length):
-                action = self._get_action(torch.tensor(obs, dtype=torch.float32))
+                action = self._get_action(
+                    torch.tensor(obs, dtype=torch.float32, device=self.device)
+                )
                 next_obs, reward, terminated, truncated, info = self.environment.step(
                     action
                 )
@@ -92,7 +110,7 @@ class DQN(BaseAgent):
                         self.exploration_rate_divisor += 1
                     break
             if episode % self.config.evaluation_interval == 0:
-                self.evaluate(save=episode % self.config.save_interval == 0)
+                self.evaluate(time_to_save=episode % self.config.save_interval == 0)
             # self.result_storage.add_average_training_step_reward(
             #     episode_reward * self.config.episode_length
             # )
@@ -106,9 +124,6 @@ class DQN(BaseAgent):
         return action
 
     def get_best_action(self: "DQN", obs: torch.Tensor) -> np.ndarray:
-        self.q_net.eval()
-        with torch.no_grad():
-            q_value_tensor = self.q_net.forward(obs)
+        q_value_tensor = self.q_net.forward(obs)
         action = torch.argmax(q_value_tensor)
-        self.q_net.train()
-        return np.array(action)
+        return np.array(action.cpu())

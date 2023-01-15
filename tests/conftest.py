@@ -65,6 +65,7 @@ def cartpole_config() -> Callable[[str, str], Config]:
             epochs=3,
             target_score=200,
             results_filename=results_filename,
+            save=False,
         )
 
     return _create_config
@@ -128,6 +129,7 @@ def mountain_car_config() -> Callable[[str, str], Config]:
             epochs=3,
             target_score=200,
             results_filename=results_filename,
+            save=False,
         )
 
     return _create_config
@@ -192,6 +194,7 @@ def mountain_car_continuous_config() -> Callable[[str, str], Config]:
             epochs=3,
             target_score=200,
             results_filename=results_filename,
+            save=False,
         )
 
     return _create_config
@@ -243,6 +246,7 @@ def adventure_config() -> Callable[[str, str], Config]:
             epochs=3,
             target_score=200,
             results_filename=results_filename,
+            save=False,
         )
 
     return _create_config

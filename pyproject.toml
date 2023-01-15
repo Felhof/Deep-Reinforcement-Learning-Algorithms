@@ -12,7 +12,7 @@ repository = "https://github.com/Felhof/Deep-Reinforcement-Learning-Algorithms"
 python = "^3.9"
 torch = [
   {url = "https://download.pytorch.org/whl/cpu/torch-1.11.0%2Bcpu-cp39-cp39-linux_x86_64.whl", python = "~3.9", markers = "sys_platform == 'linux'"},
-  {url = "https://download.pytorch.org/whl/cpu/torch-1.11.0%2Bcpu-cp310-cp310-linux_x86_64.whl", python = "~3.10", markers = "sys_platform == 'linux'"},
+  {url = "https://download.pytorch.org/whl/cu117/torch-1.13.0%2Bcu117-cp310-cp310-linux_x86_64.whl", python = "~3.10", markers = "sys_platform == 'linux'"},
   {url = "https://download.pytorch.org/whl/cpu/torch-1.11.0%2Bcpu-cp39-cp39-win_amd64.whl", python = "~3.9", markers = "sys_platform == 'win32'"},
   {url = "https://download.pytorch.org/whl/cpu/torch-1.11.0%2Bcpu-cp310-cp310-win_amd64.whl", python = "~3.10", markers = "sys_platform == 'win32'"},
 ]

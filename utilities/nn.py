@@ -80,6 +80,9 @@ def create_nn(
         model, sizes=sizes, activations=parameters["linear_layer_activations"]
     )
 
+    if torch.cuda.is_available():
+        model = model.cuda()
+
     return model
 
 

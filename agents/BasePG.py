@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import List, Tuple
+from typing import Tuple
 
 from agents.BaseAgent import BaseAgent
 from agents.Policy import create_policy, Policy
@@ -60,15 +60,26 @@ class BasePG(BaseAgent):
     ) -> None:
         pass
 
+    def evaluate(self: "BasePG", time_to_save: bool = False) -> float:
+        self.policy.policy_net.eval()
+        self.value_net.eval()
+        reward = super().evaluate(time_to_save=time_to_save)
+        self.policy.policy_net.train()
+        self.value_net.train()
+        return reward
+
     def get_best_action(self: "BasePG", obs: torch.Tensor) -> np.ndarray:
         best_action = self.policy.get_best_action(obs)
-        return best_action.numpy()
+        return best_action.cpu().numpy()
 
     def load(self: "BasePG", filename) -> None:
         self.policy.policy_net.load_state_dict(
             torch.load(f"{filename}_policy_model.pt")
         )
         self.value_net.load_state_dict(torch.load(f"{filename}_value_model.pt"))
+        if torch.cuda.is_available():
+            self.policy.policy_net = self.policy.policy_net.cuda()
+            self.value_net = self.value_net.cuda()
 
     def train(self: "BasePG") -> None:
         for training_step in range(self.config.training_steps_per_epoch):
@@ -94,9 +105,9 @@ class BasePG(BaseAgent):
                 scope="epoch", level="INFO", attribute="policy_update"
             )
             self._update_policy(
-                torch.tensor(obs, dtype=self.tensor_type),
-                torch.tensor(actions, dtype=self.tensor_type),
-                torch.tensor(advantages, dtype=self.tensor_type),
+                torch.tensor(obs, dtype=self.tensor_type, device=self.device),
+                torch.tensor(actions, dtype=self.tensor_type, device=self.device),
+                torch.tensor(advantages, dtype=self.tensor_type, device=self.device),
             )
             self.logger.stop_timer(
                 scope="epoch", level="INFO", attribute="policy_update"
@@ -104,8 +115,8 @@ class BasePG(BaseAgent):
 
             self.logger.info("Updating value net")
             self._update_value_net(
-                torch.tensor(obs, dtype=self.tensor_type),
-                torch.tensor(rewards_to_go, dtype=self.tensor_type),
+                torch.tensor(obs, dtype=self.tensor_type, device=self.device),
+                torch.tensor(rewards_to_go, dtype=self.tensor_type, device=self.device),
             )
 
             self.buffer.reset()
@@ -144,7 +155,7 @@ class BasePG(BaseAgent):
             obs, _ = self.environment.reset()
             for step in range(self.episode_length):
                 action, value = self._get_action_and_value(
-                    torch.tensor(obs, dtype=self.tensor_type)
+                    torch.tensor(obs, dtype=self.tensor_type, device=self.device)
                 )
                 next_obs, reward, terminated, truncated, info = self.environment.step(
                     action
@@ -162,7 +173,7 @@ class BasePG(BaseAgent):
                     break
                 elif step == self.episode_length - 1 or truncated:
                     _, last_value = self._get_action_and_value(
-                        torch.tensor(obs, dtype=self.tensor_type)
+                        torch.tensor(obs, dtype=self.tensor_type, device=self.device)
                     )
                     self.buffer.add_transition_data(
                         states, actions, values, rewards, last_value=last_value
@@ -170,7 +181,7 @@ class BasePG(BaseAgent):
                     self.logger.store(scope="training_step", reward=episode_reward)
 
         if step % self.config.evaluation_interval == 0:
-            self.evaluate(save=step % self.config.save_interval == 0)
+            self.evaluate(time_to_save=step % self.config.save_interval == 0)
         self.logger.stop_timer(scope="epoch", level="INFO", attribute="episodes")
 
     def _get_state_value(self: "BasePG", obs: torch.Tensor) -> float:
@@ -186,7 +197,7 @@ class BasePG(BaseAgent):
     ) -> Tuple[np.ndarray, float]:
         action = self.policy.get_action(obs)
         value = self._get_state_value(obs)
-        return action.numpy(), value
+        return action.cpu().numpy(), value
 
     def _update_value_net(
         self: "BasePG", obs: torch.Tensor, rewards_to_go: torch.Tensor

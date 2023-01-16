@@ -182,7 +182,12 @@ class BasePG(BaseAgent):
                     )
                     self.logger.store(scope="training_step", reward=episode_reward)
         if step % self.config.evaluation_interval == 0:
-            self.evaluate(time_to_save=step % self.config.save_interval == 0)
+            evaluation_result = self.evaluate(
+                time_to_save=step % self.config.save_interval == 0
+            )
+            self.logger.info(
+                f"During evaluation the policy achieves a score of {evaluation_result}"
+            )
         self.logger.stop_timer(scope="epoch", level="INFO", attribute="episodes")
 
     def _get_state_value(self: "BasePG", obs: torch.Tensor) -> float:

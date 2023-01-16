@@ -111,7 +111,12 @@ class DQN(BaseAgent):
                         self.exploration_rate_divisor += 1
                     break
             if episode % self.config.evaluation_interval == 0:
-                self.evaluate(time_to_save=episode % self.config.save_interval == 0)
+                evaluation_result = self.evaluate(
+                    time_to_save=episode % self.config.save_interval == 0
+                )
+                self.logger.info(
+                    f"During evaluation the policy achieves a score of {evaluation_result}"
+                )
         self.logger.clear_handlers()
 
     def _get_action(self: "DQN", obs: torch.Tensor) -> np.ndarray:

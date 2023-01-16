@@ -5,6 +5,7 @@ from typing import cast
 from agents.BaseAgent import BaseAgent
 from agents.BasePG import BasePG
 from agents.DQN import DQN
+from agents.SAC import SAC
 import numpy as np
 import torch
 from utilities.utils import get_dimension_format_string
@@ -71,6 +72,28 @@ class ModelSaver:
             f"{self.directory}/{self.filename}_value_model.pt",
         )
 
+    def _save_sac(self: "ModelSaver", agent: SAC) -> None:
+        torch.save(
+            agent.actor.policy_net.state_dict(),
+            f"{self.directory}/{self.filename}_policy_model.pt",
+        )
+        torch.save(
+            agent.critic1.state_dict(),
+            f"{self.directory}/{self.filename}_policy_model.pt",
+        )
+        torch.save(
+            agent.critic2.state_dict(),
+            f"{self.directory}/{self.filename}_policy_model.pt",
+        )
+        torch.save(
+            agent.critic_target1.state_dict(),
+            f"{self.directory}/{self.filename}_policy_model.pt",
+        )
+        torch.save(
+            agent.critic_target2.state_dict(),
+            f"{self.directory}/{self.filename}_policy_model.pt",
+        )
+
     def save_model_if_best(self: "ModelSaver", agent: BaseAgent, score: float) -> None:
         if score <= self.best_score_so_far:
             return
@@ -80,3 +103,5 @@ class ModelSaver:
                 self._save_pg(cast(BasePG, agent))
             case "DQN":
                 self._save_dqn(cast(DQN, agent))
+            case "SAC":
+                self._save_sac(cast(SAC, agent))

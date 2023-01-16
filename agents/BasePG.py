@@ -71,14 +71,14 @@ class BasePG(BaseAgent):
 
     def get_best_action(self: "BasePG", obs: torch.Tensor) -> np.ndarray:
         best_action = self.policy.get_best_action(obs)
-        return best_action.cpu().numpy()
+        return best_action.numpy()
 
     def load(self: "BasePG", filename) -> None:
         self.policy.policy_net.load_state_dict(
             torch.load(f"{filename}_policy_model.pt")
         )
         self.value_net.load_state_dict(torch.load(f"{filename}_value_model.pt"))
-        if torch.cuda.is_available():
+        if torch.cuda.is_available() and self.config.device != "cpu":
             self.policy.policy_net = self.policy.policy_net.cuda()
             self.value_net = self.value_net.cuda()
 

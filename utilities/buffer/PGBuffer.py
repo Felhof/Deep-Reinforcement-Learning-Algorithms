@@ -23,9 +23,7 @@ class PGBuffer:
         self.top_index = 0
         self.observation_dim = observation_dim
         self.action_dim = action_dim
-        self.dtype_name: str = config.hyperparameters["policy_gradient"].get(
-            "dtype_name", "float32"
-        )
+        self.dtype_name: str = config.dtype_name
         (
             self.states,
             self.actions,

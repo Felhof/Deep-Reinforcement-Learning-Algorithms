@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Iterator, OrderedDict
+from typing import Any, Dict, Iterator, Tuple
 
 import torch
 from torch import nn
@@ -63,18 +63,16 @@ class Policy(ABC):
     def get_parameters(self: "Policy") -> Iterator[Parameter]:
         return self.policy_net.parameters()
 
-    def get_state_dict(self: "Policy") -> OrderedDict[str, torch.Tensor]:
+    def get_state_dict(self: "Policy") -> Dict[str, Any]:
         return self.policy_net.state_dict()
 
-    def load_state_dict(
-        self: "Policy", state_dict: OrderedDict[str, torch.Tensor]
-    ) -> None:
+    def load_state_dict(self: "Policy", state_dict: Dict[str, Any]) -> None:
         self.policy_net.load_state_dict(state_dict)
 
     def reset_gradients(self) -> None:
         self.optimizer.zero_grad()
 
-    def update_gradients(
+    def update(
         self: "Policy",
     ) -> None:
         self.optimizer.step()
@@ -115,8 +113,14 @@ class CategoricalPolicy(Policy):
         )
         return kl_div.mean()
 
-    def get_log_probs(self: "CategoricalPolicy", obs: torch.Tensor) -> torch.Tensor:
-        return torch.log(self.get_policy(obs).probs)
+    def get_action_probs(
+        self: "CategoricalPolicy", obs: torch.Tensor
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        action_probs = self.get_policy(obs).probs
+        z = action_probs == 0.0
+        z = z.float() * 1e-8
+        log_action_probs = torch.log(action_probs + z)
+        return action_probs, log_action_probs
 
 
 class ContinuousPolicy(Policy):

@@ -18,7 +18,7 @@ class PPO(BasePG):
         )
         for param, grad in zip(self.policy.get_parameters(), ppo_clip_objective_grad):
             param.grad = grad
-        self.policy.update_gradients()
+        self.policy.update()
 
     def _ppo_clip_objective(
         self: "PPO", obs: torch.Tensor, actions: torch.Tensor, advantages: torch.Tensor

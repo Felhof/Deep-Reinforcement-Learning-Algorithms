@@ -1,0 +1,64 @@
+import os
+
+from agents.SAC import SAC
+import pytest
+from tests.agent_test_helpers import (
+    _assert_n_rows_where_stored,
+    _train_agent_and_store_result,
+    PATH_TO_TEST_RESULTS,
+)
+
+CARTPOLE_TEST_RESULTS = "cartpole_sac_test"
+MOUNTAIN_CAR_TEST_RESULTS = "mountain_car_sac_test"
+MOUNTAIN_CAR_CONTINUOUS_TEST_RESULTS = "mountain_car_continuous_sac_test"
+ATARI_TEST_RESULTS = "atari_sac_test"
+
+
+@pytest.fixture
+def cleanup_discrete_test_results() -> None:
+    yield
+    os.remove(f"{PATH_TO_TEST_RESULTS}{CARTPOLE_TEST_RESULTS}.csv")
+    os.remove(f"{PATH_TO_TEST_RESULTS}{MOUNTAIN_CAR_TEST_RESULTS}.csv")
+
+
+@pytest.fixture()
+def cleanup_atari_test_results() -> None:
+    yield
+    os.remove(f"{PATH_TO_TEST_RESULTS}{ATARI_TEST_RESULTS}.csv")
+
+
+def test_can_train_with_different_environment_dimensions(
+    cartpole_environment,
+    mountain_car_environment,
+    cartpole_config,
+    mountain_car_config,
+    cleanup_discrete_test_results,
+) -> None:
+    config = cartpole_config(CARTPOLE_TEST_RESULTS)
+    _train_agent_and_store_result(
+        agent=SAC, config=config, environment=cartpole_environment
+    )
+    _assert_n_rows_where_stored(
+        filepath=f"{PATH_TO_TEST_RESULTS}{CARTPOLE_TEST_RESULTS}.csv", n=3
+    )
+
+    config = mountain_car_config(MOUNTAIN_CAR_TEST_RESULTS)
+    _train_agent_and_store_result(
+        agent=SAC, config=config, environment=mountain_car_environment
+    )
+    _assert_n_rows_where_stored(
+        filepath=f"{PATH_TO_TEST_RESULTS}{MOUNTAIN_CAR_TEST_RESULTS}.csv", n=3
+    )
+
+
+def test_can_train_for_atari_environments(
+    adventure_environment, adventure_config, cleanup_atari_test_results
+):
+    config = adventure_config(ATARI_TEST_RESULTS)
+    _train_agent_and_store_result(
+        agent=SAC, config=config, environment=adventure_environment
+    )
+    _assert_n_rows_where_stored(
+        filepath=f"{PATH_TO_TEST_RESULTS}{ATARI_TEST_RESULTS}.csv",
+        n=3,
+    )

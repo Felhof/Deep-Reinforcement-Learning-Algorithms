@@ -130,4 +130,4 @@ class DQN(BaseAgent):
     def get_best_action(self: "DQN", obs: torch.Tensor) -> np.ndarray:
         q_value_tensor = self.q_net.forward(obs)
         action = torch.argmax(q_value_tensor)
-        return np.array(action.cpu())
+        return np.array(action)

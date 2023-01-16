@@ -11,4 +11,4 @@ class VPG(BasePG):
     ) -> None:
         policy_loss = self.policy.compute_loss(obs, actions, advantages)
         policy_loss.backward()
-        self.policy.update_gradients()
+        self.policy.update()

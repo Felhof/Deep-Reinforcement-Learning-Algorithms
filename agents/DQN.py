@@ -24,7 +24,11 @@ class DQN(BaseAgent):
             self.q_net.parameters(),
             lr=self.config.hyperparameters["DQN"]["q_net_learning_rate"],
         )
-        self.replayBuffer = DQNBuffer(self.config, self.environment.observation_dim)
+        self.replay_buffer = DQNBuffer(
+            minibatch_size=self.config.hyperparameters["SAC"]["minibatch_size"],
+            buffer_size=self.config.hyperparameters["SAC"]["buffer_size"],
+            observation_dim=self.environment.observation_dim,
+        )
         self.exploration_rate = self.config.hyperparameters["DQN"][
             "initial_exploration_rate"
         ]
@@ -47,7 +51,7 @@ class DQN(BaseAgent):
 
     def train(self: "DQN") -> None:
         def update_q_network() -> None:
-            data = self.replayBuffer.get_transition_data()
+            data = self.replay_buffer.get_transition_data()
             states = torch.tensor(
                 data["states"], dtype=torch.float32, device=self.device
             )
@@ -94,13 +98,13 @@ class DQN(BaseAgent):
                     action
                 )
                 reward /= self.config.episode_length
-                self.replayBuffer.add_transition(
+                self.replay_buffer.add_transition(
                     obs, action, float(reward), next_obs, terminated or truncated
                 )
                 episode_reward += float(reward)
                 obs = next_obs
                 learning = (
-                    self.replayBuffer.get_number_of_stored_transitions()
+                    self.replay_buffer.get_number_of_stored_transitions()
                     >= self.config.hyperparameters["DQN"]["minibatch_size"]
                 )
                 if learning:

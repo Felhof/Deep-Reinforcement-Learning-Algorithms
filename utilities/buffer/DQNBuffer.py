@@ -8,10 +8,13 @@ from utilities.utils import get_dimension_format_string
 
 class DQNBuffer:
     def __init__(
-        self: "DQNBuffer", config: Config, observation_dim: ObservationDim = 2
+        self: "DQNBuffer",
+        minibatch_size: int = 256,
+        buffer_size: int = 40000,
+        observation_dim: ObservationDim = 2,
     ) -> None:
-        self.minibatch_size = config.hyperparameters["DQN"]["minibatch_size"]
-        self.buffer_size = config.hyperparameters["DQN"]["buffer_size"]
+        self.minibatch_size = minibatch_size
+        self.buffer_size = buffer_size
         self.states = np.zeros(
             self.buffer_size,
             dtype=get_dimension_format_string(observation_dim),

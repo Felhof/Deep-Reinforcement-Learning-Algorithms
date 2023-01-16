@@ -69,7 +69,11 @@ class SAC(BaseAgent):
         )
         self._soft_update_target_networks(tau=1.0)
 
-        self.replay_buffer = DQNBuffer(self.config, self.environment.observation_dim)
+        self.replay_buffer = DQNBuffer(
+            minibatch_size=self.config.hyperparameters["SAC"]["minibatch_size"],
+            buffer_size=self.config.hyperparameters["SAC"]["buffer_size"],
+            observation_dim=self.environment.observation_dim,
+        )
 
         self.target_entropy = 0.98 * -np.log(1 / self.environment.action_space.n)
         self.log_alpha = torch.tensor(

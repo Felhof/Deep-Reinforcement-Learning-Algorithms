@@ -17,7 +17,7 @@ config = Config(
             "gae_exp_mean_discount_rate": 0.92,
             "policy_net_parameters": {
                 "linear_layer_sizes": [128],
-                "activations": [
+                "linear_layer_activations": [
                     torch.nn.ReLU(),
                     torch.nn.Tanh(),
                 ],
@@ -25,13 +25,12 @@ config = Config(
             },
             "value_net_parameters": {
                 "linear_layer_sizes": [128],
-                "activations": [
+                "linear_layer_activations": [
                     torch.nn.ReLU(),
                     torch.nn.Tanh(),
                 ],
                 "learning_rate": 0.001,
             },
-            "dtype_name": "float64",
         },
         "TRPG": {
             "kl_divergence_limit": 0.01,
@@ -41,17 +40,18 @@ config = Config(
             "conjugate_gradient_iterations": 10,
         },
     },
-    episode_length=230,
+    episode_length=200,
     training_steps_per_epoch=400,
-    epochs=5,
-    results_filename="TRPG_cartpole_rewards2",
+    epochs=1,
+    results_filename="TRPG_cartpole_rewards_01",
     log_level="INFO",
-    log_filename="TRPG_cartpole_debug2",
+    log_filename="TRPG_cartpole_debug_01",
+    dtype_name="float64",
 )
 
 env = BaseEnvironmentWrapper(gym.make("CartPole-v1"))
 
 if __name__ == "__main__":
     vpn_trainer = trainer.Trainer(config)
-    vpn_trainer.train_agents([TRPG.TRPG])
+    vpn_trainer.train_agents([TRPG.TRPG], environment=env)
     vpn_trainer.save_results(filename="TRPG_result")

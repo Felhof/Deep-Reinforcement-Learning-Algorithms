@@ -15,10 +15,11 @@ config = Config(
             "discount_rate": 0.99,
             "q_net_parameters": {
                 "linear_layer_sizes": [64],
-                "activations": [
+                "linear_layer_activations": [
                     torch.nn.ReLU(),
                     torch.nn.Tanh(),
                 ],
+                "learning_rate": 0.001,
             },
             "q_net_learning_rate": 0.001,
             "minibatch_size": 256,
@@ -28,13 +29,13 @@ config = Config(
             "gradient_clipping_norm": 0.7,
         },
     },
-    episode_length=230,
+    episode_length=200,
     training_steps_per_epoch=400,
     epochs=5,
     target_score=200,
-    results_filename="VPG_cartpole_rewards3",
+    results_filename="DQN_cartpole_rewards3",
     log_level="INFO",
-    log_filename="VPG_cartpole_debug3",
+    log_filename="DQN_cartpole_debug3",
 )
 
 env = BaseEnvironmentWrapper(gym.make("CartPole-v1"))

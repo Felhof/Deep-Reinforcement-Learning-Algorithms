@@ -17,7 +17,7 @@ config = Config(
             "gae_exp_mean_discount_rate": 0.92,
             "policy_net_parameters": {
                 "linear_layer_sizes": [128],
-                "activations": [
+                "linear_layer_activations": [
                     torch.nn.ReLU(),
                     torch.nn.Tanh(),
                 ],
@@ -25,7 +25,7 @@ config = Config(
             },
             "value_net_parameters": {
                 "linear_layer_sizes": [128],
-                "activations": [
+                "linear_layer_activations": [
                     torch.nn.ReLU(),
                     torch.nn.Tanh(),
                 ],
@@ -36,7 +36,7 @@ config = Config(
             "clip_range": 0.1
         }
     },
-    episode_length=230,
+    episode_length=200,
     training_steps_per_epoch=400,
     epochs=5,
     results_filename="PPO_cartpole_rewards2",

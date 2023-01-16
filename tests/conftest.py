@@ -33,7 +33,6 @@ def cartpole_config() -> Callable[[str, str], Config]:
                         ],
                         "learning_rate": 0.001,
                     },
-                    "dtype_name": dtype_name,
                 },
                 "TRPG": {
                     "kl_divergence_limit": 0.01,
@@ -66,6 +65,7 @@ def cartpole_config() -> Callable[[str, str], Config]:
             target_score=200,
             results_filename=results_filename,
             save=False,
+            dtype_name=dtype_name,
         )
 
     return _create_config
@@ -97,7 +97,6 @@ def mountain_car_config() -> Callable[[str, str], Config]:
                         ],
                         "learning_rate": 0.001,
                     },
-                    "dtype_name": dtype_name,
                 },
                 "TRPG": {
                     "kl_divergence_limit": 0.01,
@@ -130,6 +129,7 @@ def mountain_car_config() -> Callable[[str, str], Config]:
             target_score=200,
             results_filename=results_filename,
             save=False,
+            dtype_name=dtype_name,
         )
 
     return _create_config
@@ -162,7 +162,6 @@ def mountain_car_continuous_config() -> Callable[[str, str], Config]:
                         "learning_rate": 0.001,
                     },
                     "use_double_precision": True,
-                    "dtype_name": dtype_name,
                 },
                 "TRPG": {
                     "kl_divergence_limit": 0.01,
@@ -195,6 +194,7 @@ def mountain_car_continuous_config() -> Callable[[str, str], Config]:
             target_score=200,
             results_filename=results_filename,
             save=False,
+            dtype_name=dtype_name,
         )
 
     return _create_config
@@ -220,7 +220,6 @@ def adventure_config() -> Callable[[str, str], Config]:
                     "policy_net_parameters": network_parameters,
                     "value_net_parameters": network_parameters,
                     "use_double_precision": True,
-                    "dtype_name": dtype_name,
                 },
                 "TRPG": {
                     "kl_divergence_limit": 0.01,
@@ -247,6 +246,7 @@ def adventure_config() -> Callable[[str, str], Config]:
             target_score=200,
             results_filename=results_filename,
             save=False,
+            dtype_name=dtype_name,
         )
 
     return _create_config

@@ -13,9 +13,7 @@ class BaseAgent(ABC):
         )
         self.environment = kwargs["environment"]
         self.episode_length: int = self.config.episode_length
-        self.dtype_name = self.config.hyperparameters["policy_gradient"].get(
-            "dtype_name", "float32"
-        )
+        self.dtype_name = self.config.dtype_name
         if self.dtype_name == "float64":
             self.tensor_type = torch.float64
             torch.set_default_tensor_type("torch.DoubleTensor")

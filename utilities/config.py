@@ -22,3 +22,4 @@ class Config:
     save_interval: int = 5
     evaluation_interval: int = 1
     use_cuda: bool = False
+    dtype_name: str = "float32"

@@ -89,7 +89,7 @@ class SAC(BaseAgent):
         self.tau = self.config.hyperparameters["SAC"][
             "soft_update_interpolation_factor"
         ]
-        self.pure_exploration_steps = self.config.hyperparameters["DQN"].get(
+        self.pure_exploration_steps = self.config.hyperparameters["SAC"].get(
             "pure_exploration_steps", 0
         )
 
@@ -206,6 +206,9 @@ class SAC(BaseAgent):
     def train(self: "SAC") -> None:
         for episode in range(self.config.training_steps_per_epoch):
             self.logger.info(f"Training step {episode}")
+            self.logger.start_timer(
+                scope="training_step", level="INFO", attribute="episode_length"
+            )
             obs, _ = self.environment.reset()
             for step in range(self.config.episode_length):
                 action = self._get_action(
@@ -232,6 +235,10 @@ class SAC(BaseAgent):
                 if terminated or truncated:
                     break
 
+            self.logger.stop_timer(
+                scope="training_step", level="INFO", attribute="episode_length"
+            )
+
             if episode % self.config.evaluation_interval == 0:
                 evaluation_result = self.evaluate(
                     time_to_save=episode % self.config.save_interval == 0
@@ -239,6 +246,8 @@ class SAC(BaseAgent):
                 self.logger.info(
                     f"During evaluation the policy achieves a score of {evaluation_result}"
                 )
+
+        self.logger.log_table(scope="training_step", level="INFO")
         self.logger.clear_handlers()
 
     def load(self: "SAC", filename: str) -> None:

@@ -79,19 +79,19 @@ class ModelSaver:
         )
         torch.save(
             agent.critic1.state_dict(),
-            f"{self.directory}/{self.filename}_policy_model.pt",
+            f"{self.directory}/{self.filename}_critic1_model.pt",
         )
         torch.save(
             agent.critic2.state_dict(),
-            f"{self.directory}/{self.filename}_policy_model.pt",
+            f"{self.directory}/{self.filename}_critic2_model.pt",
         )
         torch.save(
             agent.critic_target1.state_dict(),
-            f"{self.directory}/{self.filename}_policy_model.pt",
+            f"{self.directory}/{self.filename}_target1_model.pt",
         )
         torch.save(
             agent.critic_target2.state_dict(),
-            f"{self.directory}/{self.filename}_policy_model.pt",
+            f"{self.directory}/{self.filename}_target2_model.pt",
         )
 
     def save_model_if_best(self: "ModelSaver", agent: BaseAgent, score: float) -> None:

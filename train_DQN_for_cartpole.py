@@ -25,7 +25,7 @@ config = Config(
             "minibatch_size": 256,
             "buffer_size": 40000,
             "initial_exploration_rate": 1,
-            "random_episodes": 3,
+            "pure_exploration_steps": 3,
             "gradient_clipping_norm": 0.7,
         },
     },

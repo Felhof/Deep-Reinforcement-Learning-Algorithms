@@ -89,6 +89,9 @@ class SAC(BaseAgent):
         self.tau = self.config.hyperparameters["SAC"][
             "soft_update_interpolation_factor"
         ]
+        self.pure_exploration_steps = self.config.hyperparameters["DQN"].get(
+            "pure_exploration_steps", 0
+        )
 
     def _actor_loss(self, obs: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         action_probs, log_action_probs = self.actor.get_action_probs(obs)
@@ -204,7 +207,7 @@ class SAC(BaseAgent):
         for episode in range(self.config.training_steps_per_epoch):
             self.logger.info(f"Training step {episode}")
             obs, _ = self.environment.reset()
-            for _step in range(self.config.episode_length):
+            for step in range(self.config.episode_length):
                 action = self._get_action(
                     torch.tensor(obs, dtype=torch.float32, device=self.device)
                 )
@@ -221,7 +224,10 @@ class SAC(BaseAgent):
                     self.replay_buffer.get_number_of_stored_transitions()
                     >= self.config.hyperparameters["SAC"]["minibatch_size"]
                 )
-                if can_learn:
+                is_exploration_step = (episode + 1) * (
+                    step + 1
+                ) > self.pure_exploration_steps
+                if can_learn and not is_exploration_step:
                     self._update()
                 if terminated or truncated:
                     break

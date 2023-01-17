@@ -57,7 +57,7 @@ AgentHyperParameters = TypedDict(
         "minibatch_size": int,
         "buffer_size": int,
         "initial_exploration_rate": float,
-        "random_episodes": int,
+        "pure_exploration_steps": int,
         "gradient_clipping_norm": Optional[float],
         "kl_divergence_limit": float,
         "backtracking_coefficient": float,

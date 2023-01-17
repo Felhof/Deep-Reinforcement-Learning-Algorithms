@@ -32,7 +32,9 @@ class DQN(BaseAgent):
         self.exploration_rate = self.config.hyperparameters["DQN"][
             "initial_exploration_rate"
         ]
-        self.random_episodes = self.config.hyperparameters["DQN"]["random_episodes"]
+        self.pure_exploration_steps = self.config.hyperparameters["DQN"].get(
+            "pure_exploration_steps", 0
+        )
         self.gradient_clipping_norm = self.config.hyperparameters["DQN"][
             "gradient_clipping_norm"
         ]
@@ -90,7 +92,7 @@ class DQN(BaseAgent):
         for episode in range(self.config.training_steps_per_epoch):
             episode_reward: float = 0
             obs, _ = self.environment.reset()
-            for _step in range(self.config.episode_length):
+            for step in range(self.config.episode_length):
                 action = self._get_action(
                     torch.tensor(obs, dtype=torch.float32, device=self.device)
                 )
@@ -103,14 +105,17 @@ class DQN(BaseAgent):
                 )
                 episode_reward += float(reward)
                 obs = next_obs
-                learning = (
+                can_learn = (
                     self.replay_buffer.get_number_of_stored_transitions()
                     >= self.config.hyperparameters["DQN"]["minibatch_size"]
                 )
-                if learning:
+                is_exploration_step = (episode + 1) * (
+                    step + 1
+                ) > self.pure_exploration_steps
+                if can_learn and not is_exploration_step:
                     update_q_network()
-                if terminated or truncated or _step == self.config.episode_length - 1:
-                    if episode > self.random_episodes and learning:
+                if terminated or truncated or step == self.config.episode_length - 1:
+                    if episode > self.pure_exploration_steps and can_learn:
                         self.exploration_rate = 1 / self.exploration_rate_divisor
                         self.exploration_rate_divisor += 1
                     break

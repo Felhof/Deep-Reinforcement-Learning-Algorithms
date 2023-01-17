@@ -55,7 +55,7 @@ def cartpole_config() -> Callable[[str, str], Config]:
                     "minibatch_size": 256,
                     "buffer_size": 40000,
                     "initial_exploration_rate": 1,
-                    "random_episodes": 3,
+                    "pure_exploration_steps": 3,
                     "gradient_clipping_norm": 0.7,
                 },
                 "SAC": {
@@ -143,7 +143,7 @@ def mountain_car_config() -> Callable[[str, str], Config]:
                     "minibatch_size": 256,
                     "buffer_size": 40000,
                     "initial_exploration_rate": 1,
-                    "random_episodes": 3,
+                    "pure_exploration_steps": 3,
                     "gradient_clipping_norm": 0.7,
                 },
                 "SAC": {
@@ -232,7 +232,7 @@ def mountain_car_continuous_config() -> Callable[[str, str], Config]:
                     "minibatch_size": 256,
                     "buffer_size": 40000,
                     "initial_exploration_rate": 1,
-                    "random_episodes": 3,
+                    "pure_exploration_steps": 3,
                     "gradient_clipping_norm": 0.7,
                 },
             },
@@ -284,7 +284,7 @@ def adventure_config() -> Callable[[str, str], Config]:
                     "minibatch_size": 256,
                     "buffer_size": 40000,
                     "initial_exploration_rate": 1,
-                    "random_episodes": 3,
+                    "pure_exploration_steps": 3,
                     "gradient_clipping_norm": 0.7,
                 },
                 "SAC": {

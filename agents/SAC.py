@@ -157,6 +157,42 @@ class SAC(BaseAgent):
             self.log_alpha * (log_action_probabilities + self.target_entropy).detach()
         ).mean()
 
+    def _training_loop(self: "SAC") -> None:
+        self.logger.start_timer(scope="epoch", level="INFO", attribute="episode")
+        obs, _ = self.environment.reset()
+        for step in range(self.config.episode_length):
+            self.current_timestep += 1
+            action = self._get_action(
+                torch.tensor(obs, dtype=torch.float32, device=self.device)
+            )
+            next_obs, reward, terminated, truncated, info = self.environment.step(
+                action
+            )
+            reward /= self.config.episode_length
+            self.replay_buffer.add_transition(
+                obs, action, float(reward), next_obs, terminated or truncated
+            )
+            obs = next_obs
+
+            can_learn = (
+                self.replay_buffer.get_number_of_stored_transitions()
+                >= self.config.hyperparameters["SAC"]["minibatch_size"]
+            )
+            is_exploration_step = self.current_timestep <= self.pure_exploration_steps
+            if can_learn and not is_exploration_step:
+                self.logger.start_timer(scope="epoch", level="INFO", attribute="update")
+                self._update()
+                self.logger.stop_timer(scope="epoch", level="INFO", attribute="update")
+            self.current_timestep += 1
+            if self.max_timestep != -1 and self.current_timestep >= self.max_timestep:
+                break
+            if terminated or truncated:
+                self.logger.info(
+                    f"This episode the agent lasted for {step + 1} frames before losing."
+                )
+                break
+        self.logger.stop_timer(scope="epoch", level="INFO", attribute="episode")
+
     def _update(self: "SAC") -> None:
         data = self.replay_buffer.get_transition_data()
         states = torch.tensor(data["states"], dtype=torch.float32, device=self.device)
@@ -202,53 +238,6 @@ class SAC(BaseAgent):
 
     def get_best_action(self: "SAC", obs: torch.Tensor) -> np.ndarray:
         return self.actor.get_best_action(obs).numpy()
-
-    def train(self: "SAC") -> None:
-        for episode in range(self.config.training_steps_per_epoch):
-            self.logger.info(f"Training step {episode}")
-            self.logger.start_timer(
-                scope="training_step", level="INFO", attribute="episode_length"
-            )
-            obs, _ = self.environment.reset()
-            for step in range(self.config.episode_length):
-                action = self._get_action(
-                    torch.tensor(obs, dtype=torch.float32, device=self.device)
-                )
-                next_obs, reward, terminated, truncated, info = self.environment.step(
-                    action
-                )
-                reward /= self.config.episode_length
-                self.replay_buffer.add_transition(
-                    obs, action, float(reward), next_obs, terminated or truncated
-                )
-                obs = next_obs
-
-                can_learn = (
-                    self.replay_buffer.get_number_of_stored_transitions()
-                    >= self.config.hyperparameters["SAC"]["minibatch_size"]
-                )
-                is_exploration_step = (episode + 1) * (
-                    step + 1
-                ) <= self.pure_exploration_steps
-                if can_learn and not is_exploration_step:
-                    self._update()
-                if terminated or truncated:
-                    break
-
-            self.logger.stop_timer(
-                scope="training_step", level="INFO", attribute="episode_length"
-            )
-
-            if episode % self.config.evaluation_interval == 0:
-                evaluation_result = self.evaluate(
-                    time_to_save=episode % self.config.save_interval == 0
-                )
-                self.logger.info(
-                    f"During evaluation the policy achieves a score of {evaluation_result}"
-                )
-
-        self.logger.log_table(scope="training_step", level="INFO")
-        self.logger.clear_handlers()
 
     def load(self: "SAC", filename: str) -> None:
         self.actor.policy_net.load_state_dict(torch.load(f"{filename}_actor.pt"))

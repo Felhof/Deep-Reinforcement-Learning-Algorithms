@@ -42,6 +42,9 @@ class ProgressLogger:
         logger = logging.getLogger()
         logger.setLevel(self.level)
 
+        if logger.hasHandlers():
+            logger.handlers.clear()
+
         if log_to_file:
             file_handler = logging.FileHandler(f"{self.directory}/{filename}.log")
             file_handler.setLevel(self.level)

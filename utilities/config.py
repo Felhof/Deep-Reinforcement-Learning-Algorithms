@@ -23,3 +23,4 @@ class Config:
     evaluation_interval: int = 1
     use_cuda: bool = False
     dtype_name: str = "float32"
+    max_timestep: int = -1

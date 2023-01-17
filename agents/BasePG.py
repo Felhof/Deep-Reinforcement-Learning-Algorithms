@@ -82,54 +82,45 @@ class BasePG(BaseAgent):
             self.policy.policy_net = self.policy.policy_net.cuda()
             self.value_net = self.value_net.cuda()
 
-    def train(self: "BasePG") -> None:
-        for training_step in range(self.config.training_steps_per_epoch):
-            self.logger.info(f"Training step {training_step}")
-            self.policy.reset_gradients()
+    def _training_loop(self: "BasePG") -> None:
+        self.policy.reset_gradients()
 
-            self.logger.info("Running episodes")
-            self._run_episodes(training_step)
-            self.logger.log_table(
-                scope="training_step", level="INFO", attributes=["reward"]
-            )
+        self.logger.info("Running episodes")
+        self._run_episodes()
+        self.logger.log_table(
+            scope="training_step", level="INFO", attributes=["reward"]
+        )
 
-            (
-                obs,
-                actions,
-                rewards,
-                advantages,
-                rewards_to_go,
-            ) = self.buffer.get_data()
+        (
+            obs,
+            actions,
+            rewards,
+            advantages,
+            rewards_to_go,
+        ) = self.buffer.get_data()
 
-            self.logger.info("Updating policy")
-            self.logger.start_timer(
-                scope="epoch", level="INFO", attribute="policy_update"
-            )
-            self._update_policy(
-                torch.tensor(obs, dtype=self.tensor_type, device=self.device),
-                torch.tensor(actions, dtype=self.tensor_type, device=self.device),
-                torch.tensor(advantages, dtype=self.tensor_type, device=self.device),
-            )
-            self.logger.stop_timer(
-                scope="epoch", level="INFO", attribute="policy_update"
-            )
+        self.logger.info("Updating policy")
+        self.logger.start_timer(scope="epoch", level="INFO", attribute="policy_update")
+        self._update_policy(
+            torch.tensor(obs, dtype=self.tensor_type, device=self.device),
+            torch.tensor(actions, dtype=self.tensor_type, device=self.device),
+            torch.tensor(advantages, dtype=self.tensor_type, device=self.device),
+        )
+        self.logger.stop_timer(scope="epoch", level="INFO", attribute="policy_update")
 
-            self.logger.info("Updating value net")
-            self._update_value_net(
-                torch.tensor(obs, dtype=self.tensor_type, device=self.device),
-                torch.tensor(rewards_to_go, dtype=self.tensor_type, device=self.device),
-            )
+        self.logger.info("Updating value net")
+        self._update_value_net(
+            torch.tensor(obs, dtype=self.tensor_type, device=self.device),
+            torch.tensor(rewards_to_go, dtype=self.tensor_type, device=self.device),
+        )
 
-            self.buffer.reset()
-            self.logger.clear(scope="training_step")
+        self.buffer.reset()
+        self.logger.clear(scope="training_step")
 
-        self.logger.log_table(scope="epoch", level="INFO")
-        self.logger.clear(scope="epoch")
-        self.logger.clear_handlers()
-
-    def _run_episodes(self: "BasePG", step: int) -> None:
+    def _run_episodes(self: "BasePG") -> None:
         self.logger.start_timer(scope="epoch", level="INFO", attribute="episodes")
         for _episode in range(self.episodes_per_training_step):
+            self.current_timestep += 1
             episode_reward: float = 0
             states = np.zeros(
                 self.episode_length,
@@ -169,11 +160,17 @@ class BasePG(BaseAgent):
                 rewards[step] = float(reward)
                 obs = next_obs
 
+                self.current_timestep += 1
+                if (
+                    self.max_timestep != -1
+                    and self.current_timestep >= self.max_timestep
+                ):
+                    break
                 if terminated:
                     self.buffer.add_transition_data(states, actions, values, rewards)
                     self.logger.store(scope="training_step", reward=episode_reward)
                     break
-                elif step == self.episode_length - 1 or truncated:
+                if step == self.episode_length - 1 or truncated:
                     _, last_value = self._get_action_and_value(
                         torch.tensor(obs, dtype=self.tensor_type, device=self.device)
                     )
@@ -181,13 +178,10 @@ class BasePG(BaseAgent):
                         states, actions, values, rewards, last_value=last_value
                     )
                     self.logger.store(scope="training_step", reward=episode_reward)
-        if step % self.config.evaluation_interval == 0:
-            evaluation_result = self.evaluate(
-                time_to_save=step % self.config.save_interval == 0
-            )
-            self.logger.info(
-                f"During evaluation the policy achieves a score of {evaluation_result}"
-            )
+
+            if self.current_timestep >= self.max_timestep:
+                break
+
         self.logger.stop_timer(scope="epoch", level="INFO", attribute="episodes")
 
     def _get_state_value(self: "BasePG", obs: torch.Tensor) -> float:

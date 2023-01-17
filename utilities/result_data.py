@@ -3,6 +3,7 @@ from typing import Dict, Type, Union
 
 from agents.DQN import DQN
 from agents.PPO import PPO
+from agents.SAC import SAC
 from agents.TRPG import TRPG
 from agents.VPG import VPG
 from utilities.types import EpochRewards
@@ -13,12 +14,14 @@ agent_type_to_label: Dict[AgentType, str] = {
     VPG: "VPG",
     TRPG: "TRPG",
     PPO: "PPO",
+    SAC: "SAC",
 }
 agent_label_to_type: Dict[str, AgentType] = {
     "DQN": DQN,
     "VPG": VPG,
     "TRPG": TRPG,
     "PPO": PPO,
+    "SAC": SAC,
 }
 
 

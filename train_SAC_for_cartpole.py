@@ -1,21 +1,14 @@
-from agents import trainer, PPO
+from agents import trainer, SAC
 import gymnasium as gym
 import torch.nn
 from utilities.config import Config
 from utilities.environments import BaseEnvironmentWrapper
 
-NUMBER_OF_ACTIONS: int = 2
-ACTION_DIM: int = 1
-OBSERVATION_DIM: int = 4
-
 config = Config(
     hyperparameters={
-        "policy_gradient": {
-            "episodes_per_training_step": 30,
-            "value_updates_per_training_step": 20,
+        "SAC": {
             "discount_rate": 0.99,
-            "gae_exp_mean_discount_rate": 0.92,
-            "policy_net_parameters": {
+            "actor_parameters": {
                 "linear_layer_sizes": [128],
                 "linear_layer_activations": [
                     torch.nn.ReLU(),
@@ -23,7 +16,7 @@ config = Config(
                 ],
                 "learning_rate": 0.001,
             },
-            "value_net_parameters": {
+            "critic_parameters": {
                 "linear_layer_sizes": [128],
                 "linear_layer_activations": [
                     torch.nn.ReLU(),
@@ -31,22 +24,26 @@ config = Config(
                 ],
                 "learning_rate": 0.001,
             },
+            "initial_temperature": 0.05,
+            "learn_temperature": False,
+            "temperature_learning_rate": 0.001,
+            "soft_update_interpolation_factor": 0.01,
+            "minibatch_size": 256,
+            "buffer_size": 40000,
         },
-        "PPO": {
-            "clip_range": 0.1
-        }
     },
     episode_length=200,
     training_steps_per_epoch=400,
     epochs=5,
-    results_filename="PPO_cartpole_rewards",
+    results_filename="SAC_cartpole_rewards",
     log_level="INFO",
-    log_filename="PPO_cartpole_debug",
+    log_filename="SAC_cartpole_debug",
+    model_filename="SAC_test",
 )
 
 env = BaseEnvironmentWrapper(gym.make("CartPole-v1"))
 
 if __name__ == "__main__":
-    ppo_trainer = trainer.Trainer(config)
-    ppo_trainer.train_agents([PPO.PPO], environment=env)
-    ppo_trainer.save_results_to_csv()
+    sac_trainer = trainer.Trainer(config)
+    sac_trainer.train_agents([SAC.SAC], environment=env)
+    sac_trainer.save_results_to_csv()

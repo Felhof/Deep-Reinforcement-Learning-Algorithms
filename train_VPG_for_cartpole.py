@@ -4,9 +4,6 @@ import torch.nn
 from utilities.config import Config
 from utilities.environments import BaseEnvironmentWrapper
 
-NUMBER_OF_ACTIONS: int = 2
-OBSERVATION_DIM: int = 4
-
 config = Config(
     hyperparameters={
         "policy_gradient": {
@@ -35,9 +32,9 @@ config = Config(
     episode_length=200,
     training_steps_per_epoch=400,
     epochs=5,
-    results_filename="VPG_cartpole_rewards3",
+    results_filename="VPG_cartpole_rewards",
     log_level="INFO",
-    log_filename="VPG_cartpole_debug3",
+    log_filename="VPG_cartpole_debug",
     model_filename="VPG_test",
 )
 

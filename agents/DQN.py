@@ -25,8 +25,8 @@ class DQN(BaseAgent):
             lr=self.config.hyperparameters["DQN"]["q_net_learning_rate"],
         )
         self.replay_buffer = DQNBuffer(
-            minibatch_size=self.config.hyperparameters["SAC"]["minibatch_size"],
-            buffer_size=self.config.hyperparameters["SAC"]["buffer_size"],
+            minibatch_size=self.config.hyperparameters["DQN"]["minibatch_size"],
+            buffer_size=self.config.hyperparameters["DQN"]["buffer_size"],
             observation_dim=self.environment.observation_dim,
         )
         self.exploration_rate = self.config.hyperparameters["DQN"][

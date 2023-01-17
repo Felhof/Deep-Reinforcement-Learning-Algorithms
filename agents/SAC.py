@@ -123,10 +123,14 @@ class SAC(BaseAgent):
             next_q_values = rewards + (1 - done) * self.gamma * soft_state_values
 
         soft_q_values = (
-            self.critic1(states).gather(1, actions.unsqueeze(-1).type(torch.int64)).squeeze(-1)
+            self.critic1(states)
+            .gather(1, actions.unsqueeze(-1).type(torch.int64))
+            .squeeze(-1)
         )
         soft_q_values2 = (
-            self.critic2(states).gather(1, actions.unsqueeze(-1).type(torch.int64)).squeeze(-1)
+            self.critic2(states)
+            .gather(1, actions.unsqueeze(-1).type(torch.int64))
+            .squeeze(-1)
         )
         critic_square_error = torch.nn.MSELoss(reduction="none")(
             soft_q_values, next_q_values

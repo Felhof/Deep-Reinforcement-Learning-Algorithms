@@ -43,15 +43,15 @@ config = Config(
     episode_length=200,
     training_steps_per_epoch=400,
     epochs=1,
-    results_filename="TRPG_cartpole_rewards_01",
+    results_filename="TRPG_cartpole_rewards_05",
     log_level="INFO",
-    log_filename="TRPG_cartpole_debug_01",
+    log_filename="TRPG_cartpole_debug_05",
     dtype_name="float64",
 )
 
 env = BaseEnvironmentWrapper(gym.make("CartPole-v1"))
 
 if __name__ == "__main__":
-    vpn_trainer = trainer.Trainer(config)
-    vpn_trainer.train_agents([TRPG.TRPG], environment=env)
-    vpn_trainer.save_results(filename="TRPG_result")
+    trpg_trainer = trainer.Trainer(config)
+    trpg_trainer.train_agents([TRPG.TRPG], environment=env)
+    trpg_trainer.save_results_to_csv()

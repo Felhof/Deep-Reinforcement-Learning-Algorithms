@@ -33,9 +33,9 @@ config = Config(
     training_steps_per_epoch=400,
     epochs=5,
     target_score=200,
-    results_filename="DQN_cartpole_rewards3",
+    results_filename="DQN_cartpole_rewards",
     log_level="INFO",
-    log_filename="DQN_cartpole_debug3",
+    log_filename="DQN_cartpole_debug",
 )
 
 env = BaseEnvironmentWrapper(gym.make("CartPole-v1"))

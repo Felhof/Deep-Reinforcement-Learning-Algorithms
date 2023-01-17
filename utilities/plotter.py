@@ -3,6 +3,7 @@ from typing import Dict, List
 
 from agents.DQN import DQN
 from agents.PPO import PPO
+from agents.SAC import SAC
 from agents.TRPG import TRPG
 from agents.VPG import VPG
 import matplotlib.pyplot as plt
@@ -20,6 +21,7 @@ agent_type_to_color: Dict[AgentType, str] = {
     VPG: "#00FF00",
     TRPG: "#FF0000",
     PPO: "#fcad03",
+    SAC: "#fc03fc",
 }
 
 
@@ -182,13 +184,11 @@ class Plotter:
         title: str = "learning curve",
         filename: str = "results.png",
     ) -> None:
-        # Shrink current axis's height by 10% on the bottom
         box = self.ax.get_position()
         self.ax.set_position(
             [box.x0, box.y0 + box.height * 0.05, box.width, box.height * 0.95]
         )
 
-        # Put a legend below current axis
         self.ax.legend(
             loc="upper center",
             bbox_to_anchor=(0.5, -0.15),

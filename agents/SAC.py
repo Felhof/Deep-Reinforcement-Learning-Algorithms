@@ -75,16 +75,17 @@ class SAC(BaseAgent):
             observation_dim=self.environment.observation_dim,
         )
 
-        self.target_entropy = 0.98 * -np.log(1 / self.environment.action_space.n)
-        self.log_alpha = torch.tensor(
-            np.log(self.config.hyperparameters["SAC"]["initial_temperature"]),
-            requires_grad=True,
-        )
-        self.alpha = self.log_alpha.exp()
-        self.alpha_optimizer = torch.optim.Adam(
-            [self.log_alpha],
-            lr=self.config.hyperparameters["SAC"]["temperature_learning_rate"],
-        )
+        self.alpha = self.config.hyperparameters["SAC"]["initial_temperature"]
+        if self.config.hyperparameters["SAC"].get("learn_temperature", False):
+            self.target_entropy = 0.98 * -np.log(1 / self.environment.action_space.n)
+            self.log_alpha = torch.tensor(
+                np.log(self.config.hyperparameters["SAC"]["initial_temperature"]),
+                requires_grad=True,
+            )
+            self.alpha_optimizer = torch.optim.Adam(
+                [self.log_alpha],
+                lr=self.config.hyperparameters["SAC"]["temperature_learning_rate"],
+            )
         self.tau = self.config.hyperparameters["SAC"][
             "soft_update_interpolation_factor"
         ]
@@ -119,13 +120,13 @@ class SAC(BaseAgent):
                 )
             ).sum(dim=1)
 
-            next_q_values = rewards + ~done * self.gamma * soft_state_values
+            next_q_values = rewards + (1 - done) * self.gamma * soft_state_values
 
         soft_q_values = (
-            self.critic1(states).gather(1, actions.unsqueeze(-1)).squeeze(-1)
+            self.critic1(states).gather(1, actions.unsqueeze(-1).type(torch.int64)).squeeze(-1)
         )
         soft_q_values2 = (
-            self.critic2(states).gather(1, actions.unsqueeze(-1)).squeeze(-1)
+            self.critic2(states).gather(1, actions.unsqueeze(-1).type(torch.int64)).squeeze(-1)
         )
         critic_square_error = torch.nn.MSELoss(reduction="none")(
             soft_q_values, next_q_values
@@ -163,6 +164,8 @@ class SAC(BaseAgent):
             states, actions, rewards, next_states, done
         )
 
+        self.critic1.zero_grad()
+        self.critic2.zero_grad()
         critic_loss.backward()
         critic2_loss.backward()
         self.critic1_optimizer.step()
@@ -170,14 +173,17 @@ class SAC(BaseAgent):
 
         actor_loss, log_action_probs = self._actor_loss(states)
 
+        self.actor.reset_gradients()
         actor_loss.backward()
         self.actor.update()
 
-        temperature_loss = self._temperature_loss(log_action_probs)
+        if self.config.hyperparameters["SAC"].get("learn_temperature", False):
+            temperature_loss = self._temperature_loss(log_action_probs)
 
-        temperature_loss.backward()
-        self.alpha_optimizer.step()
-        self.alpha = self.log_alpha.exp()
+            self.alpha_optimizer.zero_grad()
+            temperature_loss.backward()
+            self.alpha_optimizer.step()
+            self.alpha = self.log_alpha.exp()
 
         self._soft_update_target_networks(tau=self.tau)
 
@@ -192,13 +198,9 @@ class SAC(BaseAgent):
 
     def train(self: "SAC") -> None:
         for episode in range(self.config.training_steps_per_epoch):
+            self.logger.info(f"Training step {episode}")
             obs, _ = self.environment.reset()
             for _step in range(self.config.episode_length):
-                self.critic1.zero_grad()
-                self.critic2.zero_grad()
-                self.actor.reset_gradients()
-                self.alpha_optimizer.zero_grad()
-
                 action = self._get_action(
                     torch.tensor(obs, dtype=torch.float32, device=self.device)
                 )
@@ -217,6 +219,8 @@ class SAC(BaseAgent):
                 )
                 if can_learn:
                     self._update()
+                if terminated or truncated:
+                    break
 
             if episode % self.config.evaluation_interval == 0:
                 evaluation_result = self.evaluate(
@@ -225,6 +229,7 @@ class SAC(BaseAgent):
                 self.logger.info(
                     f"During evaluation the policy achieves a score of {evaluation_result}"
                 )
+        self.logger.clear_handlers()
 
     def load(self: "SAC", filename: str) -> None:
         self.actor.policy_net.load_state_dict(torch.load(f"{filename}_actor.pt"))

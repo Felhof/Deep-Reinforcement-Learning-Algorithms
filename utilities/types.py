@@ -68,6 +68,7 @@ AgentHyperParameters = TypedDict(
         "actor_parameters": NNParameters,
         "critic_parameters": NNParameters,
         "initial_temperature": float,
+        "learn_temperature": bool,
         "temperature_learning_rate": float,
         "soft_update_interpolation_factor": float,
     },

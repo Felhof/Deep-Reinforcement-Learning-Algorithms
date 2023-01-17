@@ -31,6 +31,8 @@ class DQNBuffer:
         self.done = np.zeros(self.buffer_size, dtype=bool)
         self.index = 0
         self.number_of_stored_transitions = 0
+        self.min_reward = 10**4
+        self.max_reward = -(10**4)
 
     def add_transition(
         self: "DQNBuffer",
@@ -40,6 +42,10 @@ class DQNBuffer:
         next_state: np.ndarray,
         done: bool,
     ) -> None:
+        if reward < self.min_reward:
+            self.min_reward = reward
+        if reward > self.max_reward:
+            self.max_reward = reward
         self.states[self.index] = state
         self.actions[self.index] = action
         self.rewards[self.index] = reward
@@ -56,8 +62,25 @@ class DQNBuffer:
     def get_transition_data(
         self: "DQNBuffer",
     ) -> Dict[str, np.ndarray]:
+        weights = self.rewards[: self.number_of_stored_transitions]
+        if any(self.rewards < 0):
+            reward_range = self.max_reward - self.min_reward
+            if reward_range == 0:
+                # all rewards are the same
+                weights += abs(weights[0])
+            else:
+                weights += reward_range
+
+        weights += (
+            np.arange(self.number_of_stored_transitions)
+            / self.number_of_stored_transitions
+        )
+
+        weighted_probabilities = weights / sum(weights)
         transition_indices = np.random.choice(
-            np.arange(self.number_of_stored_transitions), size=self.minibatch_size
+            np.arange(self.number_of_stored_transitions),
+            size=self.minibatch_size,
+            p=weighted_probabilities,
         )
         return dict(
             states=self.states[transition_indices],

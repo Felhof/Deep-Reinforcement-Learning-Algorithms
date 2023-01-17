@@ -179,7 +179,7 @@ class SAC(BaseAgent):
                 >= self.config.hyperparameters["SAC"]["minibatch_size"]
             )
             is_exploration_step = self.current_timestep <= self.pure_exploration_steps
-            time_to_update = self.current_timestep % self.config.update_frequency
+            time_to_update = self.current_timestep % self.config.update_frequency == 0
             if can_learn and time_to_update and not is_exploration_step:
                 self.logger.start_timer(scope="epoch", level="INFO", attribute="update")
                 self._update()

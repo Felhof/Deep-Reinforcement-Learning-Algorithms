@@ -111,7 +111,7 @@ class DQN(BaseAgent):
                 )
                 is_exploration_step = (episode + 1) * (
                     step + 1
-                ) > self.pure_exploration_steps
+                ) <= self.pure_exploration_steps
                 if can_learn and not is_exploration_step:
                     update_q_network()
                 if terminated or truncated or step == self.config.episode_length - 1:

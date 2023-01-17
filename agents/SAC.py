@@ -229,7 +229,7 @@ class SAC(BaseAgent):
                 )
                 is_exploration_step = (episode + 1) * (
                     step + 1
-                ) > self.pure_exploration_steps
+                ) <= self.pure_exploration_steps
                 if can_learn and not is_exploration_step:
                     self._update()
                 if terminated or truncated:

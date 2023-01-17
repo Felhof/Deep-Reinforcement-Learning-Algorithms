@@ -103,7 +103,8 @@ class DQN(BaseAgent):
                 >= self.config.hyperparameters["DQN"]["minibatch_size"]
             )
             is_exploration_step = self.current_timestep <= self.pure_exploration_steps
-            if can_learn and not is_exploration_step:
+            time_to_update = self.current_timestep % self.config.update_frequency
+            if can_learn and time_to_update and not is_exploration_step:
                 self._update_q_network()
             self.current_timestep += 1
             if self.max_timestep != -1 and self.current_timestep >= self.max_timestep:

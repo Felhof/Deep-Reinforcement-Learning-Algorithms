@@ -24,3 +24,4 @@ class Config:
     use_cuda: bool = False
     dtype_name: str = "float32"
     max_timestep: int = -1
+    update_frequency: int = 1

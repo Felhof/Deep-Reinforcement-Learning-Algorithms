@@ -117,13 +117,17 @@ def create_q_net(
 class ConvolutionWrapper(nn.Sequential):
     def forward(self, inp: torch.Tensor) -> torch.Tensor:
         shape = inp.shape
-        assert (
-            len(shape) == 3 or len(shape) == 5
-        ), "Input to convolution must be 3- or 5-dimensional"
+        assert len(shape) in [
+            3,
+            4,
+            5,
+        ], "Input to convolution must be 3-,4- or 5-dimensional"
         if len(shape) == 3:
             inp = inp.unsqueeze(0)
             output = super().forward(inp)
             return output.squeeze(0)
+        elif len(shape) == 4:
+            return super().forward(inp)
         else:
             episodes = shape[0]
             timesteps = shape[1]

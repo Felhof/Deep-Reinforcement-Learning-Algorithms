@@ -58,6 +58,9 @@ class BaseAgent(ABC):
                 )
                 total_reward += reward
                 if terminated or truncated:
+                    self.logger.info(
+                        f"During evaluation the policy survives for {step + 1} frames."
+                    )
                     break
                 obs = next_obs
             if time_to_save and self.config.save:

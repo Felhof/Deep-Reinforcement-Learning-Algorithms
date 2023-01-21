@@ -92,7 +92,6 @@ class DQN(BaseAgent):
             next_obs, reward, terminated, truncated, info = self.environment.step(
                 action
             )
-            reward /= self.config.episode_length
             self.replay_buffer.add_transition(
                 obs, action, float(reward), next_obs, terminated or truncated
             )

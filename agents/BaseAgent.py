@@ -45,6 +45,7 @@ class BaseAgent(ABC):
         pass
 
     def evaluate(self: "BaseAgent", time_to_save: bool = False) -> float:
+        self.logger.info("Evaluate agent.")
         with torch.no_grad():
             obs, _ = self.environment.reset()
             total_reward: float = 0.0
@@ -62,18 +63,18 @@ class BaseAgent(ABC):
             if time_to_save and self.config.save:
                 self.model_saver.save_model_if_best(self, total_reward)
             self.result_storage.add_average_training_step_reward(total_reward)
+        self.logger.info(
+            f"During evaluation the policy achieves a score of {total_reward}."
+        )
         return total_reward
 
     def train(self: "BaseAgent") -> None:
         for training_step in range(self.config.training_steps_per_epoch):
-            self.logger.info(f"Training step {training_step}")
+            self.logger.info(f"Training step {training_step}.")
             self._training_loop()
             if training_step % self.config.evaluation_interval == 0:
-                evaluation_result = self.evaluate(
+                self.evaluate(
                     time_to_save=training_step % self.config.save_interval == 0
-                )
-                self.logger.info(
-                    f"During evaluation the policy achieves a score of {evaluation_result}"
                 )
             if self.max_timestep != -1 and self.current_timestep >= self.max_timestep:
                 self.logger.info(

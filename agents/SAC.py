@@ -146,7 +146,7 @@ class SAC(BaseAgent):
         return critic_loss, critic2_loss
 
     def _get_action(self: "SAC", obs: torch.Tensor) -> np.ndarray:
-        return self.actor.get_action(obs).numpy()
+        return self.actor.get_action(obs).cpu().numpy()
 
     def _soft_update_target_networks(self: "SAC", tau=0.01):
         _soft_update(self.critic_target1, self.critic1, tau)
@@ -161,7 +161,6 @@ class SAC(BaseAgent):
         self.logger.start_timer(scope="epoch", level="INFO", attribute="episode")
         obs, _ = self.environment.reset()
         for step in range(self.config.episode_length):
-            self.current_timestep += 1
             action = self._get_action(
                 torch.tensor(obs, dtype=torch.float32, device=self.device)
             )
@@ -181,6 +180,7 @@ class SAC(BaseAgent):
             is_exploration_step = self.current_timestep <= self.pure_exploration_steps
             time_to_update = self.current_timestep % self.config.update_frequency == 0
             if can_learn and time_to_update and not is_exploration_step:
+                self.logger.info("Updating parameters.")
                 self.logger.start_timer(scope="epoch", level="INFO", attribute="update")
                 self._update()
                 self.logger.stop_timer(scope="epoch", level="INFO", attribute="update")
@@ -193,6 +193,7 @@ class SAC(BaseAgent):
                 )
                 break
         self.logger.stop_timer(scope="epoch", level="INFO", attribute="episode")
+        self.logger.info(f"After this training step, alpha is {self.alpha}.")
 
     def _update(self: "SAC") -> None:
         data = self.replay_buffer.get_transition_data()
@@ -232,13 +233,15 @@ class SAC(BaseAgent):
         self._soft_update_target_networks(tau=self.tau)
 
     def evaluate(self: "SAC", time_to_save: bool = False) -> float:
-        self.actor.policy_net.eval()
-        reward = super().evaluate(time_to_save=time_to_save)
-        self.actor.policy_net.train()
-        return reward
+        if self.current_timestep > self.pure_exploration_steps:
+            self.actor.policy_net.eval()
+            reward = super().evaluate(time_to_save=time_to_save)
+            self.actor.policy_net.train()
+            return reward
+        return -1
 
     def get_best_action(self: "SAC", obs: torch.Tensor) -> np.ndarray:
-        return self.actor.get_best_action(obs).numpy()
+        return self.actor.get_best_action(obs).cpu().numpy()
 
     def load(self: "SAC", filename: str) -> None:
         self.actor.policy_net.load_state_dict(torch.load(f"{filename}_actor.pt"))

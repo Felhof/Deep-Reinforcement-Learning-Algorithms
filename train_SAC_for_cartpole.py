@@ -35,9 +35,9 @@ config = Config(
     episode_length=200,
     training_steps_per_epoch=400,
     epochs=5,
-    results_filename="SAC_cartpole_rewards",
+    results_filename="SAC_cartpole_rewards2",
     log_level="INFO",
-    log_filename="SAC_cartpole_debug",
+    log_filename="SAC_cartpole_debug2",
     model_filename="SAC_test",
 )
 

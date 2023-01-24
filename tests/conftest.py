@@ -252,7 +252,7 @@ def mountain_car_continuous_config() -> Callable[[str, str], Config]:
 def adventure_config() -> Callable[[str, str], Config]:
     network_parameters = {
         "convolutions": [(32, 8, 4), (64, 4, 2), (64, 3, 1)],
-        "linear_layer_activations": [torch.nn.ReLU(), torch.nn.ReLU(), torch.nn.Tanh()],
+        "linear_layer_activations": [torch.nn.ReLU(), torch.nn.ReLU()],
         "linear_layer_sizes": [3136, 512],
         "learning_rate": 0.00025,
     }

@@ -55,6 +55,15 @@ def create_nn(
     assert (
         isinstance(observation_dim, int) or convolutions != []
     ), "If the observation is an image there must be a convolutional layer."
+    if convolutions:
+        assert len(parameters["linear_layer_activations"]) == len(
+            parameters["linear_layer_sizes"]
+        ), "With convolutions, net must have exactly as many activation functions as linear layers"
+    else:
+        assert (
+            len(parameters["linear_layer_activations"])
+            == len(parameters["linear_layer_sizes"]) + 1
+        ), "Without convolutions, net must have exactly one more activation function than linear layers"
 
     if convolutions:
         model: nn.Sequential = ConvolutionWrapper()
@@ -89,10 +98,6 @@ def create_value_net(
     observation_dim: ObservationDim,
     parameters: NNParameters,
 ) -> nn.Sequential:
-    assert (
-        len(parameters["linear_layer_activations"])
-        == len(parameters["linear_layer_sizes"]) + 1
-    ), "Value net must be given exactly one more activation function than hidden layers"
     return create_nn(
         observation_dim=observation_dim, output_size=1, parameters=parameters
     )
@@ -103,10 +108,6 @@ def create_q_net(
     number_of_actions: int,
     parameters: NNParameters,
 ) -> nn.Sequential:
-    assert (
-        len(parameters["linear_layer_activations"])
-        == len(parameters["linear_layer_sizes"]) + 1
-    ), "Q net must be given exactly one more activation function than hidden layers"
     return create_nn(
         observation_dim=observation_dim,
         output_size=number_of_actions,
@@ -127,7 +128,8 @@ class ConvolutionWrapper(nn.Sequential):
             output = super().forward(inp)
             return output.squeeze(0)
         elif len(shape) == 4:
-            return super().forward(inp)
+            output = super().forward(inp)
+            return output
         else:
             episodes = shape[0]
             timesteps = shape[1]

@@ -47,21 +47,25 @@ class BaseAgent(ABC):
     def evaluate(self: "BaseAgent", time_to_save: bool = False) -> float:
         self.logger.info("Evaluate agent.")
         with torch.no_grad():
-            obs, _ = self.environment.reset()
+            env = self.environment
+            obs, _ = env.reset()
+            previous_obs = np.zeros(obs.shape)
             total_reward: float = 0.0
             for step in range(self.episode_length):
                 action = self.get_best_action(
                     torch.tensor(obs, dtype=self.tensor_type, device=self.device)
                 )
-                next_obs, reward, terminated, truncated, info = self.environment.step(
-                    action
-                )
+                if step == 0 or np.array_equal(previous_obs, obs):
+                    action = np.array(1)
+                print(f"Action: {action}")
+                next_obs, reward, terminated, truncated, info = env.step(action)
                 total_reward += reward
                 if terminated or truncated:
                     self.logger.info(
                         f"During evaluation the policy survives for {step + 1} frames."
                     )
                     break
+                previous_obs = obs
                 obs = next_obs
             if time_to_save and self.config.save:
                 self.model_saver.save_model_if_best(self, total_reward)

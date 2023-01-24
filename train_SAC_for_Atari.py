@@ -6,7 +6,7 @@ from utilities.environments import AtariWrapper
 
 network_parameters = {
         "convolutions": [(32, 8, 4), (64, 4, 2), (64, 3, 1)],
-        "linear_layer_activations": [torch.nn.ReLU(), torch.nn.ReLU(), torch.nn.Tanh()],
+        "linear_layer_activations": [torch.nn.Tanh(), torch.nn.Tanh()],
         "linear_layer_sizes": [3136, 512],
         "learning_rate": 0.00025,
 }
@@ -16,8 +16,13 @@ config = Config(
         "SAC": {
             "discount_rate": 0.99,
             "actor_parameters": network_parameters,
-            "critic_parameters": network_parameters,
-            "initial_temperature": 1.,
+            "critic_parameters": {
+                    "convolutions": [(32, 8, 4), (64, 4, 2), (64, 3, 1)],
+                    "linear_layer_activations": [torch.nn.ReLU(), torch.nn.Identity()],
+                    "linear_layer_sizes": [3136, 512],
+                    "learning_rate": 0.00025,
+            },
+            "initial_temperature": 0.2,
             "learn_temperature": True,
             "temperature_learning_rate": 0.001,
             "soft_update_interpolation_factor": 0.01,
@@ -36,7 +41,7 @@ config = Config(
     model_filename="SAC_test",
     evaluation_interval=10,
     use_cuda=True,
-    update_frequency=50,
+    update_frequency=4,
 )
 
 env = AtariWrapper(gym.make("ALE/Breakout-v5"))

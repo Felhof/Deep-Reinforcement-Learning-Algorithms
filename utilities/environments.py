@@ -84,7 +84,7 @@ class AtariWrapper(BaseEnvironmentWrapper):
         if self.greyscale:
             obs = np.expand_dims(obs, 0)
         self.frames.append(obs)
-        return np.concatenate(self.frames)
+        return LazyFrames(self.frames)
 
     def _reset(self: "AtariWrapper") -> Tuple[Any, dict[str, Any]]:
         frame, info = self.environment.reset()
@@ -97,3 +97,22 @@ class AtariWrapper(BaseEnvironmentWrapper):
         frame, reward, terminated, truncated, info = self.environment.step(action)
         obs = self._preprocess_observation(frame)
         return obs, reward, terminated, truncated, info
+
+    def render(self):
+        self.environment.render()
+
+
+class LazyFrames:
+    """
+    Basically a minimalist implementation of LazyFrames from OpenAI's Atari Wrapper:
+    https://github.com/openai/baselines/blob/ea25b9e8b234e6ee1bca43083f8f3cf974143998/baselines/common/atari_wrappers.py#L229
+    """
+
+    def __init__(self, frames: deque) -> None:
+        self.frames = list(frames)
+
+    def __array__(self, dtype=None):
+        array = np.concatenate(self.frames, axis=0)
+        if dtype is not None:
+            array = array.astype(dtype)
+        return array

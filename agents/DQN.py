@@ -27,7 +27,6 @@ class DQN(BaseAgent):
         self.replay_buffer = DQNBuffer(
             minibatch_size=self.config.hyperparameters["DQN"]["minibatch_size"],
             buffer_size=self.config.hyperparameters["DQN"]["buffer_size"],
-            observation_dim=self.environment.observation_dim,
         )
         self.exploration_rate = self.config.hyperparameters["DQN"][
             "initial_exploration_rate"
@@ -87,7 +86,7 @@ class DQN(BaseAgent):
         obs, _ = self.environment.reset()
         for step in range(self.config.episode_length):
             action = self._get_action(
-                torch.tensor(obs, dtype=torch.float32, device=self.device)
+                torch.tensor(np.array(obs), dtype=torch.float32, device=self.device)
             )
             next_obs, reward, terminated, truncated, info = self.environment.step(
                 action

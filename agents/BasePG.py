@@ -148,7 +148,9 @@ class BasePG(BaseAgent):
             obs, _ = self.environment.reset()
             for step in range(self.episode_length):
                 action, value = self._get_action_and_value(
-                    torch.tensor(obs, dtype=self.tensor_type, device=self.device)
+                    torch.tensor(
+                        np.array(obs), dtype=self.tensor_type, device=self.device
+                    )
                 )
                 next_obs, reward, terminated, truncated, info = self.environment.step(
                     action
@@ -172,7 +174,9 @@ class BasePG(BaseAgent):
                     break
                 if step == self.episode_length - 1 or truncated:
                     _, last_value = self._get_action_and_value(
-                        torch.tensor(obs, dtype=self.tensor_type, device=self.device)
+                        torch.tensor(
+                            np.array(obs), dtype=self.tensor_type, device=self.device
+                        )
                     )
                     self.buffer.add_transition_data(
                         states, actions, values, rewards, last_value=last_value

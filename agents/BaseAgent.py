@@ -49,11 +49,13 @@ class BaseAgent(ABC):
         with torch.no_grad():
             env = self.environment
             obs, _ = env.reset()
-            previous_obs = np.zeros(obs.shape)
+            previous_obs = np.zeros(np.array(obs).shape)
             total_reward: float = 0.0
             for step in range(self.episode_length):
                 action = self.get_best_action(
-                    torch.tensor(obs, dtype=self.tensor_type, device=self.device)
+                    torch.tensor(
+                        np.array(obs), dtype=self.tensor_type, device=self.device
+                    )
                 )
                 if step == 0 or np.array_equal(previous_obs, obs):
                     action = np.array(1)

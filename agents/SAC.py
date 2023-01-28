@@ -186,12 +186,10 @@ class SAC(QLearningAgent):
         self._soft_update_target_networks(tau=self.tau)
 
     def evaluate(self: "SAC", time_to_save: bool = False) -> float:
-        if self.current_timestep > self.pure_exploration_steps:
-            self.actor.policy_net.eval()
-            reward = super().evaluate(time_to_save=time_to_save)
-            self.actor.policy_net.train()
-            return reward
-        return -1
+        self.actor.policy_net.eval()
+        reward = super().evaluate(time_to_save=time_to_save)
+        self.actor.policy_net.train()
+        return reward
 
     def get_best_action(self: "SAC", obs: torch.Tensor) -> np.ndarray:
         return self.actor.get_best_action(obs).cpu().numpy()

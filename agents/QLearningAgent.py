@@ -38,6 +38,8 @@ class QLearningAgent(BaseAgent, ABC):
     def _evaluate_if_evaluating_during_episodes(self: "QLearningAgent") -> None:
         if self.config.training_steps_per_epoch > 0:
             return
+        if self._is_exploration_step():
+            return
         if self.current_timestep % self.config.evaluate_every_n_timesteps == 0:
             self.evaluate(
                 time_to_save=self.current_timestep
@@ -55,7 +57,8 @@ class QLearningAgent(BaseAgent, ABC):
         self.logger.start_timer(scope="epoch", level="INFO", attribute="episode")
         obs, _ = self.environment.reset()
         for step in range(self.config.episode_length):
-            self.current_timestep += 1
+            if not self._is_exploration_step():
+                self.current_timestep += 1
             action = self._get_action(
                 torch.tensor(np.array(obs), dtype=torch.float32, device=self.device)
             )

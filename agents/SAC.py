@@ -160,6 +160,7 @@ class SAC(BaseAgent):
         self.logger.start_timer(scope="epoch", level="INFO", attribute="episode")
         obs, _ = self.environment.reset()
         for step in range(self.config.episode_length):
+            self.current_timestep += 1
             action = self._get_action(
                 torch.tensor(np.array(obs), dtype=torch.float32, device=self.device)
             )
@@ -184,7 +185,6 @@ class SAC(BaseAgent):
                 self.logger.start_timer(scope="epoch", level="INFO", attribute="update")
                 self._update()
                 self.logger.stop_timer(scope="epoch", level="INFO", attribute="update")
-            self.current_timestep += 1
             if self.has_reached_timestep_limit():
                 break
             if terminated or truncated:

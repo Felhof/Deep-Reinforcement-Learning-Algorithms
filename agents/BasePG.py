@@ -120,7 +120,6 @@ class BasePG(BaseAgent):
     def _run_episodes(self: "BasePG") -> None:
         self.logger.start_timer(scope="epoch", level="INFO", attribute="episodes")
         for _episode in range(self.episodes_per_training_step):
-            self.current_timestep += 1
             episode_reward: float = 0
             states = np.zeros(
                 self.episode_length,
@@ -147,6 +146,7 @@ class BasePG(BaseAgent):
 
             obs, _ = self.environment.reset()
             for step in range(self.episode_length):
+                self.current_timestep += 1
                 action, value = self._get_action_and_value(
                     torch.tensor(
                         np.array(obs), dtype=self.tensor_type, device=self.device
@@ -162,7 +162,6 @@ class BasePG(BaseAgent):
                 rewards[step] = float(reward)
                 obs = next_obs
 
-                self.current_timestep += 1
                 if self.has_reached_timestep_limit():
                     break
                 if terminated:

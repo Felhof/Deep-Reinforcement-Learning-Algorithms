@@ -44,6 +44,28 @@ class BaseAgent(ABC):
     def load(self: "BaseAgent", filename) -> None:
         pass
 
+    def _train_for_n_training_steps(self: "BaseAgent") -> None:
+        for training_step in range(self.config.training_steps_per_epoch):
+            self.logger.info(f"Training step {training_step}.")
+            self._training_loop()
+            if training_step % self.config.evaluate_every_n_training_steps == 0:
+                self.evaluate(
+                    time_to_save=training_step % self.config.save_every_n_training_steps
+                    == 0
+                )
+
+    def _train_until_timestep_limit_reached(self: "BaseAgent") -> None:
+        training_step_counter = 0
+        while True:
+            training_step_counter += 1
+            self.logger.info(f"Training step {training_step_counter}.")
+            self._training_loop()
+            if self.has_reached_timestep_limit():
+                self.logger.info(
+                    "Stopping training as maximum number of training steps has been reached."
+                )
+                break
+
     def evaluate(self: "BaseAgent", time_to_save: bool = False) -> float:
         self.logger.info("Evaluate agent.")
         with torch.no_grad():
@@ -81,18 +103,10 @@ class BaseAgent(ABC):
         return self.max_timestep != 0 and self.current_timestep >= self.max_timestep
 
     def train(self: "BaseAgent") -> None:
-        for training_step in range(self.config.training_steps_per_epoch):
-            self.logger.info(f"Training step {training_step}.")
-            self._training_loop()
-            if training_step % self.config.evaluate_every_n_training_steps == 0:
-                self.evaluate(
-                    time_to_save=training_step % self.config.save_interval == 0
-                )
-            if self.has_reached_timestep_limit():
-                self.logger.info(
-                    "Stopping training as maximum number of training steps has been reached."
-                )
-                break
+        if self.config.training_steps_per_epoch > 0:
+            self._train_for_n_training_steps()
+        else:
+            self._train_until_timestep_limit_reached()
 
         self.logger.log_table(scope="epoch", level="INFO")
         self.logger.clear(scope="epoch")

@@ -35,6 +35,16 @@ class QLearningAgent(BaseAgent, ABC):
             >= self.config.hyperparameters[self.key]["minibatch_size"]
         )
 
+    def _evaluate_if_evaluating_during_episodes(self: "QLearningAgent") -> None:
+        if self.config.training_steps_per_epoch > 0:
+            return
+        if self.current_timestep % self.config.evaluate_every_n_timesteps == 0:
+            self.evaluate(
+                time_to_save=self.current_timestep
+                % self.config.save_every_n_training_steps
+                == 0
+            )
+
     def _is_exploration_step(self: "QLearningAgent") -> bool:
         return self.current_timestep <= self.pure_exploration_steps
 
@@ -65,6 +75,7 @@ class QLearningAgent(BaseAgent, ABC):
                 self.logger.start_timer(scope="epoch", level="INFO", attribute="update")
                 self._update()
                 self.logger.stop_timer(scope="epoch", level="INFO", attribute="update")
+            self._evaluate_if_evaluating_during_episodes()
             if self.has_reached_timestep_limit():
                 break
             if terminated or truncated:

@@ -19,7 +19,8 @@ class Config:
     model_filename: str = ""
     model_directory: str = ""
     save: bool = True
-    save_interval: int = 5
+    save_every_n_training_steps: int = 5
+    save_every_n_timesteps: int = 2500
     evaluate_every_n_training_steps: int = 1
     evaluate_every_n_timesteps: int = 2500
     use_cuda: bool = False

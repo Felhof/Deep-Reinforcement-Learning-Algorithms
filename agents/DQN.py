@@ -1,15 +1,15 @@
-from agents.BaseAgent import BaseAgent
 import numpy as np
 import torch
 import torch.nn as nn
-from utilities.buffer.DQNBuffer import DQNBuffer
+
+from agents.QLearningAgent import QLearningAgent
 from utilities.nn import create_q_net
 from utilities.types import AdamOptimizer, NNParameters
 
 
-class DQN(BaseAgent):
+class DQN(QLearningAgent):
     def __init__(self: "DQN", **kwargs) -> None:
-        super().__init__(**kwargs)
+        super().__init__(key="DQN", **kwargs)
         self.gamma: float = self.config.hyperparameters["DQN"]["discount_rate"]
         q_net_parameters: NNParameters = self.config.hyperparameters["DQN"][
             "q_net_parameters"
@@ -24,16 +24,9 @@ class DQN(BaseAgent):
             self.q_net.parameters(),
             lr=self.config.hyperparameters["DQN"]["q_net_learning_rate"],
         )
-        self.replay_buffer = DQNBuffer(
-            minibatch_size=self.config.hyperparameters["DQN"]["minibatch_size"],
-            buffer_size=self.config.hyperparameters["DQN"]["buffer_size"],
-        )
         self.exploration_rate = self.config.hyperparameters["DQN"][
             "initial_exploration_rate"
         ]
-        self.pure_exploration_steps = self.config.hyperparameters["DQN"].get(
-            "pure_exploration_steps", 0
-        )
         self.gradient_clipping_norm = self.config.hyperparameters["DQN"][
             "gradient_clipping_norm"
         ]
@@ -50,7 +43,7 @@ class DQN(BaseAgent):
         if torch.cuda.is_available():
             self.q_net = self.q_net.cuda()
 
-    def _update_q_network(self: "DQN") -> None:
+    def _update(self: "DQN") -> None:
         data = self.replay_buffer.get_transition_data()
         states = torch.tensor(data["states"], dtype=torch.float32, device=self.device)
         actions = torch.tensor(data["actions"], dtype=torch.float32, device=self.device)
@@ -82,38 +75,12 @@ class DQN(BaseAgent):
         self.q_net_optimizer.step()
 
     def _training_loop(self: "DQN") -> None:
-        episode_reward: float = 0
-        obs, _ = self.environment.reset()
-        for step in range(self.config.episode_length):
-            self.current_timestep += 1
-            action = self._get_action(
-                torch.tensor(np.array(obs), dtype=torch.float32, device=self.device)
-            )
-            next_obs, reward, terminated, truncated, info = self.environment.step(
-                action
-            )
-            self.replay_buffer.add_transition(
-                obs, action, float(reward), next_obs, terminated or truncated
-            )
-            episode_reward += float(reward)
-            obs = next_obs
-            can_learn = (
-                self.replay_buffer.get_number_of_stored_transitions()
-                >= self.config.hyperparameters["DQN"]["minibatch_size"]
-            )
-            is_exploration_step = self.current_timestep <= self.pure_exploration_steps
-            time_to_update = (
-                self.current_timestep % self.config.update_model_every_n_timesteps == 0
-            )
-            if can_learn and time_to_update and not is_exploration_step:
-                self._update_q_network()
-            if self.has_reached_timestep_limit():
-                break
-            if terminated or truncated or step == self.config.episode_length - 1:
-                if can_learn and not is_exploration_step:
-                    self.exploration_rate = 1 / self.exploration_rate_divisor
-                    self.exploration_rate_divisor += 1
-                break
+        super()._training_loop()
+        can_learn = self._can_learn()
+        is_exploration_step = self._is_exploration_step()
+        if can_learn and not is_exploration_step:
+            self.exploration_rate = 1 / self.exploration_rate_divisor
+            self.exploration_rate_divisor += 1
 
     def _get_action(self: "DQN", obs: torch.Tensor) -> np.ndarray:
         explore = np.random.binomial(1, p=self.exploration_rate)

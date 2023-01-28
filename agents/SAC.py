@@ -1,11 +1,11 @@
 from typing import cast, Tuple
 
-from agents.BaseAgent import BaseAgent
 from agents.Policy import CategoricalPolicy, create_policy
 import numpy as np
 from torch import nn
 import torch.optim
-from utilities.buffer.DQNBuffer import DQNBuffer
+
+from agents.QLearningAgent import QLearningAgent
 from utilities.nn import create_q_net
 from utilities.types import AdamOptimizer, PolicyParameters
 
@@ -17,9 +17,9 @@ def _soft_update(target_model, origin_model, tau):
         target_param.data.copy_(tau * local_param.data + (1 - tau) * target_param.data)
 
 
-class SAC(BaseAgent):
+class SAC(QLearningAgent):
     def __init__(self: "SAC", **kwargs) -> None:
-        super().__init__(**kwargs)
+        super().__init__(key="SAC", **kwargs)
         self.gamma: float = self.config.hyperparameters["SAC"]["discount_rate"]
 
         actor_parameters: PolicyParameters = {
@@ -69,11 +69,6 @@ class SAC(BaseAgent):
         )
         self._soft_update_target_networks(tau=1.0)
 
-        self.replay_buffer = DQNBuffer(
-            minibatch_size=self.config.hyperparameters["SAC"]["minibatch_size"],
-            buffer_size=self.config.hyperparameters["SAC"]["buffer_size"],
-        )
-
         self.alpha = self.config.hyperparameters["SAC"]["initial_temperature"]
         if self.config.hyperparameters["SAC"].get("learn_temperature", False):
             self.target_entropy = 0.98 * -np.log(1 / self.environment.action_space.n)
@@ -88,9 +83,6 @@ class SAC(BaseAgent):
         self.tau = self.config.hyperparameters["SAC"][
             "soft_update_interpolation_factor"
         ]
-        self.pure_exploration_steps = self.config.hyperparameters["SAC"].get(
-            "pure_exploration_steps", 0
-        )
 
     def _actor_loss(self, obs: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         action_probs, log_action_probs = self.actor.get_action_probs(obs)
@@ -156,45 +148,6 @@ class SAC(BaseAgent):
             self.log_alpha * (log_action_probabilities + self.target_entropy).detach()
         ).mean()
 
-    def _training_loop(self: "SAC") -> None:
-        self.logger.start_timer(scope="epoch", level="INFO", attribute="episode")
-        obs, _ = self.environment.reset()
-        for step in range(self.config.episode_length):
-            self.current_timestep += 1
-            action = self._get_action(
-                torch.tensor(np.array(obs), dtype=torch.float32, device=self.device)
-            )
-            next_obs, reward, terminated, truncated, info = self.environment.step(
-                action
-            )
-            self.replay_buffer.add_transition(
-                obs, action, float(reward), next_obs, terminated or truncated
-            )
-            obs = next_obs
-
-            can_learn = (
-                self.replay_buffer.get_number_of_stored_transitions()
-                >= self.config.hyperparameters["SAC"]["minibatch_size"]
-            )
-            is_exploration_step = self.current_timestep <= self.pure_exploration_steps
-            time_to_update = (
-                self.current_timestep % self.config.update_model_every_n_timesteps == 0
-            )
-            if can_learn and time_to_update and not is_exploration_step:
-                self.logger.info("Updating parameters.")
-                self.logger.start_timer(scope="epoch", level="INFO", attribute="update")
-                self._update()
-                self.logger.stop_timer(scope="epoch", level="INFO", attribute="update")
-            if self.has_reached_timestep_limit():
-                break
-            if terminated or truncated:
-                self.logger.info(
-                    f"This episode the agent lasted for {step + 1} frames before losing."
-                )
-                break
-        self.logger.stop_timer(scope="epoch", level="INFO", attribute="episode")
-        self.logger.info(f"After this training step, alpha is {self.alpha}.")
-
     def _update(self: "SAC") -> None:
         data = self.replay_buffer.get_transition_data()
         states = torch.tensor(data["states"], dtype=torch.float32, device=self.device)
@@ -255,3 +208,7 @@ class SAC(BaseAgent):
             self.critic2 = self.critic2.cuda()
             self.critic_target1 = self.critic_target1.cuda()
             self.critic_target2 = self.critic_target2.cuda()
+
+    def _training_loop(self: "SAC") -> None:
+        super()._training_loop()
+        self.logger.info(f"After this training step, alpha is {self.alpha}.")

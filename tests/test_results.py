@@ -19,7 +19,7 @@ def cleanup_test_results() -> None:
 
 
 def test_result_storage_can_store_episode_data(cleanup_test_results):
-    storage = ResultStorage(filename=TEST_RESULTS_FILENAME, training_steps_per_epoch=3)
+    storage = ResultStorage(filename=TEST_RESULTS_FILENAME, evaluations_per_epoch=3)
 
     storage.add_average_training_step_reward(1.0)
     storage.add_average_training_step_reward(2.0)

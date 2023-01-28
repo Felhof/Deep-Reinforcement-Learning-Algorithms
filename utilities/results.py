@@ -19,15 +19,13 @@ class ResultStorage:
     def __init__(
         self: "ResultStorage",
         filename: str = "VPG_results",
-        training_steps_per_epoch: int = 400,
+        evaluations_per_epoch: int = 400,
         epochs=5,
         directory="",
     ) -> None:
         self.rewards = np.zeros(
             epochs,
-            dtype=get_dimension_format_string(
-                training_steps_per_epoch, dtype="float32"
-            ),
+            dtype=get_dimension_format_string(evaluations_per_epoch, dtype="float32"),
         )
         self.episode_idx = 0
         self.training_step_idx = 0

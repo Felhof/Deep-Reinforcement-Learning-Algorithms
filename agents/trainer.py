@@ -7,11 +7,30 @@ from utilities.results import ModelSaver, ResultStorage
 
 class Trainer:
     def __init__(self: "Trainer", config: Config) -> None:
+        assert (
+            config.training_steps_per_epoch >= 1
+            and config.evaluate_every_n_training_steps >= 1
+        ) or (
+            config.train_for_n_environment_steps >= 1
+            and config.evaluate_every_n_timesteps >= 1
+        ), (
+            "Either both training_steps_per_epoch and evaluate_every_n_training_steps or train_for_n_environment_steps "
+            "and evaluate_every_n_environment_steps must be positive."
+        )
+
         self.config = config
+        if config.training_steps_per_epoch >= 1:
+            evaluations_per_epoch = int(
+                config.training_steps_per_epoch / config.evaluate_every_n_training_steps
+            )
+        else:
+            evaluations_per_epoch = int(
+                config.train_for_n_environment_steps / config.evaluate_every_n_timesteps
+            )
         self.result_storage = ResultStorage(
             filename=config.results_filename,
             directory=config.results_directory,
-            training_steps_per_epoch=config.training_steps_per_epoch,
+            evaluations_per_epoch=evaluations_per_epoch,
             epochs=config.epochs,
         )
 

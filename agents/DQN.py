@@ -101,11 +101,13 @@ class DQN(BaseAgent):
                 >= self.config.hyperparameters["DQN"]["minibatch_size"]
             )
             is_exploration_step = self.current_timestep <= self.pure_exploration_steps
-            time_to_update = self.current_timestep % self.config.update_frequency == 0
+            time_to_update = (
+                self.current_timestep % self.config.update_model_every_n_timesteps == 0
+            )
             if can_learn and time_to_update and not is_exploration_step:
                 self._update_q_network()
             self.current_timestep += 1
-            if self.max_timestep != -1 and self.current_timestep >= self.max_timestep:
+            if self.has_reached_timestep_limit():
                 break
             if terminated or truncated or step == self.config.episode_length - 1:
                 if can_learn and not is_exploration_step:

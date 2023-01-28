@@ -20,8 +20,9 @@ class Config:
     model_directory: str = ""
     save: bool = True
     save_interval: int = 5
-    evaluation_interval: int = 1
+    evaluate_every_n_training_steps: int = 1
+    evaluate_every_n_timesteps: int = 2500
     use_cuda: bool = False
     dtype_name: str = "float32"
-    max_timestep: int = -1
-    update_frequency: int = 1
+    train_for_n_environment_steps: int = 0
+    update_model_every_n_timesteps: int = 1

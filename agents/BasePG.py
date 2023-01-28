@@ -163,10 +163,7 @@ class BasePG(BaseAgent):
                 obs = next_obs
 
                 self.current_timestep += 1
-                if (
-                    self.max_timestep != -1
-                    and self.current_timestep >= self.max_timestep
-                ):
+                if self.has_reached_timestep_limit():
                     break
                 if terminated:
                     self.buffer.add_transition_data(states, actions, values, rewards)
@@ -183,7 +180,7 @@ class BasePG(BaseAgent):
                     )
                     self.logger.store(scope="training_step", reward=episode_reward)
 
-            if self.current_timestep >= self.max_timestep:
+            if self.has_reached_timestep_limit():
                 break
 
         self.logger.stop_timer(scope="epoch", level="INFO", attribute="episodes")

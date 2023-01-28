@@ -29,7 +29,7 @@ class BaseAgent(ABC):
         self.result_storage = kwargs["result_storage"]
         if self.config.save:
             self.model_saver = kwargs["model_saver"]
-        self.max_timestep = self.config.max_timestep
+        self.max_timestep = self.config.train_for_n_environment_steps
         self.current_timestep = 0
 
     @abstractmethod
@@ -77,15 +77,18 @@ class BaseAgent(ABC):
         )
         return total_reward
 
+    def has_reached_timestep_limit(self: "BaseAgent") -> bool:
+        return self.max_timestep != 0 and self.current_timestep >= self.max_timestep
+
     def train(self: "BaseAgent") -> None:
         for training_step in range(self.config.training_steps_per_epoch):
             self.logger.info(f"Training step {training_step}.")
             self._training_loop()
-            if training_step % self.config.evaluation_interval == 0:
+            if training_step % self.config.evaluate_every_n_training_steps == 0:
                 self.evaluate(
                     time_to_save=training_step % self.config.save_interval == 0
                 )
-            if self.max_timestep != -1 and self.current_timestep >= self.max_timestep:
+            if self.has_reached_timestep_limit():
                 self.logger.info(
                     "Stopping training as maximum number of training steps has been reached."
                 )

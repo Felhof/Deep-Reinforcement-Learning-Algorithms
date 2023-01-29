@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 
 from agents.QLearningAgent import QLearningAgent
-from utilities.nn import create_q_net
+from utilities.nn import create_q_net, soft_update_nn
 from utilities.types import AdamOptimizer, NNParameters
 
 
@@ -24,6 +24,12 @@ class DQN(QLearningAgent):
             self.q_net.parameters(),
             lr=self.config.hyperparameters["DQN"]["q_net_learning_rate"],
         )
+        self.target_q_net: nn.Sequential = create_q_net(
+            observation_dim=self.environment.observation_dim,
+            number_of_actions=self.environment.number_of_actions,
+            parameters=q_net_parameters,
+        )
+        self._soft_update_target_networks(tau=1.0)
         self.exploration_rate = self.config.hyperparameters["DQN"][
             "initial_exploration_rate"
         ]
@@ -38,6 +44,9 @@ class DQN(QLearningAgent):
         ]
         self.exploration_rate_annealing_period = self.config.hyperparameters["DQN"][
             "exploration_rate_annealing_period"
+        ]
+        self.tau = self.config.hyperparameters["DQN"][
+            "soft_update_interpolation_factor"
         ]
 
     def evaluate(self: "DQN", time_to_save: bool = False) -> float:
@@ -62,7 +71,7 @@ class DQN(QLearningAgent):
         done = torch.tensor(data["done"], dtype=torch.float32, device=self.device)
 
         with torch.no_grad():
-            next_state_q_values = self.q_net(next_states)
+            next_state_q_values = self.target_q_net(next_states)
             best_next_state_q_values = torch.max(next_state_q_values, dim=1).values
             q_value_targets = (
                 rewards + (1 - done) * self.gamma * best_next_state_q_values
@@ -81,6 +90,7 @@ class DQN(QLearningAgent):
                 self.q_net.parameters(), self.gradient_clipping_norm
             )
         self.q_net_optimizer.step()
+        self._soft_update_target_networks(tau=self.tau)
 
     def _training_loop(self: "DQN") -> None:
         super()._training_loop()
@@ -104,3 +114,6 @@ class DQN(QLearningAgent):
         q_value_tensor = self.q_net.forward(obs)
         action = torch.argmax(q_value_tensor)
         return np.array(action.cpu())
+
+    def _soft_update_target_networks(self: "DQN", tau: float = 0.01) -> None:
+        soft_update_nn(self.target_q_net, self.q_net, tau)

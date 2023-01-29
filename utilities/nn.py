@@ -137,3 +137,10 @@ class ConvolutionWrapper(nn.Sequential):
             output = super().forward(inp)
             output = output.reshape((episodes, timesteps, output.shape[-1]))
             return output
+
+
+def soft_update_nn(target_model, origin_model, tau):
+    for target_param, local_param in zip(
+        target_model.parameters(), origin_model.parameters()
+    ):
+        target_param.data.copy_(tau * local_param.data + (1 - tau) * target_param.data)

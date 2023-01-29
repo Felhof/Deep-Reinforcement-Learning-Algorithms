@@ -29,6 +29,7 @@ config = Config(
             "exploration_rate_annealing_period": 5000,
             "pure_exploration_steps": 3,
             "gradient_clipping_norm": 0.7,
+            "soft_update_interpolation_factor": 0.01,
         },
     },
     episode_length=200,

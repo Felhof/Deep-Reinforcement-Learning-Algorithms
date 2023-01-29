@@ -26,6 +26,10 @@ class QLearningAgent(BaseAgent, ABC):
         pass
 
     @abc.abstractmethod
+    def _soft_update_target_networks(self: "QLearningAgent", tau: float) -> None:
+        pass
+
+    @abc.abstractmethod
     def _update(self: "QLearningAgent") -> None:
         pass
 

@@ -6,15 +6,8 @@ from torch import nn
 import torch.optim
 
 from agents.QLearningAgent import QLearningAgent
-from utilities.nn import create_q_net
+from utilities.nn import create_q_net, soft_update_nn
 from utilities.types import AdamOptimizer, PolicyParameters
-
-
-def _soft_update(target_model, origin_model, tau):
-    for target_param, local_param in zip(
-        target_model.parameters(), origin_model.parameters()
-    ):
-        target_param.data.copy_(tau * local_param.data + (1 - tau) * target_param.data)
 
 
 class SAC(QLearningAgent):
@@ -139,9 +132,9 @@ class SAC(QLearningAgent):
     def _get_action(self: "SAC", obs: torch.Tensor) -> np.ndarray:
         return self.actor.get_action(obs).cpu().numpy()
 
-    def _soft_update_target_networks(self: "SAC", tau=0.01):
-        _soft_update(self.critic_target1, self.critic1, tau)
-        _soft_update(self.critic_target2, self.critic2, tau)
+    def _soft_update_target_networks(self: "SAC", tau: float = 0.01) -> None:
+        soft_update_nn(self.critic_target1, self.critic1, tau)
+        soft_update_nn(self.critic_target2, self.critic2, tau)
 
     def _temperature_loss(self, log_action_probabilities: torch.Tensor) -> torch.Tensor:
         return -(

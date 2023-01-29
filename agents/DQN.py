@@ -30,7 +30,15 @@ class DQN(QLearningAgent):
         self.gradient_clipping_norm = self.config.hyperparameters["DQN"][
             "gradient_clipping_norm"
         ]
-        self.exploration_rate_divisor = 2
+        self.initial_exploration_rate = self.config.hyperparameters["DQN"][
+            "initial_exploration_rate"
+        ]
+        self.final_exploration_rate = self.config.hyperparameters["DQN"][
+            "final_exploration_rate"
+        ]
+        self.exploration_rate_annealing_period = self.config.hyperparameters["DQN"][
+            "exploration_rate_annealing_period"
+        ]
 
     def evaluate(self: "DQN", time_to_save: bool = False) -> float:
         self.q_net.eval()
@@ -79,8 +87,10 @@ class DQN(QLearningAgent):
         can_learn = self._can_learn()
         is_exploration_step = self._is_exploration_step()
         if can_learn and not is_exploration_step:
-            self.exploration_rate = 1 / self.exploration_rate_divisor
-            self.exploration_rate_divisor += 1
+            self.exploration_rate = self.initial_exploration_rate - (
+                (self.current_timestep - self.pure_exploration_steps)
+                / self.exploration_rate_annealing_period
+            ) * (self.initial_exploration_rate - self.final_exploration_rate)
 
     def _get_action(self: "DQN", obs: torch.Tensor) -> np.ndarray:
         explore = np.random.binomial(1, p=self.exploration_rate)
@@ -93,4 +103,4 @@ class DQN(QLearningAgent):
     def get_best_action(self: "DQN", obs: torch.Tensor) -> np.ndarray:
         q_value_tensor = self.q_net.forward(obs)
         action = torch.argmax(q_value_tensor)
-        return np.array(action)
+        return np.array(action.cpu())

@@ -64,6 +64,7 @@ class QLearningAgent(BaseAgent, ABC):
     def _training_loop(self: "QLearningAgent") -> None:
         self.logger.start_timer(scope="epoch", level="INFO", attribute="episode")
         obs, _ = self.environment.reset()
+        total_reward = 0.0
         for step in range(self.config.episode_length):
             self.current_timestep += 1
             action = self._get_action(
@@ -72,6 +73,7 @@ class QLearningAgent(BaseAgent, ABC):
             next_obs, reward, terminated, truncated, info = self.environment.step(
                 action
             )
+            total_reward += reward
             self.replay_buffer.add_transition(
                 obs, action, float(reward), next_obs, terminated or truncated
             )
@@ -81,7 +83,9 @@ class QLearningAgent(BaseAgent, ABC):
             is_exploration_step = self._is_exploration_step()
             time_to_update = self._is_time_to_update()
             if can_learn and time_to_update and not is_exploration_step:
-                self.logger.info("Updating parameters.")
+                self.logger.info(
+                    f"Timestep {self.current_timestep}: Updating parameters."
+                )
                 self.logger.start_timer(scope="epoch", level="INFO", attribute="update")
                 self._update()
                 self.logger.stop_timer(scope="epoch", level="INFO", attribute="update")
@@ -90,7 +94,7 @@ class QLearningAgent(BaseAgent, ABC):
                 break
             if terminated or truncated:
                 self.logger.info(
-                    f"This episode the agent lasted for {step + 1} frames before losing."
+                    f"This episode the agent lasted for {step + 1} frames and achieved a reward of {total_reward} before losing."
                 )
                 break
         self.logger.stop_timer(scope="epoch", level="INFO", attribute="episode")

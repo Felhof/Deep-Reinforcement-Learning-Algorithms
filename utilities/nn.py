@@ -29,6 +29,8 @@ def _add_convolutional_layers(
             )
         )
         model.append(nn.ReLU())
+        model.append(nn.BatchNorm2d(out_channels))
+        model.append(nn.Dropout2d(p=0.15))
         if len(pooling_deque) > 0:
             layer_type, kernel_size = pooling_deque.popleft()
             match layer_type:

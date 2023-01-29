@@ -5,7 +5,11 @@ import torch.nn as nn
 from typing_extensions import TypeAlias
 
 ActivationFunction = Union[
-    torch.nn.Identity, torch.nn.ReLU, torch.nn.Sigmoid, torch.nn.Tanh
+    torch.nn.Identity,
+    torch.nn.LeakyReLU,
+    torch.nn.ReLU,
+    torch.nn.Sigmoid,
+    torch.nn.Tanh,
 ]
 
 AdamOptimizer: TypeAlias = torch.optim.Adam
@@ -57,6 +61,8 @@ AgentHyperParameters = TypedDict(
         "minibatch_size": int,
         "buffer_size": int,
         "initial_exploration_rate": float,
+        "final_exploration_rate": float,
+        "exploration_rate_annealing_period": int,
         "pure_exploration_steps": int,
         "gradient_clipping_norm": Optional[float],
         "kl_divergence_limit": float,

@@ -97,10 +97,15 @@ class DQN(QLearningAgent):
         can_learn = self._can_learn()
         is_exploration_step = self._is_exploration_step()
         if can_learn and not is_exploration_step:
-            self.exploration_rate = self.initial_exploration_rate - (
+            exploration_ratio = min(
                 (self.current_timestep - self.pure_exploration_steps)
-                / self.exploration_rate_annealing_period
-            ) * (self.initial_exploration_rate - self.final_exploration_rate)
+                / self.exploration_rate_annealing_period,
+                1.0,
+            )
+            self.exploration_rate = (
+                (1.0 - exploration_ratio) * self.initial_exploration_rate
+                + exploration_ratio * self.final_exploration_rate
+            )
 
     def _get_action(self: "DQN", obs: torch.Tensor) -> np.ndarray:
         explore = np.random.binomial(1, p=self.exploration_rate)

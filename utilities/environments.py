@@ -96,6 +96,7 @@ class AtariWrapper(BaseEnvironmentWrapper):
     ) -> Tuple[Any, SupportsFloat, bool, bool, dict[str, Any]]:
         frame, reward, terminated, truncated, info = self.environment.step(action)
         obs = self._preprocess_observation(frame)
+        reward = np.clip(reward, -1.0, 1.0)
         return obs, reward, terminated, truncated, info
 
     def render(self):

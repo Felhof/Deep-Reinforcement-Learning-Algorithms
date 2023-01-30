@@ -104,11 +104,13 @@ class AtariWrapper(BaseEnvironmentWrapper):
 
     def _reset(self: "AtariWrapper") -> Tuple[Any, dict[str, Any]]:
         if self.is_really_done:
-            frame, info = self._true_reset()
+            obs, info = self.true_reset()
         else:
             frame, _, _, _, info = self.environment.step(0)
+            if self.is_fire_reset_env:
+                frame, _, _, _, info = self.environment.step(1)
+            obs = self._preprocess_observation(frame)
 
-        obs = self._preprocess_observation(frame)
         self.lives = self.environment.unwrapped.ale.lives()
         return obs, info
 
@@ -128,8 +130,8 @@ class AtariWrapper(BaseEnvironmentWrapper):
 
         return obs, reward, terminated, truncated, info
 
-    def _true_reset(self: "AtariWrapper") -> Tuple[Any, Any]:
-        number_of_noops = np.random.randint(0, 31)
+    def true_reset(self: "AtariWrapper", with_noops=True) -> Tuple[Any, Any]:
+        number_of_noops = np.random.randint(0, 31) if with_noops else 0
 
         def reset():
             frame, info = self.environment.reset()
@@ -150,7 +152,9 @@ class AtariWrapper(BaseEnvironmentWrapper):
             if terminated or truncated:
                 frame, info = reset()
 
-        return frame, info
+        obs = self._preprocess_observation(frame)
+
+        return obs, info
 
     def render(self):
         self.environment.render()

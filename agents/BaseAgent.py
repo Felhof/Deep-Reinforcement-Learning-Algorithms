@@ -70,7 +70,7 @@ class BaseAgent(ABC):
         self.logger.info("Evaluate agent.")
         with torch.no_grad():
             env = self.environment
-            obs, _ = env.reset()
+            obs, _ = env.true_reset(with_noops=False)
             total_reward: float = 0.0
             for step in range(self.episode_length):
                 action = self.get_best_action(
@@ -81,11 +81,13 @@ class BaseAgent(ABC):
                 print(f"Action: {action}")
                 next_obs, reward, terminated, truncated, info = env.step(action)
                 total_reward += reward
-                if terminated or truncated:
+                if env.is_really_done:
                     self.logger.info(
                         f"During evaluation the policy survives for {step + 1} frames."
                     )
                     break
+                elif terminated:
+                    next_obs, info = env.reset()
                 obs = next_obs
             if time_to_save and self.config.save:
                 self.model_saver.save_model_if_best(self, total_reward)

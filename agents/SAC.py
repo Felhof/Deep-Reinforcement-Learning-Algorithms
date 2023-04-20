@@ -1,13 +1,12 @@
 from typing import cast, Tuple
 
 from agents.Policy import CategoricalPolicy, create_policy
+from agents.QLearningAgent import QLearningAgent
 import numpy as np
 from torch import nn
 import torch.optim
-
-from agents.QLearningAgent import QLearningAgent
 from utilities.nn import create_q_net, soft_update_nn
-from utilities.types import AdamOptimizer, PolicyParameters
+from utilities.types.types import AdamOptimizer, PolicyParameters
 
 
 class SAC(QLearningAgent):
@@ -77,7 +76,9 @@ class SAC(QLearningAgent):
             "soft_update_interpolation_factor"
         ]
 
-    def _actor_loss(self, obs: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def _actor_loss(
+        self, obs: torch.Tensor
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         action_probs, log_action_probs = self.actor.get_action_probs(obs)
         q_values_local = self.critic1(obs)
         q_values_local2 = self.critic2(obs)
@@ -85,7 +86,7 @@ class SAC(QLearningAgent):
             q_values_local, q_values_local2
         )
         policy_loss = (action_probs * inside_term).sum(dim=1).mean()
-        return policy_loss, log_action_probs
+        return policy_loss, action_probs, log_action_probs
 
     def _critic_loss(
         self: "SAC",
@@ -136,9 +137,15 @@ class SAC(QLearningAgent):
         soft_update_nn(self.critic_target1, self.critic1, tau)
         soft_update_nn(self.critic_target2, self.critic2, tau)
 
-    def _temperature_loss(self, log_action_probabilities: torch.Tensor) -> torch.Tensor:
-        return -(
-            self.log_alpha * (log_action_probabilities + self.target_entropy).detach()
+    def _temperature_loss(
+        self, action_probs: torch.Tensor, log_action_probabilities: torch.Tensor
+    ) -> torch.Tensor:
+        return (
+            action_probs.detach()
+            * -(
+                self.log_alpha
+                * (log_action_probabilities + self.target_entropy).detach()
+            )
         ).mean()
 
     def _update(self: "SAC") -> None:
@@ -162,14 +169,14 @@ class SAC(QLearningAgent):
         self.critic1_optimizer.step()
         self.critic2_optimizer.step()
 
-        actor_loss, log_action_probs = self._actor_loss(states)
+        actor_loss, action_probs, log_action_probs = self._actor_loss(states)
 
         self.actor.reset_gradients()
         actor_loss.backward()
         self.actor.update()
 
         if self.config.hyperparameters["SAC"].get("learn_temperature", False):
-            temperature_loss = self._temperature_loss(log_action_probs)
+            temperature_loss = self._temperature_loss(action_probs, log_action_probs)
 
             self.alpha_optimizer.zero_grad()
             temperature_loss.backward()

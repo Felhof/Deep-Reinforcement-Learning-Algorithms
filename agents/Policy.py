@@ -6,7 +6,7 @@ from torch import nn
 from torch.distributions import Categorical, Distribution, Normal
 from torch.nn import Parameter
 from utilities.nn import create_nn
-from utilities.types import (
+from utilities.types.types import (
     AdamOptimizer,
     NNParameters,
     ObservationDim,

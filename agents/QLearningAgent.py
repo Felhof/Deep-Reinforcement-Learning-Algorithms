@@ -73,7 +73,7 @@ class QLearningAgent(BaseAgent, ABC):
             next_obs, reward, terminated, truncated, info = self.environment.step(
                 action
             )
-            total_reward += reward
+            total_reward += float(reward)
             self.replay_buffer.add_transition(
                 obs, action, float(reward), next_obs, terminated or truncated
             )
@@ -94,7 +94,8 @@ class QLearningAgent(BaseAgent, ABC):
                 break
             if terminated or truncated:
                 self.logger.info(
-                    f"This episode the agent lasted for {step + 1} frames and achieved a reward of {total_reward} before losing."
+                    f"This episode the agent lasted for {step + 1} frames and achieved "
+                    f"a reward of {total_reward} before losing."
                 )
                 break
         self.logger.stop_timer(scope="epoch", level="INFO", attribute="episode")

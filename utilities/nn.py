@@ -3,7 +3,7 @@ from typing import cast, List
 
 import torch
 import torch.nn as nn
-from utilities.types import (
+from utilities.types.types import (
     ActivationFunction,
     ConvolutionSpec,
     NNParameters,
@@ -60,12 +60,18 @@ def create_nn(
     if convolutions:
         assert len(parameters["linear_layer_activations"]) == len(
             parameters["linear_layer_sizes"]
-        ), "With convolutions, net must have exactly as many activation functions as linear layers"
+        ), (
+            "With convolutions, net must have exactly as many activation functions as "
+            "linear layers"
+        )
     else:
         assert (
             len(parameters["linear_layer_activations"])
             == len(parameters["linear_layer_sizes"]) + 1
-        ), "Without convolutions, net must have exactly one more activation function than linear layers"
+        ), (
+            "Without convolutions, net must have exactly one more activation function "
+            "than linear layers"
+        )
 
     if convolutions:
         model: nn.Sequential = ConvolutionWrapper()

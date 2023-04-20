@@ -37,7 +37,7 @@ def smooth_values(rewards: List[float], window_length: int = 4) -> List[float]:
 
 
 class Plotter:
-    def __init__(self: "Plotter", target_score: int = 200) -> None:
+    def __init__(self: "Plotter", target_score: int = 40) -> None:
         self.ax = plt.gca()
         self.target_score = target_score
         self.current_y_max = float("-inf")

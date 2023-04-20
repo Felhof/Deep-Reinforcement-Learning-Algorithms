@@ -2,7 +2,7 @@ from typing import Tuple
 
 import numpy as np
 from utilities.config import Config
-from utilities.types import ObservationDim
+from utilities.types.types import ObservationDim
 from utilities.utils import get_dimension_format_string
 
 

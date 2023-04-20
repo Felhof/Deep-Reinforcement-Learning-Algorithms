@@ -1,10 +1,9 @@
+from agents.QLearningAgent import QLearningAgent
 import numpy as np
 import torch
 import torch.nn as nn
-
-from agents.QLearningAgent import QLearningAgent
 from utilities.nn import create_q_net, soft_update_nn
-from utilities.types import AdamOptimizer, NNParameters
+from utilities.types.types import AdamOptimizer, NNParameters
 
 
 class DQN(QLearningAgent):

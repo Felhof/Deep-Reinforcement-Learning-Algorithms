@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 import torch
+from utilities.environments import BaseEnvironmentWrapper
 from utilities.progress_logging import ProgressLogger
 
 
@@ -12,7 +13,7 @@ class BaseAgent(ABC):
             self.config.use_cuda and not torch.cuda.is_available()
         ), "Cannot use cuda as it is not available on this machine"
         self.device = "cuda:0" if self.config.use_cuda else "cpu"
-        self.environment = kwargs["environment"]
+        self.environment: BaseEnvironmentWrapper = kwargs["environment"]
         self.episode_length: int = self.config.episode_length
         self.dtype_name = self.config.dtype_name
         if self.dtype_name == "float64":
@@ -62,7 +63,8 @@ class BaseAgent(ABC):
             self._training_loop()
             if self.has_reached_timestep_limit():
                 self.logger.info(
-                    "Stopping training as maximum number of training steps has been reached."
+                    "Stopping training as maximum number of training steps has been "
+                    "reached."
                 )
                 break
 
@@ -70,7 +72,7 @@ class BaseAgent(ABC):
         self.logger.info("Evaluate agent.")
         with torch.no_grad():
             env = self.environment
-            obs, _ = env.true_reset(with_noops=False)
+            obs, _ = env.true_reset()
             total_reward: float = 0.0
             for step in range(self.episode_length):
                 action = self.get_best_action(
@@ -78,9 +80,8 @@ class BaseAgent(ABC):
                         np.array(obs), dtype=self.tensor_type, device=self.device
                     )
                 )
-                print(f"Action: {action}")
                 next_obs, reward, terminated, truncated, info = env.step(action)
-                total_reward += reward
+                total_reward += float(reward)
                 if env.is_really_done:
                     self.logger.info(
                         f"During evaluation the policy survives for {step + 1} frames."

@@ -1,8 +1,7 @@
-from typing import Dict
+from typing import Dict, List
 
 import numpy as np
-from utilities.config import Config
-from utilities.types import ObservationDim
+from utilities.types.environment import Observation
 from utilities.utils import get_dimension_format_string
 
 
@@ -14,25 +13,25 @@ class DQNBuffer:
     ) -> None:
         self.minibatch_size = minibatch_size
         self.buffer_size = buffer_size
-        self.states = []
+        self.states: List[Observation] = []
         self.actions = np.zeros(
             self.buffer_size,
             dtype=get_dimension_format_string(1),
         )
         self.rewards = np.zeros(self.buffer_size, dtype=np.float32)
-        self.next_states = []
+        self.next_states: List[Observation] = []
         self.done = np.zeros(self.buffer_size, dtype=bool)
         self.index = 0
         self.number_of_stored_transitions = 0
-        self.min_reward = 10**4
-        self.max_reward = -(10**4)
+        self.min_reward = 10e4
+        self.max_reward = -10e4
 
     def add_transition(
         self: "DQNBuffer",
-        state: np.ndarray,
+        state: Observation,
         action: np.ndarray,
         reward: float,
-        next_state: np.ndarray,
+        next_state: Observation,
         done: bool,
     ) -> None:
         if reward < self.min_reward:

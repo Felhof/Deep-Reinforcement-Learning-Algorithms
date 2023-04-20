@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from utilities.types import HyperParameters
+from utilities.types.types import HyperParameters
 
 
 @dataclass

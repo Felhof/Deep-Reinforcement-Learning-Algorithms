@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 from utilities.buffer.PGBuffer import PGBuffer
 from utilities.nn import create_value_net
-from utilities.types import AdamOptimizer, NNParameters, PolicyParameters
+from utilities.types.types import AdamOptimizer, NNParameters, PolicyParameters
 from utilities.utils import get_dimension_format_string
 
 

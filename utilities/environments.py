@@ -4,7 +4,9 @@ from typing import Any, cast, SupportsFloat, Tuple
 import cv2
 import gymnasium as gym
 import numpy as np
-from utilities.types import ObservationDim
+from utilities.LazyFrames import LazyFrames
+from utilities.types.environment import Info, Observation
+from utilities.types.types import ObservationDim
 
 
 def _get_observation_dim_from_environment(environment: gym.Env) -> ObservationDim:
@@ -26,6 +28,7 @@ class BaseEnvironmentWrapper:
         self.observation_dim: ObservationDim = _get_observation_dim_from_environment(
             environment
         )
+        self.is_really_done = True
         if isinstance(
             self.environment.action_space, gym.spaces.Box
         ) and self.environment.action_space.shape == (1,):
@@ -33,19 +36,29 @@ class BaseEnvironmentWrapper:
             self.number_of_actions = 1
             self.action_type = "Continuous"
         elif isinstance(self.environment.action_space, gym.spaces.Box):
-            self.step = environment.step
+            self.step = self._step
             self.number_of_actions = self.environment.action_space.shape[0]
             self.action_type = "Continuous"
         else:
-            self.step = environment.step
+            self.step = self._step
             self.number_of_actions = self.environment.action_space.n
             self.action_type = "Discrete"
 
+    def _step(
+        self: "BaseEnvironmentWrapper", action: np.ndarray
+    ) -> Tuple[Observation, SupportsFloat, bool, bool, dict[str, Any]]:
+        obs, reward, terminated, truncated, info = self.environment.step(action)
+        self.is_really_done = terminated or truncated
+        return obs, reward, terminated, truncated, info
+
     def continuous_step(
         self: "BaseEnvironmentWrapper", action: np.ndarray
-    ) -> Tuple[Any, SupportsFloat, bool, bool, dict[str, Any]]:
+    ) -> Tuple[Observation, SupportsFloat, bool, bool, dict[str, Any]]:
         gym_action = np.array([action])
-        return self.environment.step(gym_action)
+        return self._step(gym_action)
+
+    def true_reset(self: "BaseEnvironmentWrapper") -> Tuple[Observation, Info]:
+        return self.reset()
 
 
 class AtariWrapper(BaseEnvironmentWrapper):
@@ -58,7 +71,7 @@ class AtariWrapper(BaseEnvironmentWrapper):
         - Fires on reset for environments that are fixed until firing.
         - Clips reward to between -1 and 1.
         - Uses memory-efficient lazy frames for observations.
-    """
+    """  # noqa
 
     def __init__(
         self: "AtariWrapper",
@@ -80,7 +93,6 @@ class AtariWrapper(BaseEnvironmentWrapper):
         self.is_fire_reset_env = (
             environment.unwrapped.get_action_meanings()[1] == "FIRE"
         )
-        self.is_really_done = True
         self.lives = 0
 
     def _initialize_frame_stack(self: "AtariWrapper", max_frames: int = 4) -> deque:
@@ -93,7 +105,7 @@ class AtariWrapper(BaseEnvironmentWrapper):
             maxlen=max_frames,
         )
 
-    def _preprocess_observation(self: "AtariWrapper", obs: Any) -> Any:
+    def _preprocess_observation(self: "AtariWrapper", obs: np.ndarray) -> LazyFrames:
         if self.greyscale:
             obs = cv2.cvtColor(obs, cv2.COLOR_RGB2GRAY)
         obs = cv2.resize(obs, (self.width, self.height), interpolation=cv2.INTER_AREA)
@@ -102,9 +114,9 @@ class AtariWrapper(BaseEnvironmentWrapper):
         self.frames.append(obs)
         return LazyFrames(self.frames)
 
-    def _reset(self: "AtariWrapper") -> Tuple[Any, dict[str, Any]]:
+    def _reset(self: "AtariWrapper") -> Tuple[LazyFrames, dict[str, Any]]:
         if self.is_really_done:
-            obs, info = self.true_reset()
+            obs, info = self.true_reset(with_noops=True)
         else:
             frame, _, _, _, info = self.environment.step(0)
             if self.is_fire_reset_env:
@@ -116,7 +128,7 @@ class AtariWrapper(BaseEnvironmentWrapper):
 
     def _step(
         self: "AtariWrapper", action: np.ndarray[Any, Any]
-    ) -> Tuple[Any, SupportsFloat, bool, bool, dict[str, Any]]:
+    ) -> Tuple[LazyFrames, SupportsFloat, bool, bool, dict[str, Any]]:
         frame, reward, terminated, truncated, info = self.environment.step(action)
         info["True Reward"] = reward
         obs = self._preprocess_observation(frame)
@@ -130,7 +142,7 @@ class AtariWrapper(BaseEnvironmentWrapper):
 
         return obs, reward, terminated, truncated, info
 
-    def true_reset(self: "AtariWrapper", with_noops=True) -> Tuple[Any, Any]:
+    def true_reset(self: "AtariWrapper", with_noops=False) -> Tuple[LazyFrames, Info]:
         number_of_noops = np.random.randint(0, 31) if with_noops else 0
 
         def reset():
@@ -158,19 +170,3 @@ class AtariWrapper(BaseEnvironmentWrapper):
 
     def render(self):
         self.environment.render()
-
-
-class LazyFrames:
-    """
-    Basically a minimalist implementation of LazyFrames from OpenAI's Atari Wrapper:
-    https://github.com/openai/baselines/blob/ea25b9e8b234e6ee1bca43083f8f3cf974143998/baselines/common/atari_wrappers.py#L229
-    """
-
-    def __init__(self, frames: deque) -> None:
-        self.frames = list(frames)
-
-    def __array__(self, dtype=None):
-        array = np.concatenate(self.frames, axis=0)
-        if dtype is not None:
-            array = array.astype(dtype)
-        return array

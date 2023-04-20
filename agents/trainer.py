@@ -14,8 +14,9 @@ class Trainer:
             config.train_for_n_environment_steps >= 1
             and config.evaluate_every_n_timesteps >= 1
         ), (
-            "Either both training_steps_per_epoch and evaluate_every_n_training_steps or train_for_n_environment_steps "
-            "and evaluate_every_n_environment_steps must be positive."
+            "Either both training_steps_per_epoch and evaluate_every_n_training_steps "
+            "or train_for_n_environment_steps and evaluate_every_n_environment_steps "
+            "must be positive."
         )
 
         self.config = config

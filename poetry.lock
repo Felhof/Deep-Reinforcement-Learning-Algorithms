@@ -54,6 +54,22 @@ files = [
 test = ["coverage", "flake8", "pexpect", "wheel"]
 
 [[package]]
+name = "array2gif"
+version = "1.0.4"
+description = "Write a (list of) NumPy array(s) to an (animated) GIF."
+category = "dev"
+optional = false
+python-versions = "*"
+files = [
+    {file = "array2gif-1.0.4-py2-none-any.whl", hash = "sha256:112529fd6103a40c2111202d32c9b8026d2796870e9df70d6b5881e84f6104fa"},
+    {file = "array2gif-1.0.4-py3-none-any.whl", hash = "sha256:b34b6fe589a8044c2d35a39f1f04895b57304894cbe67695ea0f068aa6a3c43c"},
+    {file = "array2gif-1.0.4.tar.gz", hash = "sha256:bfb92520109af44f5f066fd8dd5e05eda5918d8c771c03a65dad7a7feb178415"},
+]
+
+[package.dependencies]
+numpy = "*"
+
+[[package]]
 name = "attrs"
 version = "22.2.0"
 description = "Classes Without Boilerplate"
@@ -1608,4 +1624,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "26417adf375b6c429c2f70e42f1698e3e66192ff514e94a3264e589254cef717"
+content-hash = "da95b1ffd3a69251415f3cfe003f64615cbb2f8daea49114a39c122913dfa3a0"

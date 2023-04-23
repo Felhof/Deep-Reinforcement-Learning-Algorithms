@@ -19,10 +19,10 @@ def _get_observation_dim_from_environment(environment: gym.Env) -> ObservationDi
     return cast(Tuple[int, int, int], shape)
 
 
-class BaseEnvironmentWrapper:
+class BaseEnvironmentWrapper(gym.Wrapper):
     def __init__(self: "BaseEnvironmentWrapper", environment: gym.Env) -> None:
-        self.environment = environment
-        self.action_space = self.environment.action_space
+        super().__init__(environment)
+        self.action_space = self.env.action_space
         self.action_dim = 1
         self.reset = environment.reset
         self.observation_dim: ObservationDim = _get_observation_dim_from_environment(
@@ -30,24 +30,24 @@ class BaseEnvironmentWrapper:
         )
         self.is_really_done = True
         if isinstance(
-            self.environment.action_space, gym.spaces.Box
-        ) and self.environment.action_space.shape == (1,):
+            self.env.action_space, gym.spaces.Box
+        ) and self.env.action_space.shape == (1,):
             self.step = self.continuous_step
             self.number_of_actions = 1
             self.action_type = "Continuous"
-        elif isinstance(self.environment.action_space, gym.spaces.Box):
+        elif isinstance(self.env.action_space, gym.spaces.Box):
             self.step = self._step
-            self.number_of_actions = self.environment.action_space.shape[0]
+            self.number_of_actions = self.env.action_space.shape[0]
             self.action_type = "Continuous"
         else:
             self.step = self._step
-            self.number_of_actions = self.environment.action_space.n
+            self.number_of_actions = self.env.action_space.n
             self.action_type = "Discrete"
 
     def _step(
         self: "BaseEnvironmentWrapper", action: np.ndarray
     ) -> Tuple[Observation, SupportsFloat, bool, bool, dict[str, Any]]:
-        obs, reward, terminated, truncated, info = self.environment.step(action)
+        obs, reward, terminated, truncated, info = self.env.step(action)
         self.is_really_done = terminated or truncated
         return obs, reward, terminated, truncated, info
 
@@ -82,7 +82,6 @@ class AtariWrapper(BaseEnvironmentWrapper):
         max_frames=4,
     ) -> None:
         super().__init__(environment)
-        self.environment = environment
         self.observation_dim = (max_frames, height, width)
         self.width = width
         self.height = height
@@ -118,24 +117,24 @@ class AtariWrapper(BaseEnvironmentWrapper):
         if self.is_really_done:
             obs, info = self.true_reset(with_noops=True)
         else:
-            frame, _, _, _, info = self.environment.step(0)
+            frame, _, _, _, info = self.env.step(0)
             if self.is_fire_reset_env:
-                frame, _, _, _, info = self.environment.step(1)
+                frame, _, _, _, info = self.env.step(1)
             obs = self._preprocess_observation(frame)
 
-        self.lives = self.environment.unwrapped.ale.lives()
+        self.lives = self.env.unwrapped.ale.lives()
         return obs, info
 
     def _step(
         self: "AtariWrapper", action: np.ndarray[Any, Any]
     ) -> Tuple[LazyFrames, SupportsFloat, bool, bool, dict[str, Any]]:
-        frame, reward, terminated, truncated, info = self.environment.step(action)
+        frame, reward, terminated, truncated, info = self.env.step(action)
         info["True Reward"] = reward
         obs = self._preprocess_observation(frame)
         reward = np.clip(reward, -1.0, 1.0)
 
         self.is_really_done = terminated or truncated
-        lives = self.environment.unwrapped.ale.lives()
+        lives = self.env.unwrapped.ale.lives()
         if 0 < lives < self.lives:
             terminated = True
         self.lives = lives
@@ -146,20 +145,20 @@ class AtariWrapper(BaseEnvironmentWrapper):
         number_of_noops = np.random.randint(0, 31) if with_noops else 0
 
         def reset():
-            frame, info = self.environment.reset()
+            frame, info = self.env.reset()
             if self.is_fire_reset_env:
                 while True:
-                    frame, info, terminated, truncated, _ = self.environment.step(1)
+                    frame, info, terminated, truncated, _ = self.env.step(1)
                     if not (terminated or truncated):
                         break
-                    self.environment.reset()
+                    self.env.reset()
 
             return frame, info
 
         frame, info = reset()
 
         for _ in range(number_of_noops):
-            frame, info, terminated, truncated, _ = self.environment.step(0)
+            frame, info, terminated, truncated, _ = self.env.step(0)
 
             if terminated or truncated:
                 frame, info = reset()
@@ -169,4 +168,4 @@ class AtariWrapper(BaseEnvironmentWrapper):
         return obs, info
 
     def render(self):
-        self.environment.render()
+        self.env.render()
